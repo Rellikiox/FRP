@@ -9,7 +9,8 @@ def main():
 	pygame.init()
 	screen = pygame.display.set_mode((800, 600))
 	
-	app = App(800,600)
+	app = App()
+	app.init(800,600)
 
 	#time is specified in milliseconds
 	#fixed simulation step duration
@@ -18,10 +19,12 @@ def main():
 	max_frame_time = 100
 
 	now = pygame.time.get_ticks()
-	while(True):
+	running = True
+	while running:
 		#handle events
-		if QUIT in [e.type for e in pygame.event.get()]:
-			break
+		for event in pygame.event.get():
+			if event.type == QUIT or event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]): 
+				running = False
 
 		#get the current real time
 		T = pygame.time.get_ticks()
