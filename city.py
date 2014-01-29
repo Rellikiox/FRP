@@ -40,13 +40,13 @@ class City(util.BaseEntity):
 
 
 	def grow(self):	
-		size = 4
+		size = 7
 		if random.randint(0,1): # horizontal
 			y_pos = util.PseudoRandom.randint(0, self.height, 3)
-			road = Road(Vec2(0, y_pos), Vec2(self.width - 1, y_pos + size * 2), size)
+			road = Road(Vec2(0, y_pos), Vec2(self.width, y_pos), size)
 		else: #vertical
 			x_pos = util.PseudoRandom.randint(0, self.width, 3)
-			road = Road(Vec2(x_pos, 0), Vec2(x_pos + size * 2, self.height - 1), size)
+			road = Road(Vec2(x_pos, 0), Vec2(x_pos, self.height), size)
 
 		self.add_road(road)
 		road.grow()
@@ -94,7 +94,7 @@ class Road(util.BaseEntity):
 			road.grow()
 
 	def render(self, screen):
-		pygame.draw.rect(screen, (255,255,255), (self.start_pos.x, self.start_pos.y, self.end_pos.x - self.start_pos.x, self.end_pos.y - self.start_pos.y))
+		pygame.draw.line(screen, (255,255,255), to_int_pair(self.start_pos), to_int_pair(self.end_pos), self.size)
 
 
 	def is_horizontal(self):
@@ -109,33 +109,48 @@ class Road(util.BaseEntity):
 	@classmethod
 	def make_road(cls, parent, offset, side, size):
 		if parent.is_horizontal():
-			x1 = (parent.end_pos.x - parent.start_pos.x) * offset + parent.start_pos.x
-			x2 = x1 + size * 2
+			x1 = parent.start_pos.x + (parent.end_pos.x - parent.start_pos.x) * offset
+			x2 = x1
+			y1 = parent.end_pos.y
 			if side == 'r':
-				y1 = parent.end_pos.y
 				y2 = 600
 			else:
-				y1 = 0
-				y2 = parent.start_pos.y
+				y2 = 0
 		else:
 			y1 = (parent.end_pos.y - parent.start_pos.y) * offset + parent.start_pos.y
-			y2 = y1 + size * 2
+			y2 = y1
+			x1 = parent.end_pos.x
 			if side == 'r':
-				x1 = parent.end_pos.x
 				x2 = 800
 			else:
-				x1 = 0
-				x2 = parent.start_pos.x
+				x2 = 0
 		road = Road(Vec2(x1, y1), Vec2(x2, y2), size, parent)
 
 		shapes_overlaping = city.get_space().bb_query(road.shape.bb)
+		hit_point = None
 		for shape in shapes_overlaping:
 			segment_query = shape.segment_query(road.shape.a, road.shape.b)
-			if segment_query:
-				city.add_marker(segment_query.get_hit_point(), str(segment_query.t))
+			if segment_query and segment_query.t > 0.0001 and (hit_point is None or segment_query.t < hit_point.t):
+				hit_point = segment_query
+		if hit_point:
+			road.split(hit_point.t)
 
 		city.add_road(road)
 		return road
+
+	def split(self, offset):
+		if self.is_horizontal():
+			if self.start_pos.x < self.end_pos.x:
+				self.end_pos = Vec2(self.start_pos.x + (self.end_pos.x - self.start_pos.x) * offset, self.start_pos.y)
+			else:
+				self.end_pos = Vec2(self.end_pos.x + (self.start_pos.x - self.end_pos.x) * (1 - offset), self.start_pos.y)
+		else:
+			if self.start_pos.y < self.end_pos.y:
+				self.end_pos = Vec2(self.start_pos.x, self.start_pos.y + (self.end_pos.y - self.start_pos.y) * offset)
+			else:
+				self.end_pos = Vec2(self.start_pos.x, self.end_pos.y + (self.start_pos.y - self.end_pos.y) * (1 - offset))
+		self.shape.unsafe_set_b(self.end_pos)
+		self.shape.cache_bb()
 
 class Marker(util.BaseEntity):
 	color = (255, 0, 0)

@@ -53,5 +53,9 @@ def main():
 
 		pygame.display.flip()
 
+import sys
+import random
 if __name__ == "__main__":
+	if len(sys.argv) > 1:
+		random.seed(sys.argv[1])
 	main()
