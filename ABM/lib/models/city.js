@@ -27,7 +27,7 @@ MyModel = (function(_super) {
     this.refreshPatches = false;
     this.anim.setRate(60, false);
     this.density = 65;
-    this.ember_decay_rate = 1;
+    this.ember_decay_rate = 0.3;
     this.spread_time = 0;
     this.cooloff_time = 0;
     this.iters = 0;

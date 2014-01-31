@@ -32,8 +32,8 @@
                     1 is inmediately, 0 is never. The lower this number is the more embers there will 
                     be at any given time, and thus, the slower the animation will be.
             ###
-            @density = 65 # percent
-            @ember_decay_rate = 1
+            @density = 100 # percent
+            @ember_decay_rate = 0.01
 
             # Create our trees
             @trees.setBreed patch for patch in @patches when u.randomInt(100) < @density

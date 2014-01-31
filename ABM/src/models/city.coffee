@@ -20,7 +20,7 @@ class MyModel extends ABM.Model
         @anim.setRate 60, false
         
         @density = 65 # percent
-        @ember_decay_rate = 1
+        @ember_decay_rate = 0.3
 
         @spread_time = 0
         @cooloff_time = 0

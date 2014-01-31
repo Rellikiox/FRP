@@ -36,8 +36,8 @@ MyModel = (function(_super) {
             1 is inmediately, 0 is never. The lower this number is the more embers there will 
             be at any given time, and thus, the slower the animation will be.
      */
-    this.density = 65;
-    this.ember_decay_rate = 1;
+    this.density = 100;
+    this.ember_decay_rate = 0.01;
     _ref = this.patches;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       patch = _ref[_i];
