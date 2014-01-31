@@ -11,17 +11,14 @@ class MyModel extends ABM.Model
 
         @anim.setRate 10, false
         
-        
-        
-        for p in @patches
-            p.alive = u.randomInt(100) < @density
+        p.alive = yes for p in @patches when u.randomInt(100) < @density
 
     countLiveNeighbors: (patch) ->
         neighbors = (n for n in patch.n when n.alive)
         neighbors.length
 
     step: ->
-        console.log @anim.toString() if @anim.ticks % 100 is 0
+        console.log @anim.toString() if @anim.ticks % 10 is 0
 
         for p in @patches
             neighbors = @countLiveNeighbors p

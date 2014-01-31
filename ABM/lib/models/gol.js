@@ -21,7 +21,9 @@ MyModel = (function(_super) {
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       p = _ref[_i];
-      _results.push(p.alive = u.randomInt(100) < this.density);
+      if (u.randomInt(100) < this.density) {
+        _results.push(p.alive = true);
+      }
     }
     return _results;
   };
@@ -45,7 +47,7 @@ MyModel = (function(_super) {
 
   MyModel.prototype.step = function() {
     var neighbors, p, _i, _j, _len, _len1, _ref, _ref1, _results;
-    if (this.anim.ticks % 100 === 0) {
+    if (this.anim.ticks % 10 === 0) {
       console.log(this.anim.toString());
     }
     _ref = this.patches;
