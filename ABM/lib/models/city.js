@@ -13,112 +13,52 @@ MyModel = (function(_super) {
   }
 
   MyModel.prototype.setup = function() {
-    var patch, tree, _i, _j, _len, _ref, _ref1, _results;
-    this.agentBreeds("embers fires");
-    this.patchBreeds("trees");
-    this.agents.setDefault("shape", "square");
-    this.agents.setDefault("heading", 0);
-    this.fires.setDefault("color", [255, 0, 0]);
-    this.ember_default_color = [255, 34, 34];
-    this.embers.setDefault("color", this.ember_default_color);
-    this.embers.setDefault("intensity", 1);
-    this.trees.setDefault("color", [0, 255, 0]);
-    this.trees.setDefault("burnt", false);
-    this.refreshPatches = false;
-    this.anim.setRate(60, false);
-    this.density = 65;
-    this.ember_decay_rate = 0.3;
-    this.spread_time = 0;
-    this.cooloff_time = 0;
-    this.iters = 0;
-    this.n_fires = 0;
-    this.n_embers = 0;
+    var p, patch, _i, _len, _ref;
+    this.patchBreeds("city_hall road");
+    this.agentBreeds("roadMakers");
+    this.anim.setRate(1, false);
     _ref = this.patches;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      patch = _ref[_i];
-      if (u.randomInt(100) < this.density) {
-        this.trees.setBreed(patch);
-      }
+      p = _ref[_i];
+      p.color = u.randomGray();
     }
-    _ref1 = this.trees;
-    _results = [];
-    for (_j = _ref1.length - 1; _j >= 0; _j += -1) {
-      tree = _ref1[_j];
-      if (tree.x === this.patches.minX) {
-        _results.push(this.ignite(tree));
-      }
-    }
-    return _results;
-  };
-
-  MyModel.prototype.ignite = function(tree) {
-    tree.sprout(1, this.fires);
-    tree.burnt = true;
-    tree.color = [0, 0, 0];
-    return tree.draw(this.contexts.patches);
-  };
-
-  MyModel.prototype.spread = function(fire) {
-    var tree, _i, _len, _ref;
-    _ref = fire.p.n4;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      tree = _ref[_i];
-      if (tree.breed.name === "trees" && !tree.burnt) {
-        this.ignite(tree);
-      }
-    }
-    fire.p.sprout(1, this.embers);
-    return fire.die();
-  };
-
-  MyModel.prototype.coolOff = function(ember) {
-    ember.intensity *= 1 - this.ember_decay_rate;
-    ember.color = u.scaleColor(this.ember_default_color, ember.intensity);
-    if (ember.intensity < .5) {
-      return ember.die();
-    }
+    this.city_hall = this.createCityHall(0, 0);
+    patch = u.oneOf(this.city_hall.p.n);
+    return this.createRoadMaker(patch.x, patch.y);
   };
 
   MyModel.prototype.step = function() {
-    var ember, fire, iter_end, iter_start, _i, _j, _ref, _ref1;
-    if (!this.agents.any()) {
-      console.log("..stopping, fire done at tick: " + this.anim.ticks);
-      this.stop();
-    }
-    this.n_embers += this.embers.length;
-    iter_start = performance.now();
-    _ref = this.embers;
-    for (_i = _ref.length - 1; _i >= 0; _i += -1) {
-      ember = _ref[_i];
-      this.coolOff(ember);
-    }
-    iter_end = performance.now();
-    this.cooloff_time += iter_end - iter_start;
-    this.n_fires += this.fires.length;
-    iter_start = performance.now();
-    _ref1 = this.fires;
-    for (_j = _ref1.length - 1; _j >= 0; _j += -1) {
-      fire = _ref1[_j];
-      this.spread(fire);
-    }
-    iter_end = performance.now();
-    this.spread_time += iter_end - iter_start;
-    this.iters++;
-    if (this.anim.ticks % 10 === 0) {
-      console.log(this.anim.toString());
-      this.spread_time = 0;
-      this.cooloff_time = 0;
-      this.iters = 0;
-      this.n_fires = 0;
-      return this.n_embers = 0;
-    }
+    return console.log(this.anim.toString());
+  };
+
+  MyModel.prototype.createCityHall = function(x, y) {
+    var agent;
+    agent = (this.agents.create(1))[0];
+    agent.setXY(x, y);
+    agent.color = [255, 0, 0];
+    agent.shape = "square";
+    agent.size = 1;
+    return agent;
+  };
+
+  MyModel.prototype.createRoadMaker = function(x, y) {
+    var agent;
+    agent = (this.roadMakers.create(1))[0];
+    agent.setXY(x, y);
+    agent.color = [0, 255, 0];
+    return agent.size = 1;
+  };
+
+  MyModel.prototype.stepRoadMaker = function(agent) {
+    var next_patch;
+    return next_patch = u.oneOF(agent.p.n);
   };
 
   return MyModel;
 
 })(ABM.Model);
 
-model = new MyModel("layers", 2, -125, 125, -125, 125);
+model = new MyModel("layers", 16, -16, 16, -16, 16);
 
 model.debug();
 
