@@ -14,9 +14,13 @@ MyModel = (function(_super) {
 
   MyModel.prototype.setup = function() {
     var p, patch, _i, _len, _ref;
-    this.patchBreeds("city_hall road");
-    this.agentBreeds("roadMakers");
-    this.anim.setRate(1, false);
+    this.patchBreeds("city_hall");
+    this.agentBreeds("roadMakers roads");
+    this.anim.setRate(30, false);
+    this.roads.setDefault("color", [0, 0, 255]);
+    this.roads.setDefault("shape", "circle");
+    this.roads.setDefault("size", 0.3);
+    this.links.setDefault("labelColor", [255, 0, 0]);
     _ref = this.patches;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       p = _ref[_i];
@@ -28,7 +32,43 @@ MyModel = (function(_super) {
   };
 
   MyModel.prototype.step = function() {
-    return console.log(this.anim.toString());
+    var a, _i, _len, _ref, _results;
+    if (this.anim.ticks % 100 === 0) {
+      console.log(this.anim.toString());
+    }
+    _ref = this.roadMakers;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      a = _ref[_i];
+      a.rotate(u.randomCentered(u.degToRad(30)));
+      a.forward(0.1);
+      if (!this.patchHasRoad(a.p)) {
+        _results.push(this.dropRoad(a));
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
+  };
+
+  MyModel.prototype.patchHasRoad = function(patch) {
+    var agent, _i, _len, _ref;
+    _ref = patch.agentsHere();
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      agent = _ref[_i];
+      if (agent.breed === this.roads) {
+        return true;
+      }
+    }
+  };
+
+  MyModel.prototype.dropRoad = function(agent) {
+    var road;
+    road = (agent.p.sprout(1, this.roads))[0];
+    if (agent.previous_node != null) {
+      this.links.create(road, agent.previous_node);
+    }
+    return agent.previous_node = road;
   };
 
   MyModel.prototype.createCityHall = function(x, y) {
@@ -46,12 +86,8 @@ MyModel = (function(_super) {
     agent = (this.roadMakers.create(1))[0];
     agent.setXY(x, y);
     agent.color = [0, 255, 0];
-    return agent.size = 1;
-  };
-
-  MyModel.prototype.stepRoadMaker = function(agent) {
-    var next_patch;
-    return next_patch = u.oneOF(agent.p.n);
+    agent.size = 1;
+    return agent.previous_node = null;
   };
 
   return MyModel;
