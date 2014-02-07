@@ -19,6 +19,9 @@ class MyModel extends ABM.Model
         @city_hall = @createCityHall 0, 0
         patch = u.oneOf @city_hall.p.n
         @createRoadMaker patch.x, patch.y 
+        @createRoadMaker patch.x, patch.y 
+        @createRoadMaker patch.x, patch.y 
+        @createRoadMaker patch.x, patch.y 
 
 
     step: ->
@@ -29,19 +32,21 @@ class MyModel extends ABM.Model
             a.forward 0.1
             if not @patchHasRoad a.p
                 @dropRoad a
-            
-
 
     patchHasRoad: (patch) ->
-        return true for agent in patch.agentsHere() when agent.breed is @roads
+        return @getRoadInPatch(patch) isnt undefined
+
+    getRoadInPatch: (patch) ->
+        for agent in patch.agentsHere()
+            if agent.breed is @roads
+                return agent
+        return undefined
 
     dropRoad: (agent) ->
         road = (agent.p.sprout 1, @roads)[0]
-        if agent.previous_node?
-            @links.create road, agent.previous_node
-        agent.previous_node = road
-
-
+        for patch_around_road in road.p.n4
+            if @patchHasRoad patch_around_road
+                @links.create road, @getRoadInPatch patch_around_road
         
     createCityHall: (x, y) ->
         agent = (@agents.create 1)[0]
@@ -56,7 +61,6 @@ class MyModel extends ABM.Model
         agent.setXY x, y
         agent.color = [0,255,0]
         agent.size = 1
-        agent.previous_node = null
 
         
 

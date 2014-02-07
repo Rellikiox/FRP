@@ -28,6 +28,9 @@ MyModel = (function(_super) {
     }
     this.city_hall = this.createCityHall(0, 0);
     patch = u.oneOf(this.city_hall.p.n);
+    this.createRoadMaker(patch.x, patch.y);
+    this.createRoadMaker(patch.x, patch.y);
+    this.createRoadMaker(patch.x, patch.y);
     return this.createRoadMaker(patch.x, patch.y);
   };
 
@@ -52,23 +55,35 @@ MyModel = (function(_super) {
   };
 
   MyModel.prototype.patchHasRoad = function(patch) {
+    return this.getRoadInPatch(patch) !== void 0;
+  };
+
+  MyModel.prototype.getRoadInPatch = function(patch) {
     var agent, _i, _len, _ref;
     _ref = patch.agentsHere();
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       agent = _ref[_i];
       if (agent.breed === this.roads) {
-        return true;
+        return agent;
       }
     }
+    return void 0;
   };
 
   MyModel.prototype.dropRoad = function(agent) {
-    var road;
+    var patch_around_road, road, _i, _len, _ref, _results;
     road = (agent.p.sprout(1, this.roads))[0];
-    if (agent.previous_node != null) {
-      this.links.create(road, agent.previous_node);
+    _ref = road.p.n4;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      patch_around_road = _ref[_i];
+      if (this.patchHasRoad(patch_around_road)) {
+        _results.push(this.links.create(road, this.getRoadInPatch(patch_around_road)));
+      } else {
+        _results.push(void 0);
+      }
     }
-    return agent.previous_node = road;
+    return _results;
   };
 
   MyModel.prototype.createCityHall = function(x, y) {
@@ -86,8 +101,7 @@ MyModel = (function(_super) {
     agent = (this.roadMakers.create(1))[0];
     agent.setXY(x, y);
     agent.color = [0, 255, 0];
-    agent.size = 1;
-    return agent.previous_node = null;
+    return agent.size = 1;
   };
 
   return MyModel;
