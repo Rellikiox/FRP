@@ -6,6 +6,12 @@
     <div id="layers"></div>
     
     <script src="lib/agentscript.js"></script>
+    <script src="lib/agents/RoadMaker.js"></script>
     <script src="lib/models/city.js"></script>
+    <script type="text/javascript">
+    	model = new CityModel("layers", 8, -32, 32, -32, 32);
+		  model.debug();
+		  model.start();
+    </script>
   </body>
 </html>
