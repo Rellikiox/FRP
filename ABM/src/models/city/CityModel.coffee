@@ -1,10 +1,10 @@
-u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.       
+u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
 
 class CityModel extends ABM.Model
 
     setup: ->
         @patchBreeds "city_hall roads"
-        @agentBreeds "roadMakers" 
+        @agentBreeds "roadMakers"
         @anim.setRate 30, false
 
         @roads.setDefault "color", [0, 0, 255]
@@ -17,15 +17,17 @@ class CityModel extends ABM.Model
         @city_hall = @createCityHall(0, 0)
         Road.makeHere patch for patch in @city_hall.p.n
         patch = u.oneOf(@city_hall.p.n4)
-        
+
         #road_maker = @createRoadMaker(patch.x, patch.y )
+        road_maker = RoadMaker.makeNew patch.x, patch.y
+        @links.create(@city_hall, road_maker)
         road_maker = RoadMaker.makeNew patch.x, patch.y
         @links.create(@city_hall, road_maker)
 
     step: ->
         console.log @anim.toString() if @anim.ticks % 100 == 0
         road_maker.step() for road_maker in @roadMakers
-        
+
     createCityHall: (x, y) ->
         agent = (@agents.create 1)[0]
         agent.setXY x, y

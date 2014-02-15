@@ -8,13 +8,17 @@ class RoadMaker extends ABM.Agent
     @size:  1
 
     # Behavior
-    @point_radius = 10
+    @radius_increment = 10
+
+    # Default vars
+    target_point: null
+    ring_radius: 10
 
     @agentSet: ->
         if not @breed?
             for breed in ABM.agents.breeds
                 if breed.name is @breed_name
-                    @breed = breed 
+                    @breed = breed
                     break
         return @breed
 
@@ -26,31 +30,51 @@ class RoadMaker extends ABM.Agent
     constructor: (x, y, @color, @size) ->
         super
         @setXY x, y
-        @target_point = null
+        @starting_position = {x: x, y: y}
+
+        @target_point = @getTargetPoint()
+        @current_state = @seekTargetPointState
 
     step: ->
-        if @target_point?
-            if not @isInTarget()
-                @facePoint @target_point
-                @forward(0.1)
-                if not Road.isRoadHere(@p)
-                    @dropRoad()
-            else
-                @target_point = @getTargetPoint()
-        else
+        @current_state()
+
+    # States
+
+    goToStartingPositionState: ->
+        @facePoint @starting_position
+        @move()
+
+        if @inStartingPosition()
             @target_point = @getTargetPoint()
+            @current_state = @seekTargetPointState
+
+    seekTargetPointState: ->
+        @facePoint @target_point
+        @move()
+        @dropRoad()
+
+        if @inTargetPoint()
+            @current_state = @goToStartingPositionState
+
+
+    # Utils
 
     dropRoad: ->
         Road.makeHere(@p)
 
-    isInTarget: ->
-        return 0.1 > ABM.util.distance @x, @y, @target_point.x, @target_point.y
+    inTargetPoint: ->
+        return @inPoint @target_point
+
+    inStartingPosition: ->
+        return @inPoint @starting_position
+
+    inPoint: (point) ->
+        return 0.1 > ABM.util.distance @x, @y, point.x, point.y
 
     getTargetPoint: ->
-        radius = ABM.util.randomFloat @constructor.point_radius
         angle  = ABM.util.randomFloat 360
-        x = @x + radius * Math.cos(angle)
-        y = @y + radius * Math.sin(angle)
+        x = @x + @ring_radius * Math.cos(angle)
+        y = @y + @ring_radius * Math.sin(angle)
         return {x: x, y: y}
 
     facePoint: (point) ->
@@ -60,6 +84,11 @@ class RoadMaker extends ABM.Agent
         turn = ABM.util.subtractRads heading, @heading # angle from h to a
         #turn = u.clamp turn, -@maxTurn, @maxTurn # limit the turn
         @rotate turn
+
+    move: ->
+        @forward(0.1)
+
+
 
 
 
