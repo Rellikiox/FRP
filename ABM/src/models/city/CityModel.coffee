@@ -3,11 +3,9 @@ u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
 class CityModel extends ABM.Model
 
     setup: ->
-        @patchBreeds "city_hall roads"
-        @agentBreeds "roadMakers"
+        @patchBreeds "city_hall roads houses"
+        @agentBreeds "roadMakers houseMakers"
         @anim.setRate 30, false
-
-        @roads.setDefault "color", [0, 0, 255]
 
         @links.setDefault "labelColor", [255,0,0]
 
@@ -16,22 +14,29 @@ class CityModel extends ABM.Model
 
         @city_hall = @createCityHall(0, 0)
         Road.makeHere patch for patch in @city_hall.p.n
-        patch = u.oneOf(@city_hall.p.n4)
 
         #road_maker = @createRoadMaker(patch.x, patch.y )
+        patch = u.oneOf(@city_hall.p.n4)
         road_maker = RoadMaker.makeNew patch.x, patch.y
         @links.create(@city_hall, road_maker)
+
+        patch = u.oneOf(@city_hall.p.n4)
         road_maker = RoadMaker.makeNew patch.x, patch.y
         @links.create(@city_hall, road_maker)
 
     step: ->
         console.log @anim.toString() if @anim.ticks % 100 == 0
         road_maker.step() for road_maker in @roadMakers
+        house_maker.step() for house_maker in @houseMakers
+
+        if @anim.ticks % 100 == 0
+            patch = u.oneOf(@city_hall.p.n4)
+            house_maker = HouseMaker.makeNew patch.x, patch.y
 
     createCityHall: (x, y) ->
         agent = (@agents.create 1)[0]
         agent.setXY x, y
-        agent.color = [255,0,0]
+        agent.color = [0,0,100]
         agent.shape = "square"
         agent.size = 1
-        agent
+        return agent

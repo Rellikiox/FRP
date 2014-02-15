@@ -7,12 +7,13 @@ class Road
         if not @breed?
             for breed in ABM.patches.breeds
                 if breed.name is @breed_name
-                    @breed = breed 
+                    @breed = breed
                     break
         return @breed
 
     @makeHere: (patch) ->
         @patchSet().setBreed patch
+        patch.color = [0,100,0]
 
     @isRoadHere: (patch) ->
         return patch.breed is @patchSet()
