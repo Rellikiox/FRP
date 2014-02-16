@@ -24,14 +24,13 @@ class CityModel extends ABM.Model
         road_maker = RoadMaker.makeNew patch.x, patch.y
         @links.create(@city_hall, road_maker)
 
+        #patch = u.oneOf(@city_hall.p.n4)
+        #house_maker = HouseMaker.makeNew patch.x, patch.y
+
     step: ->
         console.log @anim.toString() if @anim.ticks % 100 == 0
         road_maker.step() for road_maker in @roadMakers
         house_maker.step() for house_maker in @houseMakers
-
-        if @anim.ticks % 100 == 0
-            patch = u.oneOf(@city_hall.p.n4)
-            house_maker = HouseMaker.makeNew patch.x, patch.y
 
     createCityHall: (x, y) ->
         agent = (@agents.create 1)[0]
