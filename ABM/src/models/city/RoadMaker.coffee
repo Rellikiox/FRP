@@ -89,13 +89,11 @@ class RoadMaker extends ABM.Agent
         @rotate turn
 
     move: (point) ->
-        #@facePoint @target_point
         if not @local_point? or @inPoint(@local_point)
             @local_point = @getLocalPoint point
 
         @facePoint @local_point
         @forward(0.1)
-
 
     getLocalPoint: (point) ->
         dx = point.x - @x

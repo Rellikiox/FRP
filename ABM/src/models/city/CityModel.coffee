@@ -21,11 +21,7 @@ class CityModel extends ABM.Model
         @links.create(@city_hall, road_maker)
 
         patch = u.oneOf(@city_hall.p.n4)
-        road_maker = RoadMaker.makeNew patch.x, patch.y
-        @links.create(@city_hall, road_maker)
-
-        #patch = u.oneOf(@city_hall.p.n4)
-        #house_maker = HouseMaker.makeNew patch.x, patch.y
+        house_maker = HouseMaker.makeNew patch.x, patch.y
 
     step: ->
         console.log @anim.toString() if @anim.ticks % 100 == 0
