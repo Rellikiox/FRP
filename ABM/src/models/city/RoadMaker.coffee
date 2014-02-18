@@ -83,9 +83,7 @@ class RoadMaker extends ABM.Agent
         dx = point.x - @x
         dy = point.y - @y
         heading = Math.atan2 dy, dx
-        # clamp the heading to the nearest 90º
-        turn = ABM.util.subtractRads heading, @heading # angle from h to a
-        #turn = u.clamp turn, -@maxTurn, @maxTurn # limit the turn
+        turn = ABM.util.subtractRads heading, @heading
         @rotate turn
 
     move: (point) ->
@@ -93,7 +91,7 @@ class RoadMaker extends ABM.Agent
             @local_point = @getLocalPoint point
 
         @facePoint @local_point
-        @forward(0.1)
+        @forward(0.05)
 
     getLocalPoint: (point) ->
         dx = point.x - @x

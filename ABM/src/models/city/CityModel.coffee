@@ -2,26 +2,33 @@ u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
 
 class CityModel extends ABM.Model
 
+    @instance: null
+
     setup: ->
-        @patchBreeds "city_hall roads houses"
+        CityModel.instance = this
+
+        @patchBreeds "city_hall roads houses aaa"
         @agentBreeds "roadMakers houseMakers"
         @anim.setRate 30, false
+        @refreshPatches = true
 
         @links.setDefault "labelColor", [255,0,0]
 
+        @patches.setDefault "connectivity", 0.0
+
         for p in @patches
             p.color = u.randomGray(120, 220)
+            p.default_color = p.color
 
         @city_hall = @createCityHall(0, 0)
         Road.makeHere patch for patch in @city_hall.p.n
 
-        #road_maker = @createRoadMaker(patch.x, patch.y )
         patch = u.oneOf(@city_hall.p.n4)
         road_maker = RoadMaker.makeNew patch.x, patch.y
         @links.create(@city_hall, road_maker)
 
-        patch = u.oneOf(@city_hall.p.n4)
-        house_maker = HouseMaker.makeNew patch.x, patch.y
+        # patch = u.oneOf(@city_hall.p.n4)
+        # house_maker = HouseMaker.makeNew patch.x, patch.y
 
     step: ->
         console.log @anim.toString() if @anim.ticks % 100 == 0
@@ -35,3 +42,13 @@ class CityModel extends ABM.Model
         agent.shape = "square"
         agent.size = 1
         return agent
+
+    drawNormal: ->
+        for patch in @patches when patch.breed.name is "patches"
+            patch.color = patch.default_color
+
+    drawConnectivity: ->
+        for patch in @patches when patch.breed.name is "patches"
+            if patch.connectivity == 1 then patch.color = [30, 130, 30]
+            else if patch.connectivity == 0.5 then patch.color = [60, 160, 60]
+            else if patch.connectivity == 0.25 then patch.color = [90, 190, 90]
