@@ -25,9 +25,9 @@ class Road
     @setConnectvity: (patch, connectivity) ->
         patch.connectivity = connectivity
 
-        if connectivity == 1 then patch.color = [30, 130, 30]
-        else if connectivity == 0.5 then patch.color = [60, 160, 60]
-        else if connectivity == 0.25 then patch.color = [90, 190, 90]
+        if connectivity == 1 then patch.connectivity_color = [30, 130, 30]
+        else if connectivity == 0.5 then patch.connectivity_color = [60, 160, 60]
+        else if connectivity == 0.25 then patch.connectivity_color = [90, 190, 90]
 
         @spreadConnectivity patch
 
