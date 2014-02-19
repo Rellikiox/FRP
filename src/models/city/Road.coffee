@@ -15,6 +15,9 @@ class Road
 
     @makeHere: (patch) ->
         @patchSet().setBreed patch
+
+        CityModel.instance.roadAStar.setWalkable(patch)
+
         patch.color = [0,100,0]
         patch.connectivity = 1.0
         for n_patch in patch.n

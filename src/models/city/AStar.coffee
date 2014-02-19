@@ -17,17 +17,20 @@ class AStarHelper
         @grid = new PF.Grid(width, height, AStarHelper.createGrid(width, height, walkable))
         @finder = new PF.AStarFinder()
 
-    setWalkable: (x, y, walkable=true) ->
+    setWalkable: (p, walkable=true) ->
+        [x,y] = @transformPointToGrid(p)
         @grid.setWalkableAt(x, y, walkable)
         null
 
-    getPath: (x1, y1, x2, y2) ->
-        [x1, y1] = transformPointToGrid(x1, y1)
-        [x2, y2] = transformPointToGrid(x2, y2)
+    getPath: (p1, p2) ->
+        [x1, y1] = @transformPointToGrid(p1)
+        [x2, y2] = @transformPointToGrid(p2)
 
-        path = finder.findPath(x1, y1, x2, y2, @grid)
+        _grid = @grid.clone()
+        path = @finder.findPath(x1, y1, x2, y2, @grid)
+        @grid = _grid
 
-        return (transformPointToWorld(x,y) for [x,y] in path)
+        return (@transformPointToWorld(x,y) for [x,y] in path)
 
     setToGridTransforms: (xTr, yTr) ->
         @xToGridTransform = xTr
@@ -39,9 +42,9 @@ class AStarHelper
         @yToWorldTransform = yTr
         null
 
-    transformPointToGrid: (x, y) ->
-        return [@xToGridTransform(x), @yToGridTransform(y)]
+    transformPointToGrid: (p) ->
+        return [@xToGridTransform(Math.round(p.x)), @yToGridTransform(Math.round(p.y))]
 
     transformPointToWorld: (x, y) ->
-        return [@xToWorldTransform(x), @yToWorldTransform(y)]
+        return {x:@xToWorldTransform(x), y:@yToWorldTransform(y)}
 
