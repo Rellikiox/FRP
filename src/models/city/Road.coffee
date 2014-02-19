@@ -19,10 +19,10 @@ class Road
         patch.connectivity = 1.0
         for n_patch in patch.n
             if n_patch.connectivity < patch.connectivity
-                @setConnectvity n_patch, 1.0
+                @setConnectivity n_patch, 1.0
         null
 
-    @setConnectvity: (patch, connectivity) ->
+    @setConnectivity: (patch, connectivity) ->
         patch.connectivity = connectivity
 
         if connectivity == 1 then patch.connectivity_color = [30, 130, 30]
@@ -37,7 +37,7 @@ class Road
         if new_connectivity > @connectivity_threshold
             for n_patch in patch.n
                 if n_patch.connectivity < patch.connectivity
-                    @setConnectvity n_patch, new_connectivity
+                    @setConnectivity n_patch, new_connectivity
         null
 
     @isRoadHere: (patch) ->
