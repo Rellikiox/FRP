@@ -51,7 +51,7 @@ class HouseMaker extends ABM.Agent
             @local_point = @getLocalPoint point
 
         @facePoint @local_point
-        @forward(0.1)
+        @forward(0.05)
 
     getLocalPoint: (point) ->
         dx = point.x - @x

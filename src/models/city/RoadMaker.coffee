@@ -12,6 +12,7 @@ class RoadMaker extends ABM.Agent
 
     # Default vars
     target_point: null
+    path: null
     local_point: null
     ring_radius: 10
 
@@ -34,6 +35,7 @@ class RoadMaker extends ABM.Agent
         @starting_position = {x: x, y: y}
 
         @target_point = @getTargetPoint()
+        @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
         @current_state = @seekTargetPointState
 
     step: ->
@@ -46,16 +48,19 @@ class RoadMaker extends ABM.Agent
 
         if @inStartingPosition()
             @target_point = @getTargetPoint()
+            @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
             @current_state = @seekTargetPointState
 
     seekTargetPointState: ->
-        @move @target_point
+        @move @path[0]
 
         if not Road.isRoadHere @p
             @dropRoad()
 
-        if @inTargetPoint()
-            @current_state = @goToStartingPositionState
+        if @inPoint(@path[0])
+            @path.shift()
+            if @path.length is 0
+                @current_state = @goToStartingPositionState
 
 
     # Utils
@@ -87,10 +92,7 @@ class RoadMaker extends ABM.Agent
         @rotate turn
 
     move: (point) ->
-        if not @local_point? or @inPoint(@local_point)
-            @local_point = @getLocalPoint point
-
-        @facePoint @local_point
+        @facePoint point
         @forward(0.05)
 
     getLocalPoint: (point) ->
