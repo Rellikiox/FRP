@@ -92,10 +92,18 @@ class RoadMaker extends ABM.Agent
         return 0.1 > ABM.util.distance @x, @y, point.x, point.y
 
     getTargetPoint: ->
-        angle  = ABM.util.randomFloat(2 * Math.PI)
-        x = Math.round(@x + @ring_radius * Math.cos(angle))
-        y = Math.round(@y + @ring_radius * Math.sin(angle))
-        return {x: x, y: y}
+        point = null
+        while not point?
+            angle  = ABM.util.randomFloat(2 * Math.PI)
+            x = Math.round(@x + @ring_radius * Math.cos(angle))
+            y = Math.round(@y + @ring_radius * Math.sin(angle))
+            potential_point = {x: x, y: y}
+            if Road.is_too_connected(potential_point)
+                angle += (Math.PI * 2) / 16
+                angle = angle %% Math.PI * 2
+            else
+                point = potential_point
+        return point
 
     facePoint: (point) ->
         dx = point.x - @x

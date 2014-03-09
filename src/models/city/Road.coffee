@@ -3,6 +3,8 @@ class Road
     @roads: null
     @default_color: [80, 80, 80]
 
+    @too_connected_threshold = 3
+
 
     @initialize_module: (patches, road_breed) ->
         @roads = road_breed
@@ -49,10 +51,14 @@ class Road
         return patch.breed is @roads
 
     @get_closest_road_to: (point) ->
-        patch = CityModel.instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
+        patch = CityModel.get_patch_at(point)
         while patch.road_distance != 0
             patch = @_get_min_neighbour(patch)
         return patch
+
+    @is_too_connected: (point) ->
+        patch = CityModel.get_patch_at(point)
+        return patch.road_distance <= Road.too_connected_threshold
 
     @_get_min_neighbour: (patch) ->
         min_patch = patch

@@ -4,6 +4,9 @@ class CityModel extends ABM.Model
 
     @instance: null
 
+    @get_patch_at: (point) ->
+        return @instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
+
     setup: ->
         CityModel.instance = this
         @set_up_AStar_helpers()
@@ -39,7 +42,7 @@ class CityModel extends ABM.Model
     set_default_params: () ->
         @patchBreeds "city_hall roads houses"
         @agentBreeds "roadMakers houseMakers"
-        @anim.setRate 30, false
+        @anim.setRate 60, false
         @refreshPatches = true
 
         @links.setDefault "labelColor", [255,0,0]
