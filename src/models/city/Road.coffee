@@ -34,6 +34,9 @@ class Road
     @_set_city_hall_dist: (road, dist_to_city_hall) ->
         road.dist_to_city_hall = dist_to_city_hall
         road.label = road.dist_to_city_hall
+        for n_road in road.n4 when n_road.breed is @roads
+            if not n_road.dist_to_city_hall? or n_road.dist_to_city_hall > dist_to_city_hall + 1
+                @_set_city_hall_dist(n_road, dist_to_city_hall + 1)
 
     @_get_roads_to_update: (road, new_distance) ->
         to_update = []
