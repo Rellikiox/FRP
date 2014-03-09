@@ -14,7 +14,7 @@ class RoadMaker extends ABM.Agent
     target_point: null
     path: null
     local_point: null
-    ring_radius: 10
+    ring_radius: 5
 
     @agentSet: ->
         if not @breed?
@@ -54,7 +54,7 @@ class RoadMaker extends ABM.Agent
     seekTargetPointState: ->
         @move @path[0]
 
-        if not Road.isRoadHere @p
+        if not Road.is_road_here @p
             @dropRoad()
 
         if @inPoint(@path[0])
@@ -81,7 +81,6 @@ class RoadMaker extends ABM.Agent
         angle  = ABM.util.randomFloat 360
         x = Math.round(@x + @ring_radius * Math.cos(angle))
         y = Math.round(@y + @ring_radius * Math.sin(angle))
-        console.log x + " " + y
         return {x: x, y: y}
 
     facePoint: (point) ->
