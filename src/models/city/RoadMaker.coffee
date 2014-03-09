@@ -36,22 +36,35 @@ class RoadMaker extends ABM.Agent
 
         @target_point = @getTargetPoint()
         @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
-        @current_state = @seekTargetPointState
+        @current_state = @buildToPointState
 
     step: ->
         @current_state()
 
+
     # States
 
-    goToStartingPositionState: ->
-        @move @starting_position
+    return_to_city_hall_state: () ->
+        @move(@starting_position)
 
         if @inStartingPosition()
             @target_point = @getTargetPoint()
-            @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
-            @current_state = @seekTargetPointState
+            closest_road_to_target = Road.get_closest_road_to(@target_point)
+            @path = CityModel.instance.terrainAStar.getPath(@, closest_road_to_target)
+            @label = "go_to_point_state"
+            @current_state = @go_to_point_state
 
-    seekTargetPointState: ->
+    go_to_point_state: ->
+        @move(@path[0])
+
+        if @inPoint(@path[0])
+            @path.shift()
+            if @path.length is 0
+                @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
+                @label = "buildToPointState"
+                @current_state = @buildToPointState
+
+    buildToPointState: ->
         @move @path[0]
 
         if not Road.is_road_here @p
@@ -60,7 +73,8 @@ class RoadMaker extends ABM.Agent
         if @inPoint(@path[0])
             @path.shift()
             if @path.length is 0
-                @current_state = @goToStartingPositionState
+                @label = "return_to_city_hall_state"
+                @current_state = @return_to_city_hall_state
 
 
     # Utils
@@ -103,7 +117,4 @@ class RoadMaker extends ABM.Agent
             when heading is 1 then return {x: @p.x, y: @p.y + 1}
             when heading is -1 then return {x: @p.x, y: @p.y - 1}
             when heading is 2 or heading is -2 then return {x: @p.x - 1, y: @p.y}
-
-
-
 

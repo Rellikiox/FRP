@@ -47,3 +47,18 @@ class Road
 
     @is_road_here: (patch) ->
         return patch.breed is @roads
+
+    @get_closest_road_to: (point) ->
+        patch = CityModel.instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
+        while patch.road_distance != 0
+            patch = @_get_min_neighbour(patch)
+        return patch
+
+    @_get_min_neighbour: (patch) ->
+        min_patch = patch
+        for neighbour in patch.n4
+            if neighbour.road_distance < min_patch.road_distance
+                min_patch = neighbour
+        return min_patch
+
+
