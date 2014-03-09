@@ -4,17 +4,17 @@ class RoadMaker extends ABM.Agent
     @breed: null
 
     # Appearance
-    @color: [0,255,0]
+    @default_color: [255,255,255]
     @size:  1
 
     # Behavior
-    @radius_increment = 10
+    @radius_increment = 3
 
     # Default vars
     target_point: null
     path: null
     local_point: null
-    ring_radius: 10
+    ring_radius: 6
 
     @agentSet: ->
         if not @breed?
@@ -25,7 +25,7 @@ class RoadMaker extends ABM.Agent
         return @breed
 
     @makeNew: (x,y) ->
-        road_maker = new RoadMaker x, y, [0,255,0], 1
+        road_maker = new RoadMaker x, y, @default_color, 1
         @agentSet().add road_maker
         return road_maker
 
@@ -34,33 +34,47 @@ class RoadMaker extends ABM.Agent
         @setXY x, y
         @starting_position = {x: x, y: y}
 
-        @target_point = @getTargetPoint()
-        @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
-        @current_state = @seekTargetPointState
+        @current_state = @return_to_city_hall_state
 
     step: ->
+        console.time('someFunction: timer start');
         @current_state()
+        console.timeEnd('someFunction: timer end');
+
 
     # States
 
-    goToStartingPositionState: ->
-        @move @starting_position
+    return_to_city_hall_state: () ->
+        @move(@starting_position)
 
         if @inStartingPosition()
             @target_point = @getTargetPoint()
-            @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
-            @current_state = @seekTargetPointState
+            closest_road_to_target = Road.get_closest_road_to(@target_point)
+            @path = CityModel.instance.terrainAStar.getPath(@, closest_road_to_target)
+            @label = "go_to_point_state"
+            @current_state = @go_to_point_state
 
-    seekTargetPointState: ->
+    go_to_point_state: ->
+        @move(@path[0])
+
+        if @inPoint(@path[0])
+            @path.shift()
+            if @path.length is 0
+                @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
+                @label = "buildToPointState"
+                @current_state = @buildToPointState
+
+    buildToPointState: ->
         @move @path[0]
 
-        if not Road.isRoadHere @p
+        if not Road.is_road_here @p
             @dropRoad()
 
         if @inPoint(@path[0])
             @path.shift()
             if @path.length is 0
-                @current_state = @goToStartingPositionState
+                @label = "return_to_city_hall_state"
+                @current_state = @return_to_city_hall_state
 
 
     # Utils
@@ -78,11 +92,24 @@ class RoadMaker extends ABM.Agent
         return 0.1 > ABM.util.distance @x, @y, point.x, point.y
 
     getTargetPoint: ->
-        angle  = ABM.util.randomFloat 360
-        x = Math.round(@x + @ring_radius * Math.cos(angle))
-        y = Math.round(@y + @ring_radius * Math.sin(angle))
-        console.log x + " " + y
-        return {x: x, y: y}
+        point = null
+        tries = 0
+        while not point? and tries < 32
+            angle  = ABM.util.randomFloat(2 * Math.PI)
+            x = Math.round(@x + @ring_radius * Math.cos(angle))
+            y = Math.round(@y + @ring_radius * Math.sin(angle))
+            potential_point = {x: x, y: y}
+            if Road.is_too_connected(potential_point)
+                angle += (Math.PI * 2) / 32
+                angle = angle %% Math.PI * 2
+                tries += 1
+            else
+                point = potential_point
+
+        if not point?
+            @ring_radius += RoadMaker.radius_increment
+            point = @getTargetPoint()
+        return point
 
     facePoint: (point) ->
         dx = point.x - @x
@@ -104,7 +131,4 @@ class RoadMaker extends ABM.Agent
             when heading is 1 then return {x: @p.x, y: @p.y + 1}
             when heading is -1 then return {x: @p.x, y: @p.y - 1}
             when heading is 2 or heading is -2 then return {x: @p.x - 1, y: @p.y}
-
-
-
 
