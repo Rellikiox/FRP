@@ -7,6 +7,9 @@ class CityModel extends ABM.Model
     @get_patch_at: (point) ->
         return @instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
 
+    @is_on_world: (point) ->
+        return @instance.patches.isOnWorld(Math.round(point.x), Math.round(point.y))
+
     setup: ->
         CityModel.instance = this
         @set_up_AStar_helpers()
@@ -37,12 +40,13 @@ class CityModel extends ABM.Model
         agent.color = [0,0,100]
         agent.shape = "square"
         agent.size = 1
+        agent.p.dist_to_city_hall = 0
         return agent
 
     set_default_params: () ->
         @patchBreeds "city_hall roads houses"
         @agentBreeds "roadMakers houseMakers"
-        @anim.setRate 60, false
+        @anim.setRate 120, false
         @refreshPatches = true
 
         @links.setDefault "labelColor", [255,0,0]
@@ -54,6 +58,11 @@ class CityModel extends ABM.Model
     spawn_entities: () ->
         @city_hall = @create_city_hall(0, 0)
         Road.makeHere(patch) for patch in @city_hall.p.n
+        Road._set_city_hall_dist(patch, 1) for patch in @city_hall.p.n
+
+        patch = u.oneOf(@city_hall.p.n4)
+        road_maker = RoadMaker.makeNew patch.x, patch.y
+        @links.create(@city_hall, road_maker)
 
         patch = u.oneOf(@city_hall.p.n4)
         road_maker = RoadMaker.makeNew patch.x, patch.y

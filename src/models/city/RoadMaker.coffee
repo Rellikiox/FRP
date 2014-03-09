@@ -106,7 +106,7 @@ class RoadMaker extends ABM.Agent
             else
                 point = potential_point
 
-        if not point?
+        if not point? or not CityModel.is_on_world(point)
             @ring_radius += RoadMaker.radius_increment
             point = @getTargetPoint()
         return point
