@@ -8,13 +8,13 @@ class RoadMaker extends ABM.Agent
     @size:  1
 
     # Behavior
-    @radius_increment = 10
+    @radius_increment = 7
 
     # Default vars
     target_point: null
     path: null
     local_point: null
-    ring_radius: 10
+    ring_radius: 7
 
     @agentSet: ->
         if not @breed?
@@ -34,12 +34,12 @@ class RoadMaker extends ABM.Agent
         @setXY x, y
         @starting_position = {x: x, y: y}
 
-        @target_point = @getTargetPoint()
-        @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
-        @current_state = @buildToPointState
+        @current_state = @return_to_city_hall_state
 
     step: ->
+        console.time('someFunction: timer start');
         @current_state()
+        console.timeEnd('someFunction: timer end');
 
 
     # States
@@ -93,16 +93,22 @@ class RoadMaker extends ABM.Agent
 
     getTargetPoint: ->
         point = null
-        while not point?
+        tries = 0
+        while not point? and tries < 32
             angle  = ABM.util.randomFloat(2 * Math.PI)
             x = Math.round(@x + @ring_radius * Math.cos(angle))
             y = Math.round(@y + @ring_radius * Math.sin(angle))
             potential_point = {x: x, y: y}
             if Road.is_too_connected(potential_point)
-                angle += (Math.PI * 2) / 16
+                angle += (Math.PI * 2) / 32
                 angle = angle %% Math.PI * 2
+                tries += 1
             else
                 point = potential_point
+
+        if not point?
+            @ring_radius += RoadMaker.radius_increment
+            point = @getTargetPoint()
         return point
 
     facePoint: (point) ->

@@ -3,7 +3,7 @@ class Road
     @roads: null
     @default_color: [80, 80, 80]
 
-    @too_connected_threshold = 3
+    @too_connected_threshold = 2
 
 
     @initialize_module: (patches, road_breed) ->
