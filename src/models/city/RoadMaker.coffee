@@ -8,13 +8,13 @@ class RoadMaker extends ABM.Agent
     @size:  1
 
     # Behavior
-    @radius_increment = 7
+    @radius_increment = 3
 
     # Default vars
     target_point: null
     path: null
     local_point: null
-    ring_radius: 7
+    ring_radius: 6
 
     @agentSet: ->
         if not @breed?
