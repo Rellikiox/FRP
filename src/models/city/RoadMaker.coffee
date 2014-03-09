@@ -47,8 +47,8 @@ class RoadMaker extends ABM.Agent
     return_to_city_hall_state: () ->
         @move(@starting_position)
 
-        if @inStartingPosition()
-            @target_point = @getTargetPoint()
+        if @in_starting_position()
+            @target_point = @get_target_point()
             closest_road_to_target = Road.get_closest_road_to(@target_point)
             @path = CityModel.instance.terrainAStar.getPath(@, closest_road_to_target)
             @label = "go_to_point_state"
@@ -57,20 +57,20 @@ class RoadMaker extends ABM.Agent
     go_to_point_state: ->
         @move(@path[0])
 
-        if @inPoint(@path[0])
+        if @in_point(@path[0])
             @path.shift()
             if @path.length is 0
                 @path = CityModel.instance.terrainAStar.getPath(@, @target_point)
-                @label = "buildToPointState"
-                @current_state = @buildToPointState
+                @label = "build_to_point_state"
+                @current_state = @build_to_point_state
 
-    buildToPointState: ->
+    build_to_point_state: ->
         @move @path[0]
 
         if not Road.is_road_here @p
-            @dropRoad()
+            @dorp_road()
 
-        if @inPoint(@path[0])
+        if @in_point(@path[0])
             @path.shift()
             if @path.length is 0
                 @label = "return_to_city_hall_state"
@@ -79,19 +79,19 @@ class RoadMaker extends ABM.Agent
 
     # Utils
 
-    dropRoad: ->
+    dorp_road: ->
         Road.makeHere(@p)
 
-    inTargetPoint: ->
-        return @inPoint @target_point
+    is_target_point: ->
+        return @in_point @target_point
 
-    inStartingPosition: ->
-        return @inPoint @starting_position
+    in_starting_position: ->
+        return @in_point @starting_position
 
-    inPoint: (point) ->
+    in_point: (point) ->
         return 0.1 > ABM.util.distance @x, @y, point.x, point.y
 
-    getTargetPoint: ->
+    get_target_point: ->
         point = null
         tries = 0
         while not point? and tries < 32
@@ -108,10 +108,10 @@ class RoadMaker extends ABM.Agent
 
         if not point? or not CityModel.is_on_world(point)
             @ring_radius += RoadMaker.radius_increment
-            point = @getTargetPoint()
+            point = @get_target_point()
         return point
 
-    facePoint: (point) ->
+    face_point: (point) ->
         dx = point.x - @x
         dy = point.y - @y
         heading = Math.atan2 dy, dx
@@ -119,10 +119,10 @@ class RoadMaker extends ABM.Agent
         @rotate turn
 
     move: (point) ->
-        @facePoint point
+        @face_point point
         @forward(0.05)
 
-    getLocalPoint: (point) ->
+    get_local_point: (point) ->
         dx = point.x - @x
         dy = point.y - @y
         heading = Math.round(Math.atan2(dy, dx) / (Math.PI / 2))
