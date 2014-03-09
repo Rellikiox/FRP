@@ -4,7 +4,7 @@ class RoadMaker extends ABM.Agent
     @breed: null
 
     # Appearance
-    @color: [0,255,0]
+    @default_color: [255,255,255]
     @size:  1
 
     # Behavior
@@ -14,7 +14,7 @@ class RoadMaker extends ABM.Agent
     target_point: null
     path: null
     local_point: null
-    ring_radius: 5
+    ring_radius: 10
 
     @agentSet: ->
         if not @breed?
@@ -25,7 +25,7 @@ class RoadMaker extends ABM.Agent
         return @breed
 
     @makeNew: (x,y) ->
-        road_maker = new RoadMaker x, y, [0,255,0], 1
+        road_maker = new RoadMaker x, y, @default_color, 1
         @agentSet().add road_maker
         return road_maker
 
@@ -78,7 +78,7 @@ class RoadMaker extends ABM.Agent
         return 0.1 > ABM.util.distance @x, @y, point.x, point.y
 
     getTargetPoint: ->
-        angle  = ABM.util.randomFloat 360
+        angle  = ABM.util.randomFloat(2 * Math.PI)
         x = Math.round(@x + @ring_radius * Math.cos(angle))
         y = Math.round(@y + @ring_radius * Math.sin(angle))
         return {x: x, y: y}

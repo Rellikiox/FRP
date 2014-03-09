@@ -22,12 +22,12 @@ class Road
 
     @_update_distance: (patch, road_distance) ->
         patch.road_distance = road_distance
-        patch.label = 0
+        # patch.label = 0
         roads_to_update = @_get_roads_to_update(patch, 0)
         while roads_to_update.length > 0
             [road, new_distance] = roads_to_update.pop()
             road.road_distance = new_distance
-            road.label = new_distance
+            # road.label = new_distance
             roads_to_update.push(n_road) for n_road in @_get_roads_to_update(road, new_distance)
         null
 
