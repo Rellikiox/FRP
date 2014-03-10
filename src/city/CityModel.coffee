@@ -28,7 +28,7 @@ class CityModel extends ABM.Model
         @spawn_entities()
 
     step: ->
-        console.log @anim.toString() if @anim.ticks % 100 == 0
+        # console.log @anim.toString() if @anim.ticks % 100 == 0
         road_maker.step() for road_maker in @road_makers
         house_maker.step() for house_maker in @house_makers
 
@@ -39,7 +39,7 @@ class CityModel extends ABM.Model
         super
 
     initialize_modules: () ->
-        Road.initialize_module(@patches, @roads)
+        Road.initialize_module(@roads)
         RoadNode.initialize_module(@road_nodes)
         RoadMaker.initialize_module(@road_makers)
         HouseMaker.initialize_module(@house_makers)
@@ -58,7 +58,6 @@ class CityModel extends ABM.Model
         @agentBreeds "road_makers house_makers road_nodes"
         @anim.setRate 120, false
         @refreshPatches = true
-        @refreshLinks = true
 
         @links.setDefault "labelColor", [255,0,0]
 
