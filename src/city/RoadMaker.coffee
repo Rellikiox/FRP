@@ -64,20 +64,18 @@ RoadMaker_instance_properties =
         @move @path[0]
 
         if not Road.is_road @p
-            @dorp_road()
+            @drop_road()
 
         if @in_point(@path[0])
             @path.shift()
             if @path.length is 0
-                Road.add_road_node(@p)
-
                 @label = "return_to_city_hall_state"
                 @current_state = @return_to_city_hall_state
 
 
     # Utils
 
-    dorp_road: ->
+    drop_road: ->
         Road.set_breed(@p)
 
     is_target_point: ->

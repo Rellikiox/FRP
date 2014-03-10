@@ -15,8 +15,7 @@ class Road
         CityModel.instance.roadAStar.setWalkable(patch)
         @_update_distances(patch, 0, city_hall_dist)
         if RoadNode.check_patch(patch)
-            node = RoadNode.spawn_node(patch)
-            patch.node = node
+            patch.node = RoadNode.spawn_node(patch)
         null
 
     @recalculate_distances: () ->
@@ -103,17 +102,7 @@ class RoadNode
         @road_nodes.setDefault('size', 0.4)
 
     @check_patch: (patch) ->
-        if not Road.is_road(patch)
-            return
-
-        neighbour_roads = @_get_road_neighbours(patch)
-        return not (neighbour_roads.length == 2 and @_patches_are_aligned(neighbour_roads[0], neighbour_roads[1]))
-
-    @_patches_are_aligned: (patch_a, patch_b) ->
-        return patch_a.x == patch_b.x or patch_a.y == patch_b.y
-
-    @_get_road_neighbours: (patch) ->
-        return (road for road in patch.n4 when Road.is_road(road))
+        return Road.is_road(patch) and not patch.node?
 
     @spawn_node: (patch) ->
         node = patch.sprout(1, @road_nodes)[0]
@@ -121,29 +110,41 @@ class RoadNode
         node.connect_to_network()
         return node
 
+
 RoadNode_instance_properties =
     connect_to_network: () ->
-        nodes = @_get_node_neighbours()
-        if nodes?.length > 0
-            @connect_to_neighbours(nodes)
-            nodes.push(@)
-            for node in nodes
-                node.smooth_neighbours()
+        if @_any_neighbours()
+            @_connect_to_neighbours()
+            @_smooth_neighbours()
         else
-            null # Find the neares node "downstream"
+            null # Find the nearest node "downstream"
 
-    connect_to_neighbours: (neighbour_nodes) ->
+    _connect_to_neighbours: () ->
+        neighbour_nodes = @_get_node_neighbours()
         for node in neighbour_nodes
             CityModel.link_agents(@, node)
 
-    smooth_neighbours: () ->
-        neighbours = @linkNeighbors()
-        if neighbours.length == 2
-            [node_a, node_b] = neighbours
-            if RoadNode._patches_are_aligned(node_a.p, node_b.p)
-                @die()
-                CityModel.link_agents(node_a, node_b)
+    _any_neighbours: () ->
+        return @_get_node_neighbours().length > 0
+
+    _smooth_neighbours: () ->
+        nodes = @_get_node_neighbours()
+        nodes.push(@)
+        for node in nodes
+            node.smooth_neighbours()
 
     _get_node_neighbours: () ->
         return (patch.node for patch in @p.n4 when patch.node?)
+
+    _is_aligned_with: (node) ->
+        return @p.x == node.p.x or @p.y == node.p.y
+
+    _smooth_node: () ->
+        neighbours = @linkNeighbors()
+        if neighbours.length == 2
+            [node_a, node_b] = neighbours
+            if node_a._is_aligned_with(node_b)
+                CityModel.link_agents(node_a, node_b)
+                @die()
+
 
