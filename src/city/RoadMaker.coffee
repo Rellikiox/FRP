@@ -1,4 +1,4 @@
-class RoadMaker extends ABM.Agent
+class RoadMaker
     # Agentscript stuff
     @road_makers: null
 

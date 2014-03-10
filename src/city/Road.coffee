@@ -94,7 +94,7 @@ class Road
         return dx + dy
 
 
-class RoadNode extends ABM.Agent
+class RoadNode
     # Agentscript stuff
     @road_nodes: null
     @default_color: [160,160,160]
