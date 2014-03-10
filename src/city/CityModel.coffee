@@ -30,7 +30,7 @@ class CityModel extends ABM.Model
     step: ->
         console.log @anim.toString() if @anim.ticks % 100 == 0
         road_maker.step() for road_maker in @road_makers
-        house_maker.step() for house_maker in @houseMakers
+        house_maker.step() for house_maker in @house_makers
 
     draw: ->
         switch @draw_mode
@@ -42,6 +42,7 @@ class CityModel extends ABM.Model
         Road.initialize_module(@patches, @roads)
         RoadNode.initialize_module(@road_nodes)
         RoadMaker.initialize_module(@road_makers)
+        HouseMaker.initialize_module(@house_makers)
 
     create_city_hall: (x, y) ->
         agent = (@agents.create 1)[0]
@@ -54,7 +55,7 @@ class CityModel extends ABM.Model
 
     set_default_params: () ->
         @patchBreeds "city_hall roads houses"
-        @agentBreeds "road_makers houseMakers road_nodes"
+        @agentBreeds "road_makers house_makers road_nodes"
         @anim.setRate 120, false
         @refreshPatches = true
         @refreshLinks = true
@@ -67,14 +68,12 @@ class CityModel extends ABM.Model
 
     spawn_entities: () ->
         @city_hall = @create_city_hall(0, 0)
-        Road.makeHere(patch, 1) for patch in @city_hall.p.n4
+        Road.set_breed(patch, 1) for patch in @city_hall.p.n4
         for patch in @city_hall.p.n
-            Road.makeHere(patch, 2) if not (patch.breed is @roads)
+            Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
         @spawn_road_makers(1)
-
-        # patch = u.oneOf(@city_hall.p.n4)
-        # house_maker = HouseMaker.makeNew patch.x, patch.y
+        @spawn_house_makers(0)
 
     spawn_road_makers: (ammount) ->
         i = 0
@@ -82,6 +81,13 @@ class CityModel extends ABM.Model
             patch = u.oneOf(@city_hall.p.n4)
             road_maker = RoadMaker.spawn_road_maker(patch)
             @links.create(@city_hall, road_maker)
+            i += 1
+
+    spawn_house_makers: (ammount) ->
+        i = 0
+        while i < ammount
+            patch = u.oneOf(@city_hall.p.n4)
+            HouseMaker.spawn_house_maker(patch)
             i += 1
 
     set_up_AStar_helpers: ->

@@ -13,7 +13,7 @@ class Road
         @roads.setDefault("color", @default_color)
         patches.setDefault("dist_to_road", null)
 
-    @makeHere: (patch, city_hall_dist=null) ->
+    @set_breed: (patch, city_hall_dist=null) ->
         @roads.setBreed patch
         CityModel.instance.roadAStar.setWalkable(patch)
         @_update_distances(patch, 0, city_hall_dist)

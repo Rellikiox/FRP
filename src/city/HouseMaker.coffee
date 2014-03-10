@@ -1,28 +1,21 @@
-class HouseMaker extends ABM.Agent
+class HouseMaker
     # Agentscript stuff
-    @breed_name: 'houseMakers'
-    @breed: null
+    @house_makers: null
 
     # Appearance
-    @color: [255,0,0]
-    @size:  1
+    @default_color: [255,0,0]
 
-    @agentSet: ->
-        if not @breed?
-            for breed in ABM.agents.breeds
-                if breed.name is @breed_name
-                    @breed = breed
-                    break
-        return @breed
+    @initialize_module: (house_makers_breed) ->
+        @house_makers = house_makers_breed
+        @house_makers.setDefault('color', @default_color)
 
-    @makeNew: (x,y) ->
-        house_maker = new HouseMaker x, y, @color, 1
-        @agentSet().add house_maker
+    @spawn_house_maker: (patch) ->
+        house_maker = patch.sprout(1, @house_makers)[0]
+        extend(house_maker, HouseMaker_instance_properties)
         return house_maker
 
-    constructor: (x, y, @color, @size) ->
-        super
-        @setXY x, y
+
+HouseMaker_instance_properties =
 
     step: ->
         # Check if there are any patches where a house might go
@@ -41,7 +34,7 @@ class HouseMaker extends ABM.Agent
                 break
 
     placeHouse: (patch) ->
-        House.makeHere patch
+        House.set_breed patch
 
     inPoint: (point) ->
         return 0.1 > ABM.util.distance @x, @y, point.x, point.y

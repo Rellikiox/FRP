@@ -11,7 +11,7 @@ class House
                     break
         return @breed
 
-    @makeHere: (patch) ->
+    @set_breed: (patch) ->
         @patchSet().setBreed patch
         CityModel.instance.terrainAStar.setWalkable(patch, false)
         patch.color = [100,0,0]

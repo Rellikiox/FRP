@@ -78,7 +78,7 @@ RoadMaker_instance_properties =
     # Utils
 
     dorp_road: ->
-        Road.makeHere(@p)
+        Road.set_breed(@p)
 
     is_target_point: ->
         return @in_point @target_point
