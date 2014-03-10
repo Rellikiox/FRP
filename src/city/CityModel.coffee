@@ -1,5 +1,9 @@
 u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
 
+extend = (obj, mixin) ->
+  obj[name] = method for name, method of mixin
+  obj
+
 class CityModel extends ABM.Model
 
     @instance: null
@@ -25,7 +29,7 @@ class CityModel extends ABM.Model
 
     step: ->
         console.log @anim.toString() if @anim.ticks % 100 == 0
-        road_maker.step() for road_maker in @roadMakers
+        road_maker.step() for road_maker in @road_makers
         house_maker.step() for house_maker in @houseMakers
 
     draw: ->
@@ -37,6 +41,7 @@ class CityModel extends ABM.Model
     initialize_modules: () ->
         Road.initialize_module(@patches, @roads)
         RoadNode.initialize_module(@road_nodes)
+        RoadMaker.initialize_module(@road_makers)
 
     create_city_hall: (x, y) ->
         agent = (@agents.create 1)[0]
@@ -49,7 +54,7 @@ class CityModel extends ABM.Model
 
     set_default_params: () ->
         @patchBreeds "city_hall roads houses"
-        @agentBreeds "roadMakers houseMakers road_nodes"
+        @agentBreeds "road_makers houseMakers road_nodes"
         @anim.setRate 120, false
         @refreshPatches = true
         @refreshLinks = true
@@ -75,7 +80,7 @@ class CityModel extends ABM.Model
         i = 0
         while i < ammount
             patch = u.oneOf(@city_hall.p.n4)
-            road_maker = RoadMaker.makeNew patch.x, patch.y
+            road_maker = RoadMaker.spawn_road_maker(patch)
             @links.create(@city_hall, road_maker)
             i += 1
 

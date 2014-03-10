@@ -88,7 +88,6 @@ class Road
     @add_road_node: (road) ->
         @road_nodes.push(road)
 
-
     @_get_distance: (road_a, road_b) ->
         dx = Math.abd(road_a.x, road_b.x)
         dy = Math.abd(road_a.y, road_b.y)
@@ -102,54 +101,52 @@ class RoadNode extends ABM.Agent
 
     @initialize_module: (road_nodes_breed) ->
         @road_nodes = road_nodes_breed
+        @road_nodes.setDefault('color', @default_color)
+        @road_nodes.setDefault('shape', 'circle')
+        @road_nodes.setDefault('size', 0.4)
 
     @check_patch: (patch) ->
         if not Road.is_road_here(patch)
             return
 
         neighbour_roads = @_get_road_neighbours(patch)
-        return not (neighbour_roads.length == 2 and @_roads_are_aligned(neighbour_roads[0], neighbour_roads[1]))
+        return not (neighbour_roads.length == 2 and @_patches_are_aligned(neighbour_roads[0], neighbour_roads[1]))
 
-    @_roads_are_aligned: (road_a, road_b) ->
-        return road_a.x == road_b.x or road_a.y == road_b.y
+    @_patches_are_aligned: (patch_a, patch_b) ->
+        return patch_a.x == patch_b.x or patch_a.y == patch_b.y
 
     @_get_road_neighbours: (patch) ->
-        road for road in patch.n4 when Road.is_road_here(road)
+        return (road for road in patch.n4 when Road.is_road_here(road))
 
     @spawn_node: (patch) ->
-        node = new RoadNode patch.x, patch.y
-        node.color = @default_color
-        node.shape = "circle"
-        node.size = 0.4
-        @road_nodes.add(node)
+        node = patch.sprout(1, @road_nodes)[0]
+        extend(node, RoadNode_instance_properties)
         node.connect_to_network()
-
         return node
 
-    constructor: (x, y) ->
-        super
-        @setXY x, y
-
+RoadNode_instance_properties =
     connect_to_network: () ->
-        road = @p
-        neighbour_roads = n_road for n_road in road.n4 when Road.is_road_here(n_road)
-
-        if neighbour_roads?.length > 0
-            for n_road in neighbour_roads when n_road.node?
-                CityModel.link_agents(@, n_road.node)
+        nodes = @_get_node_neighbours()
+        if nodes?.length > 0
+            @connect_to_neighbours(nodes)
+            nodes.push(@)
+            for node in nodes
+                node.smooth_neighbours()
         else
-            null # Go towards city hall until you find one
+            null # Find the neares node "downstream"
 
-        @smooth_nodes()
+    connect_to_neighbours: (neighbour_nodes) ->
+        for node in neighbour_nodes
+            CityModel.link_agents(@, node)
 
-    smooth_nodes: () ->
-        null
+    smooth_neighbours: () ->
+        neighbours = @linkNeighbors()
+        if neighbours.length == 2
+            [node_a, node_b] = neighbours
+            if RoadNode._patches_are_aligned(node_a.p, node_b.p)
+                @die()
+                CityModel.link_agents(node_a, node_b)
 
-
-
-
-
-
-
-
+    _get_node_neighbours: () ->
+        return (patch.node for patch in @p.n4 when patch.node?)
 

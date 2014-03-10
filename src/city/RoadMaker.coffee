@@ -1,39 +1,32 @@
 class RoadMaker extends ABM.Agent
     # Agentscript stuff
-    @breed_name: 'roadMakers'
-    @breed: null
+    @road_makers: null
 
     # Appearance
     @default_color: [255,255,255]
-    @size:  1
 
     # Behavior
     @radius_increment = 3
 
+    @initialize_module: (road_makers_breed) ->
+        @road_makers = road_makers_breed
+        @road_makers.setDefault('color', @default_color)
+
+    @spawn_road_maker: (patch) ->
+        road_maker = patch.sprout(1, @road_makers)[0]
+        extend(road_maker, RoadMaker_instance_properties)
+        road_maker.init()
+        return road_maker
+
+RoadMaker_instance_properties =
     # Default vars
     target_point: null
     path: null
     local_point: null
     ring_radius: 6
 
-    @agentSet: ->
-        if not @breed?
-            for breed in ABM.agents.breeds
-                if breed.name is @breed_name
-                    @breed = breed
-                    break
-        return @breed
-
-    @makeNew: (x,y) ->
-        road_maker = new RoadMaker x, y, @default_color, 1
-        @agentSet().add road_maker
-        return road_maker
-
-    constructor: (x, y, @color, @size) ->
-        super
-        @setXY x, y
-        @starting_position = {x: x, y: y}
-
+    init: () ->
+        @starting_position = {x: @x, y: @y}
         @current_state = @return_to_city_hall_state
 
     step: ->
@@ -110,8 +103,6 @@ class RoadMaker extends ABM.Agent
                 tries += 1
             else
                 point = potential_point
-        return point
-
 
         if not point? or not CityModel.is_on_world(point)
             @ring_radius += RoadMaker.radius_increment
