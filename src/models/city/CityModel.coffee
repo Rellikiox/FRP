@@ -10,6 +10,9 @@ class CityModel extends ABM.Model
     @is_on_world: (point) ->
         return @instance.patches.isOnWorld(Math.round(point.x), Math.round(point.y))
 
+    @link_agents: (agent_a, agent_b) ->
+        @instance.links.create(agent_a, agent_b)
+
     setup: ->
         CityModel.instance = this
         @set_up_AStar_helpers()
@@ -33,6 +36,7 @@ class CityModel extends ABM.Model
 
     initialize_modules: () ->
         Road.initialize_module(@patches, @roads)
+        RoadNode.initialize_module(@road_nodes)
 
     create_city_hall: (x, y) ->
         agent = (@agents.create 1)[0]
@@ -45,9 +49,10 @@ class CityModel extends ABM.Model
 
     set_default_params: () ->
         @patchBreeds "city_hall roads houses"
-        @agentBreeds "roadMakers houseMakers"
+        @agentBreeds "roadMakers houseMakers road_nodes"
         @anim.setRate 120, false
         @refreshPatches = true
+        @refreshLinks = true
 
         @links.setDefault "labelColor", [255,0,0]
 
@@ -57,15 +62,22 @@ class CityModel extends ABM.Model
 
     spawn_entities: () ->
         @city_hall = @create_city_hall(0, 0)
-        Road.makeHere(patch) for patch in @city_hall.p.n
-        Road._set_city_hall_dist(patch, 1) for patch in @city_hall.p.n
+        Road.makeHere(patch, 1) for patch in @city_hall.p.n4
+        for patch in @city_hall.p.n
+            Road.makeHere(patch, 2) if not (patch.breed is @roads)
 
-        patch = u.oneOf(@city_hall.p.n4)
-        road_maker = RoadMaker.makeNew patch.x, patch.y
-        @links.create(@city_hall, road_maker)
+        @spawn_road_makers(1)
 
         # patch = u.oneOf(@city_hall.p.n4)
         # house_maker = HouseMaker.makeNew patch.x, patch.y
+
+    spawn_road_makers: (ammount) ->
+        i = 0
+        while i < ammount
+            patch = u.oneOf(@city_hall.p.n4)
+            road_maker = RoadMaker.makeNew patch.x, patch.y
+            @links.create(@city_hall, road_maker)
+            i += 1
 
     set_up_AStar_helpers: ->
         width = @world.maxX - @world.minX

@@ -49,10 +49,13 @@ class RoadMaker extends ABM.Agent
 
         if @in_starting_position()
             @target_point = @get_target_point()
-            closest_road_to_target = Road.get_closest_road_to(@target_point)
-            @path = CityModel.instance.terrainAStar.getPath(@, closest_road_to_target)
-            @label = "go_to_point_state"
-            @current_state = @go_to_point_state
+            if @target_point?
+                closest_road_to_target = Road.get_closest_road_to(@target_point)
+                @path = CityModel.instance.terrainAStar.getPath(@, closest_road_to_target)
+                @label = "go_to_point_state"
+                @current_state = @go_to_point_state
+            else
+                @current_state = (() ->)
 
     go_to_point_state: ->
         @move(@path[0])
@@ -73,6 +76,8 @@ class RoadMaker extends ABM.Agent
         if @in_point(@path[0])
             @path.shift()
             if @path.length is 0
+                Road.add_road_node(@p)
+
                 @label = "return_to_city_hall_state"
                 @current_state = @return_to_city_hall_state
 
@@ -96,8 +101,8 @@ class RoadMaker extends ABM.Agent
         tries = 0
         while not point? and tries < 32
             angle  = ABM.util.randomFloat(2 * Math.PI)
-            x = Math.round(@x + @ring_radius * Math.cos(angle))
-            y = Math.round(@y + @ring_radius * Math.sin(angle))
+            x = Math.round(@ring_radius * Math.cos(angle))
+            y = Math.round(@ring_radius * Math.sin(angle))
             potential_point = {x: x, y: y}
             if Road.is_too_connected(potential_point)
                 angle += (Math.PI * 2) / 32
@@ -105,6 +110,8 @@ class RoadMaker extends ABM.Agent
                 tries += 1
             else
                 point = potential_point
+        return point
+
 
         if not point? or not CityModel.is_on_world(point)
             @ring_radius += RoadMaker.radius_increment

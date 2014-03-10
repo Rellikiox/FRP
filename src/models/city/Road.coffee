@@ -5,24 +5,30 @@ class Road
 
     @too_connected_threshold = 2
 
+    @road_nodes = []
+
 
     @initialize_module: (patches, road_breed) ->
         @roads = road_breed
         @roads.setDefault("color", @default_color)
         patches.setDefault("dist_to_road", null)
 
-    @makeHere: (patch) ->
+    @makeHere: (patch, city_hall_dist=null) ->
         @roads.setBreed patch
         CityModel.instance.roadAStar.setWalkable(patch)
-        @_update_distances(patch, 0)
+        @_update_distances(patch, 0, city_hall_dist)
+        if RoadNode.check_patch(patch)
+            node = RoadNode.spawn_node(patch)
+            patch.node = node
         null
 
     @recalculate_distances: () ->
-        @_update_distances(road, 0) for road in @roads
+        @_update_distances(road, 0, null) for road in @roads
 
-    @_update_distances: (patch, dist_to_road) ->
+    @_update_distances: (patch, dist_to_road, city_hall_dist) ->
+        city_hall_dist ?= @_get_min_neighbour(patch, "dist_to_city_hall", get_value: true) + 1
         patch.dist_to_road = dist_to_road
-        @_set_city_hall_dist(patch, @_get_min_neighbour(patch, ((p) -> p.n4), "dist_to_city_hall", true) + 1)
+        @_set_city_hall_dist(patch, city_hall_dist)
         roads_to_update = @_get_roads_to_update(patch, 0)
         while roads_to_update.length > 0
             [road, new_distance] = roads_to_update.pop()
@@ -58,21 +64,92 @@ class Road
     @get_closest_road_to: (point) ->
         patch = CityModel.get_patch_at(point)
         while patch.dist_to_road != 0
-            patch = @_get_min_neighbour(patch, ((p) -> p.n4), "dist_to_road")
+            patch = @_get_min_neighbour(patch, "dist_to_road", {})
         return patch
 
     @is_too_connected: (point) ->
         patch = CityModel.get_patch_at(point)
         return patch.dist_to_road <= Road.too_connected_threshold
 
-    @_get_min_neighbour: (patch, neighbours, param, get_value=false) ->
+    @_get_min_neighbour: (patch, param, {get_value, filter, neighbours}) ->
+        get_value ?= false
+        filter ?= (() -> true)
+        neighbours ?= ((p) -> p.n4)
+
         min_patch = patch
-        for neighbour in neighbours(patch)
+        for neighbour in neighbours(patch) when filter(neighbour)
             if not min_patch[param]? or neighbour[param] < min_patch[param]
                 min_patch = neighbour
         if get_value
             return min_patch[param]
         else
             return min_patch
+
+    @add_road_node: (road) ->
+        @road_nodes.push(road)
+
+
+    @_get_distance: (road_a, road_b) ->
+        dx = Math.abd(road_a.x, road_b.x)
+        dy = Math.abd(road_a.y, road_b.y)
+        return dx + dy
+
+
+class RoadNode extends ABM.Agent
+    # Agentscript stuff
+    @road_nodes: null
+    @default_color: [160,160,160]
+
+    @initialize_module: (road_nodes_breed) ->
+        @road_nodes = road_nodes_breed
+
+    @check_patch: (patch) ->
+        if not Road.is_road_here(patch)
+            return
+
+        neighbour_roads = @_get_road_neighbours(patch)
+        return not (neighbour_roads.length == 2 and @_roads_are_aligned(neighbour_roads[0], neighbour_roads[1]))
+
+    @_roads_are_aligned: (road_a, road_b) ->
+        return road_a.x == road_b.x or road_a.y == road_b.y
+
+    @_get_road_neighbours: (patch) ->
+        road for road in patch.n4 when Road.is_road_here(road)
+
+    @spawn_node: (patch) ->
+        node = new RoadNode patch.x, patch.y
+        node.color = @default_color
+        node.shape = "circle"
+        node.size = 0.4
+        @road_nodes.add(node)
+        node.connect_to_network()
+
+        return node
+
+    constructor: (x, y) ->
+        super
+        @setXY x, y
+
+    connect_to_network: () ->
+        road = @p
+        neighbour_roads = n_road for n_road in road.n4 when Road.is_road_here(n_road)
+
+        if neighbour_roads?.length > 0
+            for n_road in neighbour_roads when n_road.node?
+                CityModel.link_agents(@, n_road.node)
+        else
+            null # Go towards city hall until you find one
+
+        @smooth_nodes()
+
+    smooth_nodes: () ->
+        null
+
+
+
+
+
+
+
 
 
