@@ -131,7 +131,7 @@ RoadNode_instance_properties =
         nodes = @_get_node_neighbours()
         nodes.push(@)
         for node in nodes
-            node.smooth_neighbours()
+            node._smooth_node()
 
     _get_node_neighbours: () ->
         return (patch.node for patch in @p.n4 when patch.node?)
