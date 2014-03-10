@@ -63,7 +63,7 @@ RoadMaker_instance_properties =
     build_to_point_state: ->
         @move @path[0]
 
-        if not Road.is_road_here @p
+        if not Road.is_road @p
             @dorp_road()
 
         if @in_point(@path[0])

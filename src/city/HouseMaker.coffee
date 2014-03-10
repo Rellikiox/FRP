@@ -21,7 +21,7 @@ HouseMaker_instance_properties =
         # Check if there are any patches where a house might go
         near_patches = ABM.util.shuffle @p.n
         for patch in near_patches
-            if not House.isHouseHere(patch) and not Road.is_road_here(patch)
+            if not House.isHouseHere(patch) and not Road.is_road(patch)
                 @placeHouse patch
                 # Exit as soon as we place one
                 break
@@ -29,7 +29,7 @@ HouseMaker_instance_properties =
         # Move to a random new patch
         near_patches = ABM.util.shuffle @p.n4
         for patch in near_patches
-            if Road.is_road_here patch
+            if Road.is_road patch
                 @move patch
                 break
 

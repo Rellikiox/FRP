@@ -55,7 +55,7 @@ class Road
                 @_set_distance_to_road(n_patch, new_distance)
         null
 
-    @is_road_here: (patch) ->
+    @is_road: (patch) ->
         return patch.breed is @roads
 
     @get_closest_road_to: (point) ->
@@ -103,7 +103,7 @@ class RoadNode
         @road_nodes.setDefault('size', 0.4)
 
     @check_patch: (patch) ->
-        if not Road.is_road_here(patch)
+        if not Road.is_road(patch)
             return
 
         neighbour_roads = @_get_road_neighbours(patch)
@@ -113,7 +113,7 @@ class RoadNode
         return patch_a.x == patch_b.x or patch_a.y == patch_b.y
 
     @_get_road_neighbours: (patch) ->
-        return (road for road in patch.n4 when Road.is_road_here(road))
+        return (road for road in patch.n4 when Road.is_road(road))
 
     @spawn_node: (patch) ->
         node = patch.sprout(1, @road_nodes)[0]
