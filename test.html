@@ -8,6 +8,8 @@
     <script src="vendor/pathfinding-browser.js"></script>
     <script src="vendor/seedrandom.js"></script>
     <script src="vendor/gpw.js"></script>
+    <script src="vendor/jquery-2.1.0.js"></script>
+    <script src="vendor/jquery.hotkeys.js"></script>
 
     <script src="lib/agentscript.js"></script>
     <script src="lib/city/AStar.js"></script>
@@ -17,6 +19,8 @@
     <script src="lib/city/HouseMaker.js"></script>
     <script src="lib/city/CityModel.js"></script>
 
+    <script src="lib/app.js"></script>
+
     <script type="text/javascript">
       var seed = GPW.pronounceable(8);
       Math.seedrandom("ousphoun");
@@ -25,6 +29,8 @@
     	model = new CityModel("layers", 16, -16, 16, -16, 16);
 		  model.debug();
 		  model.start();
+
+
     </script>
   </body>
 </html>
