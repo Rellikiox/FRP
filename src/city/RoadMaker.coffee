@@ -101,7 +101,7 @@ RoadMaker_instance_properties =
                 tries += 1
             else
                 point = potential_point
-
+        return point
         if not point? or not CityModel.is_on_world(point)
             @ring_radius += RoadMaker.radius_increment
             point = @get_target_point()
