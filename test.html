@@ -22,15 +22,8 @@
     <script src="lib/app.js"></script>
 
     <script type="text/javascript">
-      var seed = GPW.pronounceable(8);
-      Math.seedrandom("ousphoun");
-      console.log(seed);
-
-    	model = new CityModel("layers", 16, -16, 16, -16, 16);
-		  model.debug();
-		  model.start();
-
-
+      $('#layers').CitySimulation();
+      $('#layers').CitySimulation('run');
     </script>
   </body>
 </html>
