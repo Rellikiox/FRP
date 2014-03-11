@@ -12,8 +12,11 @@
             @options = $.extend({}, @defaults, options)
             @$el = $(el)
 
+            @pause = false
+
             @setup_hotkeys()
             @setup_model()
+            @setup_buttons()
 
         # Additional plugin methods go here
         setup_model: () ->
@@ -30,11 +33,23 @@
             Math.seedrandom(@seed);
             @model.reset(true)
 
+        play_pause_model: () ->
+            if @paused
+                @model.start()
+            else
+                @model.stop()
+            @paused = not @paused
+
         set_key_command: (key, fn) ->
             $(document).bind 'keydown', key, fn
 
         setup_hotkeys: () ->
             @set_key_command 'r', () => @restart()
+
+        setup_buttons: () ->
+            $('#play-pause').click () =>
+                @play_pause_model()
+                $('#play-pause span').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
 
         get_model: () ->
             return @model
