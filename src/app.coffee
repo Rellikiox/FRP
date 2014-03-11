@@ -27,9 +27,8 @@
             @model.start();
 
         restart: () ->
-            @model.reset()
-            @setup_model()
-            @run()
+            Math.seedrandom(@seed);
+            @model.reset(true)
 
         set_key_command: (key, fn) ->
             $(document).bind 'keydown', key, fn
