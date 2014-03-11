@@ -34,8 +34,7 @@
             $(document).bind 'keydown', key, fn
 
         setup_hotkeys: () ->
-            @set_key_command 'a', () -> console.log 'A'
-            @set_key_command 'alt+r', () => @restart()
+            @set_key_command 'r', () => @restart()
 
         get_model: () ->
             return @model
