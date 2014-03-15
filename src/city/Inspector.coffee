@@ -22,6 +22,7 @@ class Inspector
 Inspector_instance_properties =
     current_message: null
     current_state: null
+    nodes_under_investigation: []
 
     init: () ->
         @current_state = @get_message_state
@@ -36,19 +37,31 @@ Inspector_instance_properties =
             @path = CityModel.instance.roadAStar.getPath(@, @current_message.patch)
             @current_state = @go_to_endpoint_state
 
-
     go_to_endpoint_state: () ->
         @move(@path[0])
 
         if @in_point(@path[0])
             @path.shift()
             if @path.length is 0
+                @nodes_under_investigation = @_get_close_nodes()
                 @current_state = @inspect_endpoint_state
 
     inspect_endpoint_state: () ->
-        console.log('Inspecting the endpoint')
-        @current_message = null
-        @current_state = @get_message_state
+
+        @_inspect_node(@nodes_under_investigation.shift())
+
+        if @nodes_under_investigation.length is 0
+            @current_message = null
+            @current_state = @get_message_state
+
+
+    _inspect_node: (node) ->
+        real_dist = @distance(node)
+        road_dist = Road.get_road_distance(@, node)
+
+        factor = road_dist / real_dist
+        if factor > 4
+            Planner.post_message('connect_nodes', {node_a: @.p.node, node_b: node})
 
 
     move: (point) ->
@@ -64,6 +77,10 @@ Inspector_instance_properties =
 
     in_point: (point) ->
         return 0.1 > ABM.util.distance @x, @y, point.x, point.y
+
+    _get_close_nodes: () ->
+        RoadNode.road_nodes.inRadius(@.p.node, 10)
+
 
 
 

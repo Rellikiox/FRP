@@ -103,8 +103,13 @@ class Road
         dy = Math.abd(road_a.y, road_b.y)
         return dx + dy
 
+    @get_road_distance: (road_a, road_b) ->
+        return CityModel.instance.roadAStar.getPath(road_a, road_b).length
+
 
 class RoadNode
+    @breed_name: 'road_nodes'
+
     # Agentscript stuff
     @road_nodes: null
     @default_color: [160,160,160]

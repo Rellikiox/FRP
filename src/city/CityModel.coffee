@@ -52,7 +52,7 @@ class CityModel extends ABM.Model
         RoadMaker.initialize_module(@road_makers)
         HouseMaker.initialize_module(@house_makers)
         Inspector.initialize_module(@inspectors)
-        Planner.initialize_module()
+        Planner.initialize_module(@planners)
 
     create_city_hall: (x, y) ->
         patch = @patches.patchXY(x, y)
@@ -62,7 +62,7 @@ class CityModel extends ABM.Model
 
     set_default_params: () ->
         @patchBreeds "roads houses"
-        @agentBreeds "road_makers house_makers road_nodes inspectors"
+        @agentBreeds "road_makers house_makers road_nodes inspectors planners"
         @anim.setRate 120, false
         @refreshPatches = true
         @draw_mode = "normal"
@@ -73,9 +73,10 @@ class CityModel extends ABM.Model
         for patch in @city_hall.n
             Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
-        @spawn_road_makers(2)
+        @spawn_road_makers(1)
         @spawn_house_makers(0)
         @spawn_inspectors(1)
+        Planner.spawn_planner()
 
     spawn_road_makers: (ammount) ->
         i = 0
