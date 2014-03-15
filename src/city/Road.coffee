@@ -160,9 +160,10 @@ class RoadNode
         null
 
 
-
 RoadNode_instance_properties =
     creating: true
+
+    step: () ->
 
     connect: () ->
         if @_any_neighbours_nodes()

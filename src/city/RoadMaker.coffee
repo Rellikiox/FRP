@@ -69,6 +69,7 @@ RoadMaker_instance_properties =
         if @in_point(@path[0])
             @path.shift()
             if @path.length is 0
+                Planner.post_message('inspect_endpoint', {patch: @p})
                 @label = "return_to_city_hall_state"
                 @current_state = @return_to_city_hall_state
 

@@ -29,8 +29,11 @@ class CityModel extends ABM.Model
 
     step: ->
         # console.log @anim.toString() if @anim.ticks % 100 == 0
-        road_maker.step() for road_maker in @road_makers
-        house_maker.step() for house_maker in @house_makers
+
+        agent.step() for agent in @agents
+
+        # road_maker.step() for road_maker in @road_makers
+        # house_maker.step() for house_maker in @house_makers
 
     draw: ->
         switch @draw_mode
@@ -43,50 +46,50 @@ class CityModel extends ABM.Model
         RoadNode.initialize_module(@road_nodes)
         RoadMaker.initialize_module(@road_makers)
         HouseMaker.initialize_module(@house_makers)
+        Inspector.initialize_module(@inspectors)
 
     create_city_hall: (x, y) ->
-        agent = (@agents.create 1)[0]
-        agent.setXY x, y
-        agent.color = [0,0,100]
-        agent.shape = "square"
-        agent.size = 1
-        agent.p.dist_to_city_hall = 0
-        return agent
+        patch = @patches.patchXY(x, y)
+        patch.color = patch.default_color = [0, 0, 100]
+        patch.dist_to_city_hall = 0
+        return patch
 
     set_default_params: () ->
-        @patchBreeds "city_hall roads houses"
-        @agentBreeds "road_makers house_makers road_nodes"
+        @patchBreeds "roads houses"
+        @agentBreeds "road_makers house_makers road_nodes inspectors"
         @anim.setRate 120, false
         @refreshPatches = true
-
-        @links.setDefault "labelColor", [255,0,0]
-
-        @patches.setDefault("free", true)
-
         @draw_mode = "normal"
 
     spawn_entities: () ->
         @city_hall = @create_city_hall(0, 0)
-        Road.set_breed(patch, 1) for patch in @city_hall.p.n4
-        for patch in @city_hall.p.n
+        Road.set_breed(patch, 1) for patch in @city_hall.n4
+        for patch in @city_hall.n
             Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
         @spawn_road_makers(1)
         @spawn_house_makers(0)
+        @spawn_inspectors(1)
 
     spawn_road_makers: (ammount) ->
         i = 0
         while i < ammount
-            patch = u.oneOf(@city_hall.p.n4)
-            road_maker = RoadMaker.spawn_road_maker(patch)
-            @links.create(@city_hall, road_maker)
+            patch = u.oneOf(@city_hall.n4)
+            RoadMaker.spawn_road_maker(patch)
             i += 1
 
     spawn_house_makers: (ammount) ->
         i = 0
         while i < ammount
-            patch = u.oneOf(@city_hall.p.n4)
+            patch = u.oneOf(@city_hall.n4)
             HouseMaker.spawn_house_maker(patch)
+            i += 1
+
+    spawn_inspectors: (ammount) ->
+        i = 0
+        while i < ammount
+            patch = u.oneOf(@city_hall.n4)
+            Inspector.spawn_inspector(patch)
             i += 1
 
     set_up_AStar_helpers: ->
