@@ -56,12 +56,18 @@
         get_model: () ->
             return @model
 
-        simulate: (ticks) ->
+        animate: (ticks) ->
             @model.stop()
             i = 0
             while i < ticks
                 @model.anim.step()
                 i += 1
+            @model.start()
+
+        animateTo: (ticks) ->
+            @model.stop()
+            while @model.anim.ticks < ticks
+                @model.anim.step()
             @model.start()
 
 

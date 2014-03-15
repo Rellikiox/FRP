@@ -4,7 +4,12 @@ extend = (obj, mixin) ->
   obj[name] = method for name, method of mixin
   obj
 
+
 class CityModel extends ABM.Model
+
+
+    @log = (msg) ->
+    console.log msg if @instance?.debugging
 
     @instance: null
 
@@ -47,6 +52,7 @@ class CityModel extends ABM.Model
         RoadMaker.initialize_module(@road_makers)
         HouseMaker.initialize_module(@house_makers)
         Inspector.initialize_module(@inspectors)
+        Planner.initialize_module()
 
     create_city_hall: (x, y) ->
         patch = @patches.patchXY(x, y)
@@ -67,7 +73,7 @@ class CityModel extends ABM.Model
         for patch in @city_hall.n
             Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
-        @spawn_road_makers(1)
+        @spawn_road_makers(2)
         @spawn_house_makers(0)
         @spawn_inspectors(1)
 

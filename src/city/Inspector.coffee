@@ -46,7 +46,7 @@ Inspector_instance_properties =
                 @current_state = @inspect_endpoint_state
 
     inspect_endpoint_state: () ->
-        console.log "Inspecting " + @current_message.patch
+        console.log('Inspecting the endpoint')
         @current_message = null
         @current_state = @get_message_state
 

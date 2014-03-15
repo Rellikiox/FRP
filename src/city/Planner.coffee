@@ -2,6 +2,9 @@ class Planner
 
     @message_queues: {}
 
+    @initialize_module: () ->
+        @message_queues = {}
+
     @get_message: (type) ->
         return @message_queues[type]?.shift()
 

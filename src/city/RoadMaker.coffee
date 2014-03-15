@@ -30,9 +30,7 @@ RoadMaker_instance_properties =
         @current_state = @return_to_city_hall_state
 
     step: ->
-        console.time('someFunction: timer start');
         @current_state()
-        console.timeEnd('someFunction: timer end');
 
 
     # States

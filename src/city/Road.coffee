@@ -151,6 +151,12 @@ class RoadNode
         return road.node
 
     @_find_downstream_node: (road) ->
+        # Hack for near city hall distance well
+        for n_road in road.n4 when Road.is_road(n_road)
+            if n_road.node? and not n_road.node.creating
+                road = n_road
+
+
         while not road.node?
             road = Road._get_min_neighbour(road, "dist_to_city_hall", {})
         return road.node
