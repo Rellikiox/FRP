@@ -15,7 +15,7 @@ class Road
         CityModel.instance.roadAStar.setWalkable(patch)
         @_update_distances(patch, 0, city_hall_dist)
         if RoadNode.check_patch(patch)
-            patch.node = RoadNode.spawn_node(patch)
+            RoadNode.spawn_node(patch)
         null
 
     @recalculate_distances: () ->
@@ -81,6 +81,20 @@ class Road
         else
             return min_patch
 
+    @_get_max_neighbour: (patch, param, {get_value, filter, neighbours}) ->
+        get_value ?= false
+        filter ?= (() -> true)
+        neighbours ?= ((p) -> p.n4)
+
+        max_patch = patch
+        for neighbour in neighbours(patch) when filter(neighbour)
+            if not max_patch[param]? or neighbour[param] > max_patch[param]
+                max_patch = neighbour
+        if get_value
+            return max_patch[param]
+        else
+            return max_patch
+
     @add_road_node: (road) ->
         @road_nodes.push(road)
 
@@ -105,26 +119,63 @@ class RoadNode
         return Road.is_road(patch) and not patch.node?
 
     @spawn_node: (patch) ->
-        node = patch.sprout(1, @road_nodes)[0]
-        extend(node, RoadNode_instance_properties)
-        node.connect_to_network()
+        node = RoadNode._make_node(patch)
+        RoadNode._prepare_neighbour_roads(patch)
+        node.connect()
         return node
+
+    @split_link_at: (road) ->
+        upstream_node = RoadNode._find_upstream_node(road)
+        downstream_node = RoadNode._find_downstream_node(road)
+
+        RoadNode._remove_link_between(upstream_node, downstream_node)
+
+        node = RoadNode._make_node(road)
+
+        CityModel.link_agents(upstream_node, node)
+        CityModel.link_agents(node, downstream_node)
+
+    @_make_node: (road) ->
+        new_node = road.sprout(1, @road_nodes)[0]
+        extend(new_node, RoadNode_instance_properties)
+        road.node = new_node
+        return new_node
+
+    @_prepare_neighbour_roads: (road) ->
+        for n_road in road.n4 when Road.is_road(n_road) and not n_road.node?
+            RoadNode.split_link_at(n_road)
+
+    @_find_upstream_node: (road) ->
+        while not road.node?
+            road = Road._get_max_neighbour(road, "dist_to_city_hall", {filter: (p) ->  Road.is_road(p) and not p.node?.creating})
+        return road.node
+
+    @_find_downstream_node: (road) ->
+        while not road.node?
+            road = Road._get_min_neighbour(road, "dist_to_city_hall", {})
+        return road.node
+
+    @_remove_link_between: (node_a, node_b) ->
+        link = link for link in node_a.myLinks() when link.otherEnd(node_a) is node_b
+        link.die()
+
 
 
 RoadNode_instance_properties =
-    connect_to_network: () ->
-        if @_any_neighbours()
+    creating: true
+
+    connect: () ->
+        if @_any_neighbours_nodes()
             @_connect_to_neighbours()
             @_smooth_neighbours()
-        else
-            null # Find the nearest node "downstream"
+        @creating = false
 
     _connect_to_neighbours: () ->
         neighbour_nodes = @_get_node_neighbours()
         for node in neighbour_nodes
             CityModel.link_agents(@, node)
 
-    _any_neighbours: () ->
+    _any_neighbours_nodes: () ->
         return @_get_node_neighbours().length > 0
 
     _smooth_neighbours: () ->
@@ -145,6 +196,8 @@ RoadNode_instance_properties =
             [node_a, node_b] = neighbours
             if node_a._is_aligned_with(node_b)
                 CityModel.link_agents(node_a, node_b)
+                # smooth node_a and node_b ?
+                @p.node = null
                 @die()
 
 

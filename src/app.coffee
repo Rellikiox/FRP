@@ -50,6 +50,8 @@
             $('#play-pause').click () =>
                 @play_pause_model()
                 $('#play-pause span').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
+            $('#reload').click () =>
+                @restart()
 
         get_model: () ->
             return @model
