@@ -56,6 +56,15 @@
         get_model: () ->
             return @model
 
+        simulate: (ticks) ->
+            @model.stop()
+            i = 0
+            while i < ticks
+                @model.anim.step()
+                i += 1
+            @model.start()
+
+
 
     # Define the plugin
     $.fn.extend CitySimulation: (option, args...) ->

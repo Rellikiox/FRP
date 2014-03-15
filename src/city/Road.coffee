@@ -156,8 +156,8 @@ class RoadNode
         return road.node
 
     @_remove_link_between: (node_a, node_b) ->
-        link = link for link in node_a.myLinks() when link.otherEnd(node_a) is node_b
-        link.die()
+        link.die() for link in node_a.myLinks() when link.otherEnd(node_a) is node_b
+        null
 
 
 
