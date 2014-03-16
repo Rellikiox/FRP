@@ -87,9 +87,10 @@ class NodeInspector extends Inspector
 
     s_inspect_endpoint: () ->
 
-        @_inspect_node(@nodes_under_investigation.shift())
+        node_connected = @_inspect_node(@nodes_under_investigation.shift())
 
-        if @nodes_under_investigation.length is 0
+        if node_connected or @nodes_under_investigation.length is 0
+            @nodes_under_investigation = []
             @current_message = null
             @_set_state('get_message')
 
@@ -101,12 +102,16 @@ class NodeInspector extends Inspector
         factor = road_dist / real_dist
         if factor > 4
             @msg_boards.connect.post_message({node_a: @.p.node, node_b: node})
+            return true
+        return false
 
     _get_close_nodes: () ->
         RoadNode.road_nodes.inRadius(@.p.node, 10)
 
 
 class RoadInspector extends Inspector
+
+    @construction_points = []
 
     ring_increment: 3
     ring_radius: 6
@@ -138,8 +143,8 @@ class RoadInspector extends Inspector
                 @_set_state('find_new_endpoint')
 
     s_find_new_endpoint: () ->
-        if Road.get_connectivity(@p) > 3
-            @msg_board.post_message({patch: @p})
+        if @_is_valid_construction_point(@p)
+            @_issue_construction(@p)
             @_set_state('get_inspection_point')
         else
             @_set_state('get_away_from_road')
@@ -149,7 +154,7 @@ class RoadInspector extends Inspector
             @circular_direction = ABM.util.oneOf([-1, 1])
 
         @_circular_move()
-        if Road.get_connectivity(@p) > 3
+        if @_is_valid_construction_point(@p)
             @circular_direction = null
             @_set_state('find_new_endpoint')
 
@@ -177,6 +182,24 @@ class RoadInspector extends Inspector
             angle: Math.atan2(@y, @x)
             radius: ABM.util.distance(0, 0, @x, @y)
         return polar_coords
+
+    _is_valid_construction_point: (patch) ->
+        road_dist = Road.get_connectivity(@p)
+        construction_dist = @_get_construction_dist(@p)
+        return road_dist > 3 && (not construction_dist? or construction_dist > 3)
+
+    _issue_construction: (patch) ->
+        @constructor.construction_points.push(patch)
+        @msg_board.post_message({patch: patch})
+
+    _get_construction_dist: (patch) ->
+        min_dist = null
+        for point in @constructor.construction_points
+            dist_to_point = ABM.util.distance(patch.x, patch.y, point.x, point.y)
+            if (not min_dist?) or dist_to_point < min_dist
+                min_dist = dist_to_point
+        return min_dist
+
 
 
 

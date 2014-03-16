@@ -102,3 +102,27 @@ class RoadExtender extends RoadMaker
 
 
 class RoadConnector extends RoadMaker
+
+    init: (endpoint) ->
+        @startingpoint = @p
+        @endpoint = endpoint
+        @current_state = @build_to_point_state
+        @msg_reader = MessageBoard.get_reader('inspect_endpoint')
+
+
+    # States
+
+    build_to_point_state: () ->
+        if not @path?
+            @path = @_get_path_to(@endpoint)
+
+        @move @path[0]
+
+        if not Road.is_road @p
+            @drop_road()
+
+        if @in_point(@path[0])
+            @path.shift()
+            if @path.length is 0
+                @msg_reader.post_message({patch: @startingpoint})
+                @die()
