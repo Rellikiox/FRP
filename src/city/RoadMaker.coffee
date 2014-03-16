@@ -68,8 +68,9 @@ class RoadMaker
             @path.shift()
             if @path.length is 0
                 @msg_reader.post_message({patch: @p})
-                @label = "return_to_city_hall_state"
-                @current_state = @return_to_city_hall_state
+                @die()
+                # @label = "return_to_city_hall_state"
+                # @current_state = @return_to_city_hall_state
 
 
     # Utils

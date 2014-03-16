@@ -35,7 +35,7 @@ class CityModel extends ABM.Model
     step: ->
         # console.log @anim.toString() if @anim.ticks % 100 == 0
 
-        agent.step() for agent in @agents
+        agent.step() for agent in @agents by -1
 
         # road_maker.step() for road_maker in @road_makers
         # house_maker.step() for house_maker in @house_makers
@@ -97,7 +97,8 @@ class CityModel extends ABM.Model
         i = 0
         while i < ammount
             patch = u.oneOf(@city_hall.n4)
-            Inspector.spawn_inspector(patch)
+            Inspector.spawn_node_inspector(patch)
+            Inspector.spawn_road_inspector(patch)
             i += 1
 
     set_up_AStar_helpers: ->

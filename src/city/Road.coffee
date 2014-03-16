@@ -106,6 +106,10 @@ class Road
     @get_road_distance: (road_a, road_b) ->
         return CityModel.instance.roadAStar.getPath(road_a, road_b).length
 
+    @get_connectivity: (patch) ->
+        return patch.dist_to_road
+
+
 
 class RoadNode
     @breed_name: 'road_nodes'
