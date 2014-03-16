@@ -26,13 +26,16 @@ Inspector_instance_properties =
 
     init: () ->
         @current_state = @get_message_state
+        @msg_boards =
+            inspect: MessageBoard.get_reader('inspect_endpoint')
+            connect: MessageBoard.get_reader('connect_nodes')
 
     step: () ->
         @current_state()
 
 
     get_message_state: () ->
-        @current_message = Planner.get_message('inspect_endpoint')
+        @current_message = @msg_boards.inspect.get_message()
         if @current_message?
             @path = CityModel.instance.roadAStar.getPath(@, @current_message.patch)
             @current_state = @go_to_endpoint_state
@@ -61,7 +64,7 @@ Inspector_instance_properties =
 
         factor = road_dist / real_dist
         if factor > 4
-            Planner.post_message('connect_nodes', {node_a: @.p.node, node_b: node})
+            @msg_boards.connect.post_message({node_a: @.p.node, node_b: node})
 
 
     move: (point) ->

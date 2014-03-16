@@ -1,25 +1,9 @@
 class Planner
     @planners = null
 
-    @message_queues: {}
-
     @initialize_module: (planners_breed) ->
         @planners = planners_breed
         @planners.setDefault 'hidden', true
-
-        @message_queues = {}
-
-    @get_message: (type) ->
-        return @message_queues[type]?.shift()
-
-    @post_message: (type, message) ->
-        queue = @_get_or_create_queue(type)
-        queue.push(message)
-
-    @_get_or_create_queue: (type) ->
-        if not @message_queues[type]?
-            @message_queues[type] = []
-        return @message_queues[type]
 
     @spawn_planner: () ->
         planner = @planners.create(1)[0]
@@ -30,9 +14,10 @@ class Planner
 Planner_instance_properties =
 
     init: () ->
+        @msg_reader = MessageBoard.get_reader('connect_nodes')
 
     step: () ->
-        msg = Planner.get_message('connect_nodes')
+        msg = @msg_reader.get_message()
         if msg?
             RoadMaker.spawn_road_maker(msg.node_a.p)
 

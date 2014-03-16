@@ -53,6 +53,7 @@ class CityModel extends ABM.Model
         HouseMaker.initialize_module(@house_makers)
         Inspector.initialize_module(@inspectors)
         Planner.initialize_module(@planners)
+        MessageBoard.initialize_module()
 
     create_city_hall: (x, y) ->
         patch = @patches.patchXY(x, y)

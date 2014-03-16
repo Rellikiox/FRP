@@ -28,6 +28,7 @@ RoadMaker_instance_properties =
     init: () ->
         @starting_position = {x: @x, y: @y}
         @current_state = @return_to_city_hall_state
+        @msg_reader = MessageBoard.get_reader('inspect_endpoint')
 
     step: ->
         @current_state()
@@ -67,7 +68,7 @@ RoadMaker_instance_properties =
         if @in_point(@path[0])
             @path.shift()
             if @path.length is 0
-                Planner.post_message('inspect_endpoint', {patch: @p})
+                @msg_reader.post_message({patch: @p})
                 @label = "return_to_city_hall_state"
                 @current_state = @return_to_city_hall_state
 
