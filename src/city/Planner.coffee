@@ -26,7 +26,7 @@ class NodeInterconnectivityPlanner extends Planner
     step: () ->
         msg = @msg_reader.get_message()
         if msg?
-            RoadMaker.spawn_road_connector(msg.node_a.p, msg.node_b.p)
+            RoadMaker.spawn_road_connector(msg.patch_a, msg.patch_b)
 
 
 class RoadPlanner

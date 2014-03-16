@@ -96,17 +96,27 @@ class NodeInspector extends Inspector
 
 
     _inspect_node: (node) ->
-        real_dist = @distance(node)
-        road_dist = Road.get_road_distance(@, node)
-
-        factor = road_dist / real_dist
-        if factor > 4
-            @msg_boards.connect.post_message({node_a: @.p.node, node_b: node})
+        if node.factor > 4
+            @msg_boards.connect.post_message({patch_a: @.p, patch_b: node.node.p})
             return true
         return false
 
     _get_close_nodes: () ->
-        RoadNode.road_nodes.inRadius(@.p.node, 10)
+        nodes = []
+        if @.p.node?
+            nodes_to_check = RoadNode.road_nodes.inRadius(@.p.node, 10)
+        else
+            nodes_to_check = RoadNode.road_nodes.inRadius(@, 10)
+        for node in nodes_to_check
+            factor = @_get_node_distance_factor(node)
+            nodes.push({node: node, factor: factor})
+        nodes.sort( (a, b) -> if a.factor < b.factor then 1 else -1 )
+        return nodes
+
+    _get_node_distance_factor: (node) ->
+        real_dist = @distance(node)
+        road_dist = Road.get_road_distance(@, node)
+        factor = road_dist / real_dist
 
 
 class RoadInspector extends Inspector
