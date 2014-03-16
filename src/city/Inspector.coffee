@@ -13,22 +13,21 @@ class Inspector
         @inspectors.setDefault('color', @default_color)
 
     @spawn_road_inspector: (patch) ->
-        inspector = @spawn_inspector(patch, RoadInspector.prototype)
-        inspector.init()
-        return inspector
+        return @spawn_inspector(patch, RoadInspector.prototype)
 
     @spawn_node_inspector: (patch) ->
-        inspector = @spawn_inspector(patch, NodeInspector.prototype)
-        inspector.init()
-        return inspector
+        return @spawn_inspector(patch, NodeInspector.prototype)
 
     @spawn_inspector: (patch, prototype) ->
         inspector = patch.sprout(1, @inspectors)[0]
         extend(inspector, prototype)
+        inspector.init()
         return inspector
 
     current_state: null
     speed: 0.05
+
+    init: () ->
 
     step: () ->
         @current_state()
@@ -82,6 +81,7 @@ class NodeInspector extends Inspector
         if @_in_point(@path[0])
             @path.shift()
             if @path.length is 0
+                @path = null
                 @nodes_under_investigation = @_get_close_nodes()
                 @_set_state('inspect_endpoint')
 
@@ -134,10 +134,11 @@ class RoadInspector extends Inspector
         if @_in_point(@path[0])
             @path.shift()
             if @path.length is 0
+                @path = null
                 @_set_state('find_new_endpoint')
 
     s_find_new_endpoint: () ->
-        if Road.get_connectivity(@) > 3
+        if Road.get_connectivity(@p) > 3
             @msg_board.post_message({patch: @p})
             @_set_state('get_inspection_point')
         else
@@ -148,7 +149,7 @@ class RoadInspector extends Inspector
             @circular_direction = ABM.util.oneOf([-1, 1])
 
         @_circular_move()
-        if Road.get_connectivity(@) > 3
+        if Road.get_connectivity(@p) > 3
             @circular_direction = null
             @_set_state('find_new_endpoint')
 

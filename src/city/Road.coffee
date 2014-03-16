@@ -140,6 +140,7 @@ class RoadNode
         RoadNode._remove_link_between(upstream_node, downstream_node)
 
         node = RoadNode._make_node(road)
+        node.creating = false
 
         CityModel.link_agents(upstream_node, node)
         CityModel.link_agents(node, downstream_node)

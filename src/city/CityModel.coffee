@@ -74,10 +74,10 @@ class CityModel extends ABM.Model
         for patch in @city_hall.n
             Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
-        @spawn_road_makers(1)
-        @spawn_house_makers(0)
+        # @spawn_road_makers(1)
+        # @spawn_house_makers(0)
         @spawn_inspectors(1)
-        Planner.spawn_planner()
+        @spawn_planners(1)
 
     spawn_road_makers: (ammount) ->
         i = 0
@@ -100,6 +100,14 @@ class CityModel extends ABM.Model
             Inspector.spawn_node_inspector(patch)
             Inspector.spawn_road_inspector(patch)
             i += 1
+
+    spawn_planners: (ammount) ->
+        i = 0
+        while i < ammount
+            Planner.spawn_road_planner()
+            Planner.spawn_node_planner()
+            i += 1
+
 
     set_up_AStar_helpers: ->
         width = @world.maxX - @world.minX
@@ -126,7 +134,7 @@ class CityModel extends ABM.Model
             p.color = [r, g * 2, b]
             p.default_color = p.color
 
-    draw_mode: (mode) ->
+    set_draw_mode: (mode) ->
         @draw_mode = mode
 
     draw_normal_color: ->

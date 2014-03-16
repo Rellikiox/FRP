@@ -5,11 +5,20 @@ class Planner
         @planners = planners_breed
         @planners.setDefault 'hidden', true
 
-    @spawn_planner: () ->
+    @spawn_road_planner: () ->
+        return @spawn_planner(RoadPlanner.prototype)
+
+    @spawn_node_planner: () ->
+        return @spawn_planner(NodeInterconnectivityPlanner.prototype)
+
+    @spawn_planner: (prototype) ->
         planner = @planners.create(1)[0]
-        extend(planner, Planner.prototype)
+        extend(planner, prototype)
         planner.init()
         return planner
+
+
+class NodeInterconnectivityPlanner extends Planner
 
     init: () ->
         @msg_reader = MessageBoard.get_reader('connect_nodes')
@@ -17,28 +26,18 @@ class Planner
     step: () ->
         msg = @msg_reader.get_message()
         if msg?
-            RoadMaker.spawn_road_maker(msg.node_a.p)
+            1#RoadMaker.spawn_road_connector(msg.node_a.p, msg.node_b.p)
+
 
 class RoadPlanner
-    @road_planners = null
-
-    @initialize_module: (road_planners_breed) ->
-        @road_planners = road_planners_breed
-        @road_planners.setDefault 'hidden', true
-
-    @spawn_road_planner: () ->
-        road_planner = @road_planners.create(1)[0]
-        extend(road_planner, RoadPlanner.prototype)
-        road_planner.init()
-        return road_planner
 
     init: () ->
-        @msg_reader = MessageBoard.get_reader('build_road')
+        @msg_reader = MessageBoard.get_reader('build_endpoint')
 
     step: () ->
         msg = @msg_reader.get_message()
         if msg?
-            RoadMaker.spawn_road_maker(msg.node_a.p)
+            RoadMaker.spawn_road_extender(msg.patch)
 
 
 
