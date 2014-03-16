@@ -13,9 +13,17 @@ class AStarHelper
     xToWorldTransform: null
     yToWorldTransform: null
 
-    constructor: (width, height, walkable=true) ->
+    constructor: (width, height, walkable=true, heuristic=null) ->
         @grid = new PF.Grid(width, height, AStarHelper.createGrid(width, height, walkable))
-        @finder = new PF.AStarFinder()
+        @finder = new PF.AStarFinder({
+            heuristic: (current_node, end_node) =>
+                dx = Math.abs(end_node.x - current_node.x)
+                dy = Math.abs(end_node.y - current_node.y)
+                val = dx + dy
+                if CityModel.get_patch_at(@transformPointToWorld(current_node.x, current_node.y)).dist_to_road == 1
+                    val += 1
+                return val
+            })
 
     setWalkable: (p, walkable=true) ->
         [x,y] = @transformPointToGrid(p)

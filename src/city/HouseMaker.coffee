@@ -1,34 +1,24 @@
-class HouseMaker extends ABM.Agent
+class HouseMaker
     # Agentscript stuff
-    @breed_name: 'houseMakers'
-    @breed: null
+    @house_makers: null
 
     # Appearance
-    @color: [255,0,0]
-    @size:  1
+    @default_color: [255,0,0]
 
-    @agentSet: ->
-        if not @breed?
-            for breed in ABM.agents.breeds
-                if breed.name is @breed_name
-                    @breed = breed
-                    break
-        return @breed
+    @initialize_module: (house_makers_breed) ->
+        @house_makers = house_makers_breed
+        @house_makers.setDefault('color', @default_color)
 
-    @makeNew: (x,y) ->
-        house_maker = new HouseMaker x, y, @color, 1
-        @agentSet().add house_maker
+    @spawn_house_maker: (patch) ->
+        house_maker = patch.sprout(1, @house_makers)[0]
+        extend(house_maker, HouseMaker.prototype)
         return house_maker
-
-    constructor: (x, y, @color, @size) ->
-        super
-        @setXY x, y
 
     step: ->
         # Check if there are any patches where a house might go
         near_patches = ABM.util.shuffle @p.n
         for patch in near_patches
-            if not House.isHouseHere(patch) and not Road.is_road_here(patch)
+            if not House.isHouseHere(patch) and not Road.is_road(patch)
                 @placeHouse patch
                 # Exit as soon as we place one
                 break
@@ -36,12 +26,12 @@ class HouseMaker extends ABM.Agent
         # Move to a random new patch
         near_patches = ABM.util.shuffle @p.n4
         for patch in near_patches
-            if Road.is_road_here patch
+            if Road.is_road patch
                 @move patch
                 break
 
     placeHouse: (patch) ->
-        House.makeHere patch
+        House.set_breed patch
 
     inPoint: (point) ->
         return 0.1 > ABM.util.distance @x, @y, point.x, point.y
