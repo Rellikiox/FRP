@@ -7,11 +7,9 @@ class Planner
 
     @spawn_planner: () ->
         planner = @planners.create(1)[0]
-        extend(planner, Planner_instance_properties)
+        extend(planner, Planner.prototype)
         planner.init()
         return planner
-
-Planner_instance_properties =
 
     init: () ->
         @msg_reader = MessageBoard.get_reader('connect_nodes')

@@ -14,12 +14,10 @@ class Inspector
 
     @spawn_inspector: (patch) ->
         inspector = patch.sprout(1, @inspectors)[0]
-        extend(inspector, Inspector_instance_properties)
+        extend(inspector, Inspector.prototype)
         inspector.init()
         return inspector
 
-
-Inspector_instance_properties =
     current_message: null
     current_state: null
     nodes_under_investigation: []

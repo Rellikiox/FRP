@@ -142,7 +142,7 @@ class RoadNode
 
     @_make_node: (road) ->
         new_node = road.sprout(1, @road_nodes)[0]
-        extend(new_node, RoadNode_instance_properties)
+        extend(new_node, RoadNode.prototype)
         road.node = new_node
         return new_node
 
@@ -170,8 +170,6 @@ class RoadNode
         link.die() for link in node_a.myLinks() when link.otherEnd(node_a) is node_b
         null
 
-
-RoadNode_instance_properties =
     creating: true
 
     step: () ->

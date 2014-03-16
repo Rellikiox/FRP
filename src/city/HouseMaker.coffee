@@ -11,11 +11,8 @@ class HouseMaker
 
     @spawn_house_maker: (patch) ->
         house_maker = patch.sprout(1, @house_makers)[0]
-        extend(house_maker, HouseMaker_instance_properties)
+        extend(house_maker, HouseMaker.prototype)
         return house_maker
-
-
-HouseMaker_instance_properties =
 
     step: ->
         # Check if there are any patches where a house might go

@@ -14,11 +14,10 @@ class RoadMaker
 
     @spawn_road_maker: (patch) ->
         road_maker = patch.sprout(1, @road_makers)[0]
-        extend(road_maker, RoadMaker_instance_properties)
+        extend(road_maker, RoadMaker.prototype)
         road_maker.init()
         return road_maker
 
-RoadMaker_instance_properties =
     # Default vars
     target_point: null
     path: null
