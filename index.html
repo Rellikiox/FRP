@@ -43,23 +43,44 @@
 
 <p>This repo contains my attempts at developing a worthwhile final proyect. You can find more about it in the github hosted <a href="http://rellikiox.github.io/FRP/">project page</a>. Here's an example:</p>
 <div id="layers"></div>
+
+
       </section>
 
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
 
-    <script src="lib/pathfinding-browser.min.js"></script>
+    <script src="vendor/jquery-2.1.0.js"></script>
+    <script src="vendor/jquery.hotkeys.js"></script>
+    <script src="vendor/bootstrap.min.js"></script>
+
+    <script src="vendor/pathfinding-browser.js"></script>
+    <script src="vendor/seedrandom.js"></script>
+    <script src="vendor/gpw.js"></script>
+
     <script src="lib/agentscript.js"></script>
-    <script src="lib/models/city/AStar.js"></script>
-    <script src="lib/models/city/Road.js"></script>
-    <script src="lib/models/city/RoadMaker.js"></script>
-    <script src="lib/models/city/House.js"></script>
-    <script src="lib/models/city/HouseMaker.js"></script>
-    <script src="lib/models/city/CityModel.js"></script>
+    <script src="lib/city/AStar.js"></script>
+    <script src="lib/city/MessageBoard.js"></script>
+
+    <script src="lib/city/Road.js"></script>
+    <script src="lib/city/House.js"></script>
+
+    <script src="lib/city/RoadMaker.js"></script>
+    <script src="lib/city/HouseMaker.js"></script>
+    <script src="lib/city/Inspector.js"></script>
+    <script src="lib/city/Planner.js"></script>
+
+    <script src="lib/city/CityModel.js"></script>
+
+    <script src="lib/app.js"></script>
+
     <script type="text/javascript">
-      model = new CityModel("layers", 16, -16, 16, -16, 16);
-      model.debug();
-      model.start();
+      $(document).ready(function(){
+
+        $('#layers').CitySimulation();
+        $('#layers').CitySimulation('run');
+        model = $('#layers').CitySimulation('get_model');
+      });
     </script>
 
   </body>
