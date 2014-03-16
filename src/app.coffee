@@ -53,6 +53,12 @@
             $('#reload').click () =>
                 @restart()
 
+            $('button.j-iterate-over').click(() =>
+                @animate(parseInt($('input.j-iterate-over').val())))
+
+            $('button.j-iterate-until').click(() =>
+                @animateTo(parseInt($('input.j-iterate-until').val())))
+
         get_model: () ->
             return @model
 
