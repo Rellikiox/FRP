@@ -44,7 +44,7 @@ class RoadExtender extends RoadMaker
     init: (endpoint) ->
         @endpoint = endpoint
         @_set_state('go_to_point_state')
-        @msg_reader = MessageBoard.get_reader('inspect_endpoint')
+        @msg_reader = MessageBoard.get_board('inspect_endpoint')
 
     s_go_to_point_state: ->
         if not @path?
@@ -79,7 +79,7 @@ class RoadConnector extends RoadMaker
         @endpoint = endpoint
 
         @_set_state('build_to_point_state')
-        @msg_reader = MessageBoard.get_reader('inspect_endpoint')
+        @msg_reader = MessageBoard.get_board('inspect_endpoint')
 
     s_build_to_point_state: () ->
         if not @path?

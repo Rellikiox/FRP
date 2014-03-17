@@ -36,8 +36,8 @@ class NodeInspector extends Inspector
     init: () ->
         @_set_state('get_message')
         @msg_boards =
-            inspect: MessageBoard.get_reader('inspect_endpoint')
-            connect: MessageBoard.get_reader('connect_nodes')
+            inspect: MessageBoard.get_board('inspect_endpoint')
+            connect: MessageBoard.get_board('connect_nodes')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
@@ -98,7 +98,7 @@ class RoadInspector extends Inspector
 
     init: () ->
         @_set_state('get_inspection_point')
-        @msg_board = MessageBoard.get_reader('build_endpoint')
+        @build_endpoint_board = MessageBoard.get_board('build_endpoint')
 
     s_get_inspection_point: () ->
         @inspection_point = @_get_point_to_inspect()
@@ -174,7 +174,7 @@ class RoadInspector extends Inspector
 
     _issue_construction: (patch) ->
         @constructor.construction_points.push(patch)
-        @msg_board.post_message({patch: patch})
+        @build_endpoint_board.post_message({patch: patch})
 
     _get_construction_dist: (patch) ->
         min_dist = null
@@ -186,42 +186,3 @@ class RoadInspector extends Inspector
 
     _lap_completed: () ->
         return @angle_moved >= 2 * Math.PI
-
-
-
-
-    # s_exit_city: () ->
-    #     point = @_get_point_away_from_city()
-    #     @_move(point)
-
-    #     if @_connectivity_under_threshold()
-    #         @_set_state('roam_unconnected_zone')
-
-    # s_roam_unconnected_zone: () ->
-    #     console.log "now what?"
-
-    # _connectivity_under_threshold: () ->
-    #     return Road.get_connectivity(@p) > 5
-
-    # _get_point_away_from_city: () ->
-    #     city_center = @_get_weighted_city_center()
-    #     angle = @_angle_between_points(@, city_center)
-
-    #     point =
-    #         x: @x + Math.cos(angle)
-    #         y: @y + Math.sin(angle)
-
-    #     return point
-
-    # _get_weighted_city_center: () ->
-    #     nodes = RoadNode.road_nodes
-    #     avg_point = {x: 0, y: 0}
-    #     for node in nodes
-    #         avg_point.x += node.x
-    #         avg_point.y += node.y
-    #     avg_point.x /= nodes.length
-    #     avg_point.y /= nodes.length
-    #     return avg_point
-
-
-
