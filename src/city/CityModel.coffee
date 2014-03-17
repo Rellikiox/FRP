@@ -40,11 +40,11 @@ class CityModel extends ABM.Model
         # road_maker.step() for road_maker in @road_makers
         # house_maker.step() for house_maker in @house_makers
 
-    draw: ->
-        switch @draw_mode
-            when "normal" then @draw_normal_color()
-            when "connectivity" then @draw_connectivity_color()
-        super
+    # draw: ->
+    #     switch @draw_mode
+    #         when "normal" then @draw_normal_color()
+    #         when "connectivity" then @draw_connectivity_color()
+    #     super
 
     initialize_modules: () ->
         Road.initialize_module(@roads)

@@ -125,4 +125,5 @@ class RoadConnector extends RoadMaker
             @path.shift()
             if @path.length is 0
                 @msg_reader.post_message({patch: @startingpoint})
+                @msg_reader.post_message({patch: @endpoint})
                 @die()
