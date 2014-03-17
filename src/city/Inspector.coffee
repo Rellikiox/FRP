@@ -20,42 +20,12 @@ class Inspector
 
     @spawn_inspector: (patch, prototype) ->
         inspector = patch.sprout(1, @inspectors)[0]
+        extend(inspector, BaseAgent.prototype)
         extend(inspector, prototype)
         inspector.init()
         return inspector
 
-    current_state: null
     speed: 0.05
-
-    init: () ->
-
-    step: () ->
-        @current_state()
-
-    _set_state: (new_state) ->
-        console.log("Transitioning from #{@label} to #{new_state}")
-        @label = new_state
-        @current_state = @['s_' + new_state]
-
-    _move: (point) ->
-        @_face_point point
-        @forward(@speed)
-
-    _face_point: (point) ->
-        heading = @_angle_between_points(point, @)
-        turn = ABM.util.subtractRads heading, @heading
-        @rotate turn
-
-    _angle_between_points: (point_a, point_b) ->
-        dx = point_a.x - point_b.x
-        dy = point_a.y - point_b.y
-        return Math.atan2(dy, dx)
-
-    _in_point: (point) ->
-        return 0.1 > ABM.util.distance @x, @y, point.x, point.y
-
-    _get_path_to: (point) ->
-        return CityModel.instance.terrainAStar.getPath(@, point)
 
 
 class NodeInspector extends Inspector
@@ -141,16 +111,10 @@ class RoadInspector extends Inspector
             @_set_state('get_inspection_point')
             return
 
-        if not @path?
-            @path = @_get_path_to(@inspection_point)
+        @_move(@inspection_point)
 
-        @_move(@path[0])
-
-        if @_in_point(@path[0])
-            @path.shift()
-            if @path.length is 0
-                @path = null
-                @_set_state('find_new_endpoint')
+        if @_in_point(@inspection_point)
+            @_set_state('find_new_endpoint')
 
     s_find_new_endpoint: () ->
         if @_is_valid_construction_point(@p)
