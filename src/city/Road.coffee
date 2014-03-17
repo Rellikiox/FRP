@@ -172,7 +172,6 @@ class RoadNode
 
         return [road_a.node, road_b.node]
 
-
     @_get_aligned_patches: (patches) ->
         if @_are_aligned(patches[0], patches[1])
             return [patches[0], patches[1]]
@@ -180,26 +179,6 @@ class RoadNode
             return [patches[1], patches[2]]
         else
             return [patches[0], patches[2]]
-
-    @_find_upstream_node: (road) ->
-        while not road.node?
-            road = Road._get_max_neighbour(road, "dist_to_city_hall", {filter: (p) ->  Road.is_road(p) and not p.node?.creating})
-        return road.node
-
-    @_find_downstream_node: (road) ->
-        # Hack for near city hall distance well
-        for n_road in road.n4 when Road.is_road(n_road)
-            if n_road.node? and not n_road.node.creating
-                road = n_road
-
-
-        while not road.node?
-            road = Road._get_min_neighbour(road, "dist_to_city_hall", {})
-        return road.node
-
-    @_remove_link_between: (node_a, node_b) ->
-        link.die() for link in node_a.myLinks() when link.otherEnd(node_a) is node_b
-        null
 
     @_are_aligned: (patch_a, patch_b) ->
         return patch_a.x == patch_b.x or patch_a.y == patch_b.y
@@ -213,6 +192,10 @@ class RoadNode
         for n in patch.n4
             if n.x == patch.x + offset.x and n.y == patch.y + offset.y
                 return n
+
+    @_remove_link_between: (node_a, node_b) ->
+        link.die() for link in node_a.myLinks() when link.otherEnd(node_a) is node_b
+        null
 
 
 
