@@ -76,7 +76,7 @@ class CityModel extends ABM.Model
 
         # @spawn_road_makers(1)
         # @spawn_house_makers(0)
-        @spawn_inspectors(1)
+        @spawn_inspectors(3)
         @spawn_planners(1)
 
     spawn_road_makers: (ammount) ->

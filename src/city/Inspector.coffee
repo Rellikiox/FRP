@@ -96,7 +96,7 @@ class NodeInspector extends Inspector
 
 
     _inspect_node: (node) ->
-        if node.factor > 4
+        if node.factor > 3
             @msg_boards.connect.post_message({patch_a: @.p, patch_b: node.node.p})
             return true
         return false
@@ -104,9 +104,9 @@ class NodeInspector extends Inspector
     _get_close_nodes: () ->
         nodes = []
         if @.p.node?
-            nodes_to_check = RoadNode.road_nodes.inRadius(@.p.node, 10)
+            nodes_to_check = RoadNode.road_nodes.inRadius(@.p.node, 20)
         else
-            nodes_to_check = RoadNode.road_nodes.inRadius(@, 10)
+            nodes_to_check = RoadNode.road_nodes.inRadius(@, 20)
         for node in nodes_to_check
             factor = @_get_node_distance_factor(node)
             nodes.push({node: node, factor: factor})
@@ -123,7 +123,7 @@ class RoadInspector extends Inspector
 
     @construction_points = []
 
-    ring_increment: 3
+    ring_increment: 4
     ring_radius: 6
 
     init: () ->
@@ -161,12 +161,21 @@ class RoadInspector extends Inspector
 
     s_get_away_from_road: () ->
         if not @circular_direction?
+            @angle_moved = 0
             @circular_direction = ABM.util.oneOf([-1, 1])
 
         @_circular_move()
         if @_is_valid_construction_point(@p)
             @circular_direction = null
+            @angle_moved = 0
             @_set_state('find_new_endpoint')
+
+        if @_lap_completed()
+            @circular_direction = null
+            @start_angle = null
+            @ring_radius += @ring_increment
+            @_set_state('get_inspection_point')
+
 
     _get_point_to_inspect: () ->
         rand_angle  = ABM.util.randomFloat(2 * Math.PI)
@@ -177,6 +186,7 @@ class RoadInspector extends Inspector
     _circular_move: () ->
         polar_coords = @_get_polar_coords()
         angle_increment = (@speed / polar_coords.radius) * @circular_direction
+        @angle_moved += Math.abs(angle_increment)
         angle = polar_coords.angle + angle_increment
         point = @_point_from_polar_coords(polar_coords.radius, angle)
         @_move(point)
@@ -196,7 +206,7 @@ class RoadInspector extends Inspector
     _is_valid_construction_point: (patch) ->
         road_dist = Road.get_connectivity(@p)
         construction_dist = @_get_construction_dist(@p)
-        return road_dist > 3 && (not construction_dist? or construction_dist > 3)
+        return road_dist > 2 && (not construction_dist? or construction_dist > 2)
 
     _issue_construction: (patch) ->
         @constructor.construction_points.push(patch)
@@ -209,6 +219,9 @@ class RoadInspector extends Inspector
             if (not min_dist?) or dist_to_point < min_dist
                 min_dist = dist_to_point
         return min_dist
+
+    _lap_completed: () ->
+        return @angle_moved >= 2 * Math.PI
 
 
 
