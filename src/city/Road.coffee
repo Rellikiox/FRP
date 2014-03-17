@@ -109,6 +109,10 @@ class Road
     @get_connectivity: (patch) ->
         return patch.dist_to_road
 
+    @_get_road_neighbours: (patch) ->
+        return (road for road in patch.n4 when Road.is_road(road))
+
+
 
 
 class RoadNode
@@ -134,16 +138,17 @@ class RoadNode
         return node
 
     @split_link_at: (road) ->
-        upstream_node = RoadNode._find_upstream_node(road)
-        downstream_node = RoadNode._find_downstream_node(road)
+        [node_a, node_b] = RoadNode._get_nodes_connecting(road)
+        # upstream_node = RoadNode._find_upstream_node(road)
+        # downstream_node = RoadNode._find_downstream_node(road)
 
-        RoadNode._remove_link_between(upstream_node, downstream_node)
+        RoadNode._remove_link_between(node_a, node_b)
 
         node = RoadNode._make_node(road)
         node.creating = false
 
-        CityModel.link_agents(upstream_node, node)
-        CityModel.link_agents(node, downstream_node)
+        CityModel.link_agents(node_a, node)
+        CityModel.link_agents(node, node_b)
 
     @_make_node: (road) ->
         new_node = road.sprout(1, @road_nodes)[0]
@@ -154,6 +159,27 @@ class RoadNode
     @_prepare_neighbour_roads: (road) ->
         for n_road in road.n4 when Road.is_road(n_road) and not n_road.node?
             RoadNode.split_link_at(n_road)
+
+    @_get_nodes_connecting: (road) ->
+        neighbour_roads = Road._get_road_neighbours(road)
+        [road_a, road_b] = @_get_aligned_patches(neighbour_roads)
+        [a_dir, b_dir] = @_get_direction(road_a, road_b)
+
+        while not road_a.node?
+            road_a = @_get_neighbour_with_offset(road_a, a_dir)
+        while not road_b.node?
+            road_b = @_get_neighbour_with_offset(road_b, b_dir)
+
+        return [road_a.node, road_b.node]
+
+
+    @_get_aligned_patches: (patches) ->
+        if @_are_aligned(patches[0], patches[1])
+            return [patches[0], patches[1]]
+        else if @_are_aligned(patches[1], patches[2])
+            return [patches[1], patches[2]]
+        else
+            return [patches[0], patches[2]]
 
     @_find_upstream_node: (road) ->
         while not road.node?
@@ -174,6 +200,21 @@ class RoadNode
     @_remove_link_between: (node_a, node_b) ->
         link.die() for link in node_a.myLinks() when link.otherEnd(node_a) is node_b
         null
+
+    @_are_aligned: (patch_a, patch_b) ->
+        return patch_a.x == patch_b.x or patch_a.y == patch_b.y
+
+    @_get_direction: (patch_a, patch_b) ->
+        dx = (patch_a.x - patch_b.x) / 2
+        dy = (patch_a.y - patch_b.y) / 2
+        return [{x: dx, y: dy}, {x: -dx, y: -dy}]
+
+    @_get_neighbour_with_offset: (patch, offset) ->
+        for n in patch.n4
+            if n.x == patch.x + offset.x and n.y == patch.y + offset.y
+                return n
+
+
 
     creating: true
 
