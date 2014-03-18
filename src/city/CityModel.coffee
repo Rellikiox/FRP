@@ -74,8 +74,7 @@ class CityModel extends ABM.Model
         for patch in @city_hall.n
             Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
-        # @spawn_road_makers(1)
-        # @spawn_house_makers(0)
+        @spawn_house_makers(1)
         @spawn_inspectors(1)
         @spawn_planners(1)
 

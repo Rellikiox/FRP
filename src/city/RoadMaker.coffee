@@ -24,81 +24,52 @@ class RoadMaker
 
     @spawn_road_maker: (patch, prototype) ->
         road_maker = patch.sprout(1, @road_makers)[0]
+        extend(road_maker, BaseAgent.prototype)
         extend(road_maker, prototype)
         return road_maker
 
-    init: () ->
+    # Utils
 
+    speed: 0.05
 
-    step: () ->
-        @current_state()
-
-
-
-       # Utils
-
-    _get_path_to: (point) ->
-        return CityModel.instance.terrainAStar.getPath(@, point)
-
-    drop_road: ->
+    _drop_road: ->
         Road.set_breed(@p)
 
-    is_target_point: ->
-        return @in_point @target_point
-
-    in_starting_position: ->
-        return @in_point @starting_position
-
-    in_point: (point) ->
-        return 0.1 > ABM.util.distance @x, @y, point.x, point.y
-
-    face_point: (point) ->
-        dx = point.x - @x
-        dy = point.y - @y
-        heading = Math.atan2 dy, dx
-        turn = ABM.util.subtractRads heading, @heading
-        @rotate turn
-
-    move: (point) ->
-        @face_point point
-        @forward(0.05)
+    s_die: ->
+        @die()
 
 
 class RoadExtender extends RoadMaker
 
     init: (endpoint) ->
         @endpoint = endpoint
-        @current_state = @go_to_point_state
-        @msg_reader = MessageBoard.get_reader('inspect_endpoint')
+        @_set_state('go_to_point_state')
+        @msg_reader = MessageBoard.get_board('inspect_endpoint')
 
-
-    # States
-
-    go_to_point_state: ->
+    s_go_to_point_state: ->
         if not @path?
             closest_road_to_target = Road.get_closest_road_to(@endpoint)
-            @path = @_get_path_to(closest_road_to_target)
+            @path = @_get_terrain_path_to(closest_road_to_target)
 
-        @move(@path[0])
+        @_move(@path[0])
 
-        if @in_point(@path[0])
+        if @_in_point(@path[0])
             @path.shift()
             if @path.length is 0
                 @path = CityModel.instance.terrainAStar.getPath(@, @endpoint)
-                @label = "build_to_point_state"
-                @current_state = @build_to_point_state
+                @_set_state('build_to_point_state')
 
-    build_to_point_state: ->
-        @move @path[0]
+    s_build_to_point_state: ->
+        @_move @path[0]
 
         if not Road.is_road @p
-            @drop_road()
+            @_drop_road()
 
-        if @in_point(@path[0])
+        if @_in_point(@path[0])
             @path.shift()
             if @path.length is 0
                 @msg_reader.post_message({patch: @p})
-                @die()
+                @_set_state('die')
 
 
 class RoadConnector extends RoadMaker
@@ -106,24 +77,22 @@ class RoadConnector extends RoadMaker
     init: (endpoint) ->
         @startingpoint = @p
         @endpoint = endpoint
-        @current_state = @build_to_point_state
-        @msg_reader = MessageBoard.get_reader('inspect_endpoint')
 
+        @_set_state('build_to_point_state')
+        @msg_reader = MessageBoard.get_board('inspect_endpoint')
 
-    # States
-
-    build_to_point_state: () ->
+    s_build_to_point_state: () ->
         if not @path?
-            @path = @_get_path_to(@endpoint)
+            @path = @_get_terrain_path_to(@endpoint)
 
-        @move @path[0]
+        @_move @path[0]
 
         if not Road.is_road @p
-            @drop_road()
+            @_drop_road()
 
-        if @in_point(@path[0])
+        if @_in_point(@path[0])
             @path.shift()
             if @path.length is 0
                 @msg_reader.post_message({patch: @startingpoint})
                 @msg_reader.post_message({patch: @endpoint})
-                @die()
+                @_set_state('die')

@@ -9,8 +9,9 @@ class MessageBoard
             @message_queues[type] = []
         return @message_queues[type]
 
-    @get_reader: (topic) ->
+    @get_board: (topic) ->
         return new MessageBoard(topic)
+
 
     constructor: (topic) ->
         @queue = @constructor._get_or_create_queue(topic)

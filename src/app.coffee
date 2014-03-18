@@ -22,7 +22,7 @@
         setup_model: () ->
             @model = new CityModel(@$el.attr('id'), 16, -16, 16, -16, 16)
             @seed = GPW.pronounceable(8)
-            @seed = "ousphoun"
+            # @seed = "ousphoun"
 
         run: () ->
             Math.seedrandom(@seed);

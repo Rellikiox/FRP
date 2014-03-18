@@ -22,20 +22,24 @@
           <div id="layers"></div>
         </div>
         <div class="col-md-6 panel">
-          <ul id="myTab" class="nav nav-tabs">
-            <li><a href="#controles" data-toggle="tab">Controles</a></li>
-            <li><a href="#B" data-toggle="tab">B</a></li>
-            <li><a href="#C" data-toggle="tab">C</a></li>
+
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
+            <li><a href="#profile" data-toggle="tab">Profile</a></li>
+            <li><a href="#messages" data-toggle="tab">Messages</a></li>
+            <li><a href="#settings" data-toggle="tab">Settings</a></li>
           </ul>
-          <div id="myTabContent" class="tab-content">
-            <div class="tab-pane fade" id="controles">
+
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <div class="tab-pane active" id="home">
 
               <div class="row">
                 <div class="col-lg-6">
                   <div class="input-group">
                     <input type="text" class="j-iterate-over form-control">
                     <span class="input-group-btn">
-                      <button class="j-iterate-over btn btn-default" type="button">Iterar durante</button>
+                      <button class="j-iterate-over btn btn-default" type="button">Iterate over</button>
                     </span>
                   </div><!-- /input-group -->
                 </div><!-- /.col-lg-6 -->
@@ -43,19 +47,17 @@
                   <div class="input-group">
                     <input type="text" class="j-iterate-until form-control">
                     <span class="input-group-btn">
-                      <button class="j-iterate-until btn btn-default" type="button">Iterar hasta</button>
+                      <button class="j-iterate-until btn btn-default" type="button">Iterate until</button>
                     </span>
                   </div><!-- /input-group -->
                 </div><!-- /.col-lg-6 -->
               </div>
-
-            <div class="tab-pane fade" id="B">
-              <p>B</p>
             </div>
-            <div class="tab-pane fade" id="C">
-              <p>C</p>
-            </div>
+            <div class="tab-pane" id="profile">...</div>
+            <div class="tab-pane" id="messages">...</div>
+            <div class="tab-pane" id="settings">...</div>
           </div>
+
         </div>
       </div>
     </div>
@@ -71,6 +73,7 @@
     <script src="lib/agentscript.js"></script>
     <script src="lib/city/AStar.js"></script>
     <script src="lib/city/MessageBoard.js"></script>
+    <script src="lib/city/Common.js"></script>
 
     <script src="lib/city/Road.js"></script>
     <script src="lib/city/House.js"></script>
@@ -86,12 +89,6 @@
 
     <script type="text/javascript">
       $(document).ready(function(){
-        $('#myTab a').click(function (e) {
-          e.preventDefault();
-          $(this).tab('show');
-        });
-
-        $('#myTab a:first').tab('show')
 
         $('#layers').CitySimulation();
         $('#layers').CitySimulation('run');

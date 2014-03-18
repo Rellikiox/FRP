@@ -20,42 +20,12 @@ class Inspector
 
     @spawn_inspector: (patch, prototype) ->
         inspector = patch.sprout(1, @inspectors)[0]
+        extend(inspector, BaseAgent.prototype)
         extend(inspector, prototype)
         inspector.init()
         return inspector
 
-    current_state: null
     speed: 0.05
-
-    init: () ->
-
-    step: () ->
-        @current_state()
-
-    _set_state: (new_state) ->
-        console.log("Transitioning from #{@label} to #{new_state}")
-        @label = new_state
-        @current_state = @['s_' + new_state]
-
-    _move: (point) ->
-        @_face_point point
-        @forward(@speed)
-
-    _face_point: (point) ->
-        heading = @_angle_between_points(point, @)
-        turn = ABM.util.subtractRads heading, @heading
-        @rotate turn
-
-    _angle_between_points: (point_a, point_b) ->
-        dx = point_a.x - point_b.x
-        dy = point_a.y - point_b.y
-        return Math.atan2(dy, dx)
-
-    _in_point: (point) ->
-        return 0.1 > ABM.util.distance @x, @y, point.x, point.y
-
-    _get_path_to: (point) ->
-        return CityModel.instance.terrainAStar.getPath(@, point)
 
 
 class NodeInspector extends Inspector
@@ -66,8 +36,8 @@ class NodeInspector extends Inspector
     init: () ->
         @_set_state('get_message')
         @msg_boards =
-            inspect: MessageBoard.get_reader('inspect_endpoint')
-            connect: MessageBoard.get_reader('connect_nodes')
+            inspect: MessageBoard.get_board('inspect_endpoint')
+            connect: MessageBoard.get_board('connect_nodes')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
@@ -96,7 +66,7 @@ class NodeInspector extends Inspector
 
 
     _inspect_node: (node) ->
-        if node.factor > 4
+        if node.factor > 3
             @msg_boards.connect.post_message({patch_a: @.p, patch_b: node.node.p})
             return true
         return false
@@ -104,9 +74,9 @@ class NodeInspector extends Inspector
     _get_close_nodes: () ->
         nodes = []
         if @.p.node?
-            nodes_to_check = RoadNode.road_nodes.inRadius(@.p.node, 10)
+            nodes_to_check = RoadNode.road_nodes.inRadius(@.p.node, 20)
         else
-            nodes_to_check = RoadNode.road_nodes.inRadius(@, 10)
+            nodes_to_check = RoadNode.road_nodes.inRadius(@, 20)
         for node in nodes_to_check
             factor = @_get_node_distance_factor(node)
             nodes.push({node: node, factor: factor})
@@ -123,12 +93,12 @@ class RoadInspector extends Inspector
 
     @construction_points = []
 
-    ring_increment: 3
+    ring_increment: 4
     ring_radius: 6
 
     init: () ->
         @_set_state('get_inspection_point')
-        @msg_board = MessageBoard.get_reader('build_endpoint')
+        @build_endpoint_board = MessageBoard.get_board('build_endpoint')
 
     s_get_inspection_point: () ->
         @inspection_point = @_get_point_to_inspect()
@@ -141,16 +111,10 @@ class RoadInspector extends Inspector
             @_set_state('get_inspection_point')
             return
 
-        if not @path?
-            @path = @_get_path_to(@inspection_point)
+        @_move(@inspection_point)
 
-        @_move(@path[0])
-
-        if @_in_point(@path[0])
-            @path.shift()
-            if @path.length is 0
-                @path = null
-                @_set_state('find_new_endpoint')
+        if @_in_point(@inspection_point)
+            @_set_state('find_new_endpoint')
 
     s_find_new_endpoint: () ->
         if @_is_valid_construction_point(@p)
@@ -161,12 +125,21 @@ class RoadInspector extends Inspector
 
     s_get_away_from_road: () ->
         if not @circular_direction?
+            @angle_moved = 0
             @circular_direction = ABM.util.oneOf([-1, 1])
 
         @_circular_move()
         if @_is_valid_construction_point(@p)
             @circular_direction = null
+            @angle_moved = 0
             @_set_state('find_new_endpoint')
+
+        if @_lap_completed()
+            @circular_direction = null
+            @start_angle = null
+            @ring_radius += @ring_increment
+            @_set_state('get_inspection_point')
+
 
     _get_point_to_inspect: () ->
         rand_angle  = ABM.util.randomFloat(2 * Math.PI)
@@ -177,6 +150,7 @@ class RoadInspector extends Inspector
     _circular_move: () ->
         polar_coords = @_get_polar_coords()
         angle_increment = (@speed / polar_coords.radius) * @circular_direction
+        @angle_moved += Math.abs(angle_increment)
         angle = polar_coords.angle + angle_increment
         point = @_point_from_polar_coords(polar_coords.radius, angle)
         @_move(point)
@@ -196,11 +170,11 @@ class RoadInspector extends Inspector
     _is_valid_construction_point: (patch) ->
         road_dist = Road.get_connectivity(@p)
         construction_dist = @_get_construction_dist(@p)
-        return road_dist > 3 && (not construction_dist? or construction_dist > 3)
+        return road_dist > 2 && (not construction_dist? or construction_dist > 2)
 
     _issue_construction: (patch) ->
         @constructor.construction_points.push(patch)
-        @msg_board.post_message({patch: patch})
+        @build_endpoint_board.post_message({patch: patch})
 
     _get_construction_dist: (patch) ->
         min_dist = null
@@ -210,41 +184,5 @@ class RoadInspector extends Inspector
                 min_dist = dist_to_point
         return min_dist
 
-
-
-
-    # s_exit_city: () ->
-    #     point = @_get_point_away_from_city()
-    #     @_move(point)
-
-    #     if @_connectivity_under_threshold()
-    #         @_set_state('roam_unconnected_zone')
-
-    # s_roam_unconnected_zone: () ->
-    #     console.log "now what?"
-
-    # _connectivity_under_threshold: () ->
-    #     return Road.get_connectivity(@p) > 5
-
-    # _get_point_away_from_city: () ->
-    #     city_center = @_get_weighted_city_center()
-    #     angle = @_angle_between_points(@, city_center)
-
-    #     point =
-    #         x: @x + Math.cos(angle)
-    #         y: @y + Math.sin(angle)
-
-    #     return point
-
-    # _get_weighted_city_center: () ->
-    #     nodes = RoadNode.road_nodes
-    #     avg_point = {x: 0, y: 0}
-    #     for node in nodes
-    #         avg_point.x += node.x
-    #         avg_point.y += node.y
-    #     avg_point.x /= nodes.length
-    #     avg_point.y /= nodes.length
-    #     return avg_point
-
-
-
+    _lap_completed: () ->
+        return @angle_moved >= 2 * Math.PI

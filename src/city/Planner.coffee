@@ -21,7 +21,7 @@ class Planner
 class NodeInterconnectivityPlanner extends Planner
 
     init: () ->
-        @msg_reader = MessageBoard.get_reader('connect_nodes')
+        @msg_reader = MessageBoard.get_board('connect_nodes')
 
     step: () ->
         msg = @msg_reader.get_message()
@@ -32,7 +32,7 @@ class NodeInterconnectivityPlanner extends Planner
 class RoadPlanner
 
     init: () ->
-        @msg_reader = MessageBoard.get_reader('build_endpoint')
+        @msg_reader = MessageBoard.get_board('build_endpoint')
 
     step: () ->
         msg = @msg_reader.get_message()
