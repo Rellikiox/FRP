@@ -34,3 +34,8 @@ class BaseAgent
 
     _get_road_path_to: (point) ->
         return CityModel.instance.roadAStar.getPath(@, point)
+
+
+extend = (obj, mixin) ->
+  obj[name] = method for name, method of mixin
+  obj

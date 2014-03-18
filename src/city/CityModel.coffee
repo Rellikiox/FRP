@@ -1,145 +1,148 @@
-u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
-
-extend = (obj, mixin) ->
-  obj[name] = method for name, method of mixin
-  obj
-
-
-class CityModel extends ABM.Model
+require.config
+    paths:
+        'agentscript': 'agentscript/agentscript'
+    shim:
+        'agentscript':
+            exports: 'ABM'
 
 
-    @log = (msg) ->
-    console.log msg if @instance?.debugging
+define ['agentscript'], (ABM) ->
 
-    @instance: null
+    console.log "Loaded city/CityModel.coffee"
 
-    @get_patch_at: (point) ->
-        return @instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
+    class CityModel extends ABM.Model
 
-    @is_on_world: (point) ->
-        return @instance.patches.isOnWorld(Math.round(point.x), Math.round(point.y))
+        @instance: null
 
-    @link_agents: (agent_a, agent_b) ->
-        @instance.links.create(agent_a, agent_b)
+        @get_patch_at: (point) ->
+            return @instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
 
-    setup: ->
-        CityModel.instance = this
-        @set_up_AStar_helpers()
+        @is_on_world: (point) ->
+            return @instance.patches.isOnWorld(Math.round(point.x), Math.round(point.y))
 
-        @set_default_params()
-        @initialize_modules()
+        @link_agents: (agent_a, agent_b) ->
+            @instance.links.create(agent_a, agent_b)
 
-        @init_patches()
-        @spawn_entities()
+        setup: ->
+            CityModel.instance = this
+            @set_up_AStar_helpers()
 
-    step: ->
-        # console.log @anim.toString() if @anim.ticks % 100 == 0
+            @set_default_params()
+            @initialize_modules()
 
-        agent.step() for agent in @agents by -1
+            @init_patches()
+            @spawn_entities()
 
-        # road_maker.step() for road_maker in @road_makers
-        # house_maker.step() for house_maker in @house_makers
+        step: ->
+            # console.log @anim.toString() if @anim.ticks % 100 == 0
 
-    # draw: ->
-    #     switch @draw_mode
-    #         when "normal" then @draw_normal_color()
-    #         when "connectivity" then @draw_connectivity_color()
-    #     super
+            agent.step() for agent in @agents by -1
 
-    initialize_modules: () ->
-        Road.initialize_module(@roads)
-        RoadNode.initialize_module(@road_nodes)
-        RoadMaker.initialize_module(@road_makers)
-        HouseMaker.initialize_module(@house_makers)
-        Inspector.initialize_module(@inspectors)
-        Planner.initialize_module(@planners)
-        MessageBoard.initialize_module()
+            # road_maker.step() for road_maker in @road_makers
+            # house_maker.step() for house_maker in @house_makers
 
-    create_city_hall: (x, y) ->
-        patch = @patches.patchXY(x, y)
-        patch.color = patch.default_color = [0, 0, 100]
-        patch.dist_to_city_hall = 0
-        return patch
+        # draw: ->
+        #     switch @draw_mode
+        #         when "normal" then @draw_normal_color()
+        #         when "connectivity" then @draw_connectivity_color()
+        #     super
 
-    set_default_params: () ->
-        @patchBreeds "roads houses"
-        @agentBreeds "road_makers house_makers road_nodes inspectors planners"
-        @anim.setRate 120, false
-        @refreshPatches = true
-        @draw_mode = "normal"
+        initialize_modules: () ->
+            Road.initialize_module(@roads)
+            RoadNode.initialize_module(@road_nodes)
+            RoadMaker.initialize_module(@road_makers)
+            HouseMaker.initialize_module(@house_makers)
+            Inspector.initialize_module(@inspectors)
+            Planner.initialize_module(@planners)
+            MessageBoard.initialize_module()
 
-    spawn_entities: () ->
-        @city_hall = @create_city_hall(0, 0)
-        Road.set_breed(patch, 1) for patch in @city_hall.n4
-        for patch in @city_hall.n
-            Road.set_breed(patch, 2) if not (patch.breed is @roads)
+        create_city_hall: (x, y) ->
+            patch = @patches.patchXY(x, y)
+            patch.color = patch.default_color = [0, 0, 100]
+            patch.dist_to_city_hall = 0
+            return patch
 
-        @spawn_house_makers(1)
-        @spawn_inspectors(1)
-        @spawn_planners(1)
+        set_default_params: () ->
+            @patchBreeds "roads houses"
+            @agentBreeds "road_makers house_makers road_nodes inspectors planners"
+            @anim.setRate 120, false
+            @refreshPatches = true
+            @draw_mode = "normal"
 
-    spawn_road_makers: (ammount) ->
-        i = 0
-        while i < ammount
-            patch = u.oneOf(@city_hall.n4)
-            RoadMaker.spawn_road_maker(patch)
-            i += 1
+        spawn_entities: () ->
+            @city_hall = @create_city_hall(0, 0)
+            Road.set_breed(patch, 1) for patch in @city_hall.n4
+            for patch in @city_hall.n
+                Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
-    spawn_house_makers: (ammount) ->
-        i = 0
-        while i < ammount
-            patch = u.oneOf(@city_hall.n4)
-            HouseMaker.spawn_house_maker(patch)
-            i += 1
+            # @spawn_house_makers(1)
+            @spawn_inspectors(1)
+            @spawn_planners(1)
 
-    spawn_inspectors: (ammount) ->
-        i = 0
-        while i < ammount
-            patch = u.oneOf(@city_hall.n4)
-            Inspector.spawn_node_inspector(patch)
-            Inspector.spawn_road_inspector(patch)
-            i += 1
+        spawn_road_makers: (ammount) ->
+            i = 0
+            while i < ammount
+                patch = ABM.utiloneOf(@city_hall.n4)
+                RoadMaker.spawn_road_maker(patch)
+                i += 1
 
-    spawn_planners: (ammount) ->
-        i = 0
-        while i < ammount
-            Planner.spawn_road_planner()
-            Planner.spawn_node_planner()
-            i += 1
+        spawn_house_makers: (ammount) ->
+            i = 0
+            while i < ammount
+                patch = ABM.utiloneOf(@city_hall.n4)
+                HouseMaker.spawn_house_maker(patch)
+                i += 1
+
+        spawn_inspectors: (ammount) ->
+            i = 0
+            while i < ammount
+                patch = ABM.utiloneOf(@city_hall.n4)
+                Inspector.spawn_node_inspector(patch)
+                Inspector.spawn_road_inspector(patch)
+                i += 1
+
+        spawn_planners: (ammount) ->
+            i = 0
+            while i < ammount
+                Planner.spawn_road_planner()
+                Planner.spawn_node_planner()
+                i += 1
 
 
-    set_up_AStar_helpers: ->
-        width = @world.maxX - @world.minX
-        height = @world.maxY - @world.minY
+        set_up_AStar_helpers: ->
+            width = @world.maxX - @world.minX
+            height = @world.maxY - @world.minY
 
-        x_to_grid_transform = (x) => x - @world.minX
-        y_to_grid_transform = (y) => -y - @world.minY
+            x_to_grid_transform = (x) => x - @world.minX
+            y_to_grid_transform = (y) => -y - @world.minY
 
-        x_to_world_transform = (x) => x + @world.minX
-        y_to_world_transform = (y) => -(y + @world.minY)
+            x_to_world_transform = (x) => x + @world.minX
+            y_to_world_transform = (y) => -(y + @world.minY)
 
-        @roadAStar = new AStarHelper(width, height, false)
-        @roadAStar.setToGridTransforms(x_to_grid_transform, y_to_grid_transform)
-        @roadAStar.setToWorldTransforms(x_to_world_transform, y_to_world_transform)
+            @roadAStar = new AStarHelper(width, height, false)
+            @roadAStar.setToGridTransforms(x_to_grid_transform, y_to_grid_transform)
+            @roadAStar.setToWorldTransforms(x_to_world_transform, y_to_world_transform)
 
-        @terrainAStar = new AStarHelper(width, height, true)
-        @terrainAStar.setToGridTransforms(x_to_grid_transform, y_to_grid_transform)
-        @terrainAStar.setToWorldTransforms(x_to_world_transform, y_to_world_transform)
+            @terrainAStar = new AStarHelper(width, height, true)
+            @terrainAStar.setToGridTransforms(x_to_grid_transform, y_to_grid_transform)
+            @terrainAStar.setToWorldTransforms(x_to_world_transform, y_to_world_transform)
 
-    init_patches: () ->
-        for p in @patches
-            p.color = u.randomGray(100, 150)
-            [r, g, b] = p.color
-            p.color = [r, g * 2, b]
-            p.default_color = p.color
+        init_patches: () ->
+            for p in @patches
+                p.color = ABM.utilrandomGray(100, 150)
+                [r, g, b] = p.color
+                p.color = [r, g * 2, b]
+                p.default_color = p.color
 
-    set_draw_mode: (mode) ->
-        @draw_mode = mode
+        set_draw_mode: (mode) ->
+            @draw_mode = mode
 
-    draw_normal_color: ->
-        for patch in @patches when patch.breed.name is "patches"
-            patch.color = patch.default_color
+        draw_normal_color: ->
+            for patch in @patches when patch.breed.name is "patches"
+                patch.color = patch.default_color
 
-    draw_connectivity_color: ->
-        for patch in @patches when patch.breed.name is "patches"
-            patch.color = if patch.connectivity_color? then patch.connectivity_color else patch.color
+        draw_connectivity_color: ->
+            for patch in @patches when patch.breed.name is "patches"
+                patch.color = if patch.connectivity_color? then patch.connectivity_color else patch.color
+
+    return CityModel
