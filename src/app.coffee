@@ -13,21 +13,27 @@ class App
         @seed = "therinet"
 
     run: () ->
-        Math.seedrandom(@seed);
-        @model.debug();
-        @model.start();
+        Math.seedrandom(@seed)
+        @model.reset(true)
 
     restart: () ->
-        Math.seedrandom(@seed);
+        Math.seedrandom(@seed)
         @model.reset(true)
 
     play_pause_model: () ->
         if @paused
             @model.start()
+            $('#step').attr('disabled', true);
         else
             @model.stop()
+            $('#step').attr('disabled', false);
         @paused = not @paused
         null
+
+    step_model: () ->
+        if @paused
+            @model.anim.step()
+            @model.anim.draw()
 
     set_key_command: (key, fn) ->
         $(document).bind 'keydown', key, fn
@@ -39,6 +45,10 @@ class App
         $('#play-pause').click () =>
             @play_pause_model()
             $('#play-pause span').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
+
+        $('#step').click () =>
+            @step_model()
+
         $('#reload').click () =>
             @restart()
 
