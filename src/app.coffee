@@ -2,7 +2,7 @@
 class App
     pause: false
 
-    setup: (@element_id) ->
+    constructor: (@element_id) ->
         @setup_hotkeys()
         @setup_model()
         @setup_buttons()
