@@ -6,7 +6,8 @@ require.config
             exports: 'ABM'
 
 
-define ['agentscript'], (ABM) ->
+define ['agentscript', 'city/Inspectors', 'city/Planners', 'city/Roads', 'city/RoadNodes'],
+(ABM, InspectorManager, PlannerManager, RoadManager, RoadNodeManager) ->
 
     console.log "Loaded city/CityModel.coffee"
 
@@ -23,15 +24,21 @@ define ['agentscript'], (ABM) ->
         @link_agents: (agent_a, agent_b) ->
             @instance.links.create(agent_a, agent_b)
 
-        setup: ->
+
+        constructor: () ->
+            @agent_breeds = []
+            @patch_breeds = []
             CityModel.instance = this
-            @set_up_AStar_helpers()
+            super
+
+        setup: ->
+            # @set_up_AStar_helpers()
 
             @set_default_params()
             @initialize_modules()
 
             @init_patches()
-            @spawn_entities()
+            # @spawn_entities()
 
         step: ->
             # console.log @anim.toString() if @anim.ticks % 100 == 0
@@ -48,13 +55,32 @@ define ['agentscript'], (ABM) ->
         #     super
 
         initialize_modules: () ->
-            Road.initialize_module(@roads)
-            RoadNode.initialize_module(@road_nodes)
-            RoadMaker.initialize_module(@road_makers)
-            HouseMaker.initialize_module(@house_makers)
-            Inspector.initialize_module(@inspectors)
-            Planner.initialize_module(@planners)
-            MessageBoard.initialize_module()
+            # inspector_breed = InspectorManager.inspector_breed
+            # @agent_breeds.push(inspector_breed)
+
+            # planner_breed = PlannerManager.planner_breed
+            # @agent_breeds.push(planner_breed)
+
+            @agent_breeds = ['inspectors', 'planners', 'road_nodes']
+
+            @initialize_breeds()
+
+            @road_node_manager = new RoadNodeManager(@['road_nodes'])
+            @inspector_manager = new InspectorManager(@['inspectors'])
+            @planner_manager = new PlannerManager(@['planners'])
+            # Road.initialize_module(@roads)
+            # RoadNode.initialize_module(@road_nodes)
+            # RoadMaker.initialize_module(@road_makers)
+            # HouseMaker.initialize_module(@house_makers)
+            # Inspector.initialize_module(@inspectors)
+            # Planner.initialize_module(@planners)
+            # MessageBoard.initialize_module()
+
+        initialize_breeds: () ->
+
+            @patchBreeds @patch_breeds.join(' ')
+            @agentBreeds @agent_breeds.join(' ')
+
 
         create_city_hall: (x, y) ->
             patch = @patches.patchXY(x, y)
@@ -82,21 +108,21 @@ define ['agentscript'], (ABM) ->
         spawn_road_makers: (ammount) ->
             i = 0
             while i < ammount
-                patch = ABM.utiloneOf(@city_hall.n4)
+                patch = ABM.util.oneOf(@city_hall.n4)
                 RoadMaker.spawn_road_maker(patch)
                 i += 1
 
         spawn_house_makers: (ammount) ->
             i = 0
             while i < ammount
-                patch = ABM.utiloneOf(@city_hall.n4)
+                patch = ABM.util.oneOf(@city_hall.n4)
                 HouseMaker.spawn_house_maker(patch)
                 i += 1
 
         spawn_inspectors: (ammount) ->
             i = 0
             while i < ammount
-                patch = ABM.utiloneOf(@city_hall.n4)
+                patch = ABM.util.oneOf(@city_hall.n4)
                 Inspector.spawn_node_inspector(patch)
                 Inspector.spawn_road_inspector(patch)
                 i += 1
@@ -129,7 +155,7 @@ define ['agentscript'], (ABM) ->
 
         init_patches: () ->
             for p in @patches
-                p.color = ABM.utilrandomGray(100, 150)
+                p.color = ABM.util.randomGray(100, 150)
                 [r, g, b] = p.color
                 p.color = [r, g * 2, b]
                 p.default_color = p.color
@@ -144,5 +170,3 @@ define ['agentscript'], (ABM) ->
         draw_connectivity_color: ->
             for patch in @patches when patch.breed.name is "patches"
                 patch.color = if patch.connectivity_color? then patch.connectivity_color else patch.color
-
-    return CityModel

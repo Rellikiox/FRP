@@ -1,105 +1,114 @@
 require.config
     paths:
         'jquery': 'vendor/jquery-2.1.0'
+        'GPW': 'vendor/gpw'
     shim:
         'jquery':
             exports: '$'
+        'GPW':
+            exports: 'GPW'
 
 
-require ['jquery', 'city/CityModel'], ($, CityModel) ->
+require ['jquery', 'GPW', 'vendor/seedrandom', 'city/CityModel'], ($, GPW, seedrandom, CityModel) ->
 
     console.log "Loaded main.coffee"
 
-    (($, window) ->
+    model = new CityModel('layers', 16, -16, 16, -16, 16)
+    seed = GPW.pronounceable(8)
+    Math.seedrandom(seed);
+    model.debug();
+    model.start();
 
-        # Define the plugin class
-        class CitySimulation
+    # (($, window) ->
 
-            defaults:
-                paramA: 'foo'
-                paramB: 'bar'
+    #     # Define the plugin class
+    #     class CitySimulation
 
-            constructor: (el, options) ->
-                @options = $.extend({}, @defaults, options)
-                @$el = $(el)
+    #         defaults:
+    #             paramA: 'foo'
+    #             paramB: 'bar'
 
-                @pause = false
+    #         constructor: (el, options) ->
+    #             @options = $.extend({}, @defaults, options)
+    #             @$el = $(el)
 
-                @setup_hotkeys()
-                @setup_model()
-                @setup_buttons()
+    #             @pause = false
 
-            # Additional plugin methods go here
-            setup_model: () ->
-                @model = new CityModel(@$el.attr('id'), 16, -16, 16, -16, 16)
-                @seed = GPW.pronounceable(8)
-                # @seed = "ousphoun"
+    #             @setup_hotkeys()
+    #             @setup_model()
+    #             @setup_buttons()
 
-            run: () ->
-                Math.seedrandom(@seed);
-                @model.debug();
-                @model.start();
+    #         # Additional plugin methods go here
+    #         setup_model: () ->
+    #             @model = new CityModel(@$el.attr('id'), 16, -16, 16, -16, 16)
+    #             @seed = GPW.pronounceable(8)
+    #             # @seed = "ousphoun"
 
-            restart: () ->
-                Math.seedrandom(@seed);
-                @model.reset(true)
+    #         run: () ->
+    #             Math.seedrandom(@seed);
+    #             @model.debug();
+    #             @model.start();
 
-            play_pause_model: () ->
-                if @paused
-                    @model.start()
-                else
-                    @model.stop()
-                @paused = not @paused
+    #         restart: () ->
+    #             Math.seedrandom(@seed);
+    #             @model.reset(true)
 
-            set_key_command: (key, fn) ->
-                $(document).bind 'keydown', key, fn
+    #         play_pause_model: () ->
+    #             if @paused
+    #                 @model.start()
+    #             else
+    #                 @model.stop()
+    #             @paused = not @paused
 
-            setup_hotkeys: () ->
-                @set_key_command 'r', () => @restart()
+    #         set_key_command: (key, fn) ->
+    #             $(document).bind 'keydown', key, fn
 
-            setup_buttons: () ->
-                $('#play-pause').click () =>
-                    @play_pause_model()
-                    $('#play-pause span').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
-                $('#reload').click () =>
-                    @restart()
+    #         setup_hotkeys: () ->
+    #             @set_key_command 'r', () => @restart()
 
-                $('button.j-iterate-over').click(() =>
-                    @animate(parseInt($('input.j-iterate-over').val())))
+    #         setup_buttons: () ->
+    #             $('#play-pause').click () =>
+    #                 @play_pause_model()
+    #                 $('#play-pause span').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
+    #             $('#reload').click () =>
+    #                 @restart()
 
-                $('button.j-iterate-until').click(() =>
-                    @animateTo(parseInt($('input.j-iterate-until').val())))
+    #             $('button.j-iterate-over').click(() =>
+    #                 @animate(parseInt($('input.j-iterate-over').val())))
 
-            get_model: () ->
-                return @model
+    #             $('button.j-iterate-until').click(() =>
+    #                 @animateTo(parseInt($('input.j-iterate-until').val())))
 
-            animate: (ticks) ->
-                @model.stop()
-                i = 0
-                while i < ticks
-                    @model.anim.step()
-                    i += 1
-                @model.start()
+    #         get_model: () ->
+    #             return @model
 
-            animateTo: (ticks) ->
-                @model.stop()
-                while @model.anim.ticks < ticks
-                    @model.anim.step()
-                @model.start()
+    #         animate: (ticks) ->
+    #             @model.stop()
+    #             i = 0
+    #             while i < ticks
+    #                 @model.anim.step()
+    #                 i += 1
+    #             @model.start()
+
+    #         animateTo: (ticks) ->
+    #             @model.stop()
+    #             while @model.anim.ticks < ticks
+    #                 @model.anim.step()
+    #             @model.start()
 
 
 
-        # Define the plugin
-        $.fn.extend CitySimulation: (option, args...) ->
-            ret_val = null
-            @each ->
-                $this = $(this)
-                data = $this.data('CitySimulation')
+    #     # Define the plugin
+    #     $.fn.extend CitySimulation: (option, args...) ->
+    #         ret_val = null
+    #         @each ->
+    #             $this = $(this)
+    #             data = $this.data('CitySimulation')
 
-                if !data
-                    ret_val = $this.data 'CitySimulation', (data = new CitySimulation(this, option))
-                if typeof option == 'string'
-                    ret_val = data[option].apply(data, args)
-            return if ret_val? then ret_val else $(this)
+    #             if !data
+    #                 ret_val = $this.data 'CitySimulation', (data = new CitySimulation(this, option))
+    #             if typeof option == 'string'
+    #                 ret_val = data[option].apply(data, args)
+    #         return if ret_val? then ret_val else $(this)
 
-    ) window.jQuery, window
+    # ) window.jQuery, window
