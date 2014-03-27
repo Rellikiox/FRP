@@ -2,13 +2,13 @@
 class App
     pause: false
 
-    setup: (@element) ->
+    setup: (@element_id) ->
         @setup_hotkeys()
         @setup_model()
         @setup_buttons()
 
     setup_model: () ->
-        @model = new CityModel(@element.attr('id'), 16, -16, 16, -16, 16)
+        @model = new CityModel(@element_id, 16, -16, 16, -16, 16)
         @seed = GPW.pronounceable(8)
         @seed = "therinet"
 
