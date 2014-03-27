@@ -8,9 +8,14 @@ class BaseAgent
         @current_state()
 
     _set_state: (new_state) ->
-        console.log("Transitioning from #{@label} to #{new_state}")
+        CityModel.log("#{@id}: #{@label} -> #{new_state}")
         @label = new_state
         @current_state = @['s_' + new_state]
+
+    _set_initial_state: (state) ->
+        CityModel.log("#{@id}: @#{state}")
+        @label = state
+        @current_state = @['s_' + state]
 
     _move: (point) ->
         @_face_point point

@@ -9,7 +9,7 @@ class CityModel extends ABM.Model
 
 
     @log = (msg) ->
-    console.log msg if @instance?.debugging
+        console.log msg if @instance?.debugging
 
     @instance: null
 
@@ -49,8 +49,8 @@ class CityModel extends ABM.Model
     initialize_modules: () ->
         Road.initialize_module(@roads)
         RoadNode.initialize_module(@road_nodes)
-        RoadMaker.initialize_module(@road_makers)
-        HouseMaker.initialize_module(@house_makers)
+        RoadBuilder.initialize_module(@road_makers)
+        HouseBuilder.initialize_module(@house_makers)
         Inspector.initialize_module(@inspectors)
         Planner.initialize_module(@planners)
         MessageBoard.initialize_module()
@@ -74,7 +74,7 @@ class CityModel extends ABM.Model
         for patch in @city_hall.n
             Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
-        @spawn_house_makers(1)
+        @spawn_house_makers(0)
         @spawn_inspectors(1)
         @spawn_planners(1)
 
@@ -82,14 +82,14 @@ class CityModel extends ABM.Model
         i = 0
         while i < ammount
             patch = u.oneOf(@city_hall.n4)
-            RoadMaker.spawn_road_maker(patch)
+            RoadBuilder.spawn_road_maker(patch)
             i += 1
 
     spawn_house_makers: (ammount) ->
         i = 0
         while i < ammount
             patch = u.oneOf(@city_hall.n4)
-            HouseMaker.spawn_house_maker(patch)
+            HouseBuilder.spawn_house_maker(patch)
             i += 1
 
     spawn_inspectors: (ammount) ->

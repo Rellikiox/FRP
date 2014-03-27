@@ -34,9 +34,9 @@ class NodeInspector extends Inspector
     nodes_under_investigation: []
 
     init: () ->
-        @_set_state('get_message')
+        @_set_initial_state('get_message')
         @msg_boards =
-            inspect: MessageBoard.get_board('inspect_endpoint')
+            inspect: MessageBoard.get_board('inspect_node')
             connect: MessageBoard.get_board('connect_nodes')
 
     s_get_message: () ->
@@ -97,7 +97,7 @@ class RoadInspector extends Inspector
     ring_radius: 6
 
     init: () ->
-        @_set_state('get_inspection_point')
+        @_set_initial_state('get_inspection_point')
         @build_endpoint_board = MessageBoard.get_board('build_endpoint')
 
     s_get_inspection_point: () ->

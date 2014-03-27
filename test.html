@@ -70,7 +70,7 @@
     <script src="vendor/seedrandom.js"></script>
     <script src="vendor/gpw.js"></script>
 
-    <script src="lib/agentscript.js"></script>
+    <script src="lib/agentscript/agentscript.js"></script>
     <script src="lib/city/AStar.js"></script>
     <script src="lib/city/MessageBoard.js"></script>
     <script src="lib/city/Common.js"></script>
@@ -78,10 +78,9 @@
     <script src="lib/city/Road.js"></script>
     <script src="lib/city/House.js"></script>
 
-    <script src="lib/city/RoadMaker.js"></script>
-    <script src="lib/city/HouseMaker.js"></script>
-    <script src="lib/city/Inspector.js"></script>
-    <script src="lib/city/Planner.js"></script>
+    <script src="lib/city/Builders.js"></script>
+    <script src="lib/city/Inspectors.js"></script>
+    <script src="lib/city/Planners.js"></script>
 
     <script src="lib/city/CityModel.js"></script>
 
@@ -90,9 +89,10 @@
     <script type="text/javascript">
       $(document).ready(function(){
 
-        $('#layers').CitySimulation();
-        $('#layers').CitySimulation('run');
-        model = $('#layers').CitySimulation('get_model');
+        city = new App();
+
+        city.setup($('#layers'));
+        city.run();
       });
     </script>
   </body>
