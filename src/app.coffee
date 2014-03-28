@@ -10,23 +10,37 @@ class App
     setup_model: () ->
         @model = new CityModel(@element_id, 16, -16, 16, -16, 16)
         @seed = GPW.pronounceable(8)
-        @seed = "therinet"
+        # @seed = "therinet"
 
     run: () ->
+        config = @get_config()
         Math.seedrandom(@seed)
-        @model.reset(true)
+        @model.reset(config, not @paused)
 
     restart: () ->
-        Math.seedrandom(@seed)
-        @model.reset(true)
+        @run()
+
+    get_int_val: (id) ->
+        parseInt($(id).val())
+
+    get_config: () ->
+        inspectors:
+            node_inspector:
+                inspection_radius: @get_int_val('#inspection-area')
+                max_distance_factor: @get_int_val('#distance-factor')
+            road_inspector:
+                ring_radius: @get_int_val('#initial-radius')
+                ring_increment: @get_int_val('#radius-increment')
 
     play_pause_model: () ->
         if @paused
             @model.start()
             $('#step').attr('disabled', true);
+            $('#play-pause').find('.btn-text').text('Pause')
         else
             @model.stop()
             $('#step').attr('disabled', false);
+            $('#play-pause').find('.btn-text').text('Play')
         @paused = not @paused
         null
 
@@ -44,7 +58,7 @@ class App
     setup_buttons: () ->
         $('#play-pause').click () =>
             @play_pause_model()
-            $('#play-pause span').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
+            $('#play-pause span.glyphicon').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
 
         $('#step').click () =>
             @step_model()
@@ -67,10 +81,16 @@ class App
         while i < ticks
             @model.anim.step()
             i += 1
-        @model.start()
+        if not @paused
+            @model.start()
+        else
+            @model.anim.draw()
 
     animateTo: (ticks) ->
         @model.stop()
         while @model.anim.ticks < ticks
             @model.anim.step()
-        @model.start()
+        if not @paused
+            @model.start()
+        else
+            @model.anim.draw()

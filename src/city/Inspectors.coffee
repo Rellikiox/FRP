@@ -5,12 +5,15 @@ class Inspector
     # Appearance
     @default_color: [0, 0, 255]
 
-    # Behavior
-    @radius_increment = 3
-
-    @initialize_module: (inspectors_breed) ->
+    @initialize_module: (inspectors_breed, config) ->
         @inspectors = inspectors_breed
         @inspectors.setDefault('color', @default_color)
+
+        for key, value of config.node_inspector
+            NodeInspector.prototype[key] = value
+        for key, value of config.road_inspector
+            RoadInspector.prototype[key] = value
+        null
 
     @spawn_road_inspector: (patch) ->
         return @spawn_inspector(patch, RoadInspector.prototype)
@@ -32,6 +35,8 @@ class NodeInspector extends Inspector
 
     current_message: null
     nodes_under_investigation: []
+    inspection_radius: 20
+    max_distance_factor: 3
 
     init: () ->
         @_set_initial_state('get_message')
@@ -66,7 +71,7 @@ class NodeInspector extends Inspector
 
 
     _inspect_node: (node) ->
-        if node.factor > 3
+        if node.factor > @max_distance_factor
             @msg_boards.connect.post_message({patch_a: @.p, patch_b: node.node.p})
             return true
         return false
@@ -74,9 +79,9 @@ class NodeInspector extends Inspector
     _get_close_nodes: () ->
         nodes = []
         if @.p.node?
-            nodes_to_check = RoadNode.road_nodes.inRadius(@.p.node, 20)
+            nodes_to_check = RoadNode.road_nodes.inRadius(@.p.node, @inspection_radius)
         else
-            nodes_to_check = RoadNode.road_nodes.inRadius(@, 20)
+            nodes_to_check = RoadNode.road_nodes.inRadius(@, @inspection_radius)
         for node in nodes_to_check
             factor = @_get_node_distance_factor(node)
             nodes.push({node: node, factor: factor})

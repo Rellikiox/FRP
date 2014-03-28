@@ -13,49 +13,130 @@
       <div class="row">
         <div class="col-md-6">
           <div style="text-align: center;">
-            <div class="btn-group">
-              <a href="#" id="play-pause" class="btn btn-default"><span class="glyphicon glyphicon-pause"></span></a>
-              <a href="#" id="step" disabled="disabled" class="btn btn-default"><span class="glyphicon glyphicon-step-forward"></span></a>
-              <a href="#" id="reload" class="btn btn-default"><span class="glyphicon glyphicon-refresh"></span></a>
-            </div>
+            <a href="#" id="play-pause" class="btn btn-default btn-xs">
+              <span class="glyphicon glyphicon-pause"></span>
+              <span class="btn-text">Pause</span>
+            </a>
+            <a href="#" id="step" disabled="disabled" class="btn btn-default btn-xs">
+              <span class="glyphicon glyphicon-step-forward"></span>
+              <span class="btn-text">Step</span>
+            </a>
+            <a href="#" id="reload" class="btn btn-default btn-xs">
+              <span class="glyphicon glyphicon-refresh"></span>
+              <span class="btn-text">Restart</span>
+            </a>
           </div>
+
+          <div class="row" style="margin: 5px;">
+            <div class="col-lg-6">
+              <div class="input-group">
+                <input type="text" class="j-iterate-over form-control">
+                <span class="input-group-btn">
+                  <button class="j-iterate-over btn btn-default" type="button">Iterate over</button>
+                </span>
+              </div><!-- /input-group -->
+            </div><!-- /.col-lg-6 -->
+            <div class="col-lg-6">
+              <div class="input-group">
+                <input type="text" class="j-iterate-until form-control">
+                <span class="input-group-btn">
+                  <button class="j-iterate-until btn btn-default" type="button">Iterate until</button>
+                </span>
+              </div><!-- /input-group -->
+            </div><!-- /.col-lg-6 -->
+          </div>
+
           <div id="layers"></div>
         </div>
         <div class="col-md-6 panel">
 
           <ul class="nav nav-tabs">
-            <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
-            <li><a href="#profile" data-toggle="tab">Profile</a></li>
-            <li><a href="#messages" data-toggle="tab">Messages</a></li>
-            <li><a href="#settings" data-toggle="tab">Settings</a></li>
+            <li class="active"><a href="#simulation" data-toggle="tab">Simulation</a></li>
+            <li><a href="#inspectors" data-toggle="tab">Inspectors</a></li>
+            <li><a href="#builders" data-toggle="tab">Builders</a></li>
+            <li><a href="#planners" data-toggle="tab">Planners</a></li>
           </ul>
 
           <!-- Tab panes -->
           <div class="tab-content">
-            <div class="tab-pane active" id="home">
-
-              <div class="row">
-                <div class="col-lg-6">
-                  <div class="input-group">
-                    <input type="text" class="j-iterate-over form-control">
-                    <span class="input-group-btn">
-                      <button class="j-iterate-over btn btn-default" type="button">Iterate over</button>
-                    </span>
-                  </div><!-- /input-group -->
-                </div><!-- /.col-lg-6 -->
-                <div class="col-lg-6">
-                  <div class="input-group">
-                    <input type="text" class="j-iterate-until form-control">
-                    <span class="input-group-btn">
-                      <button class="j-iterate-until btn btn-default" type="button">Iterate until</button>
-                    </span>
-                  </div><!-- /input-group -->
-                </div><!-- /.col-lg-6 -->
+            <div class="tab-pane active" id="simulation">
+              <div class="panel panel-default">
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-lg-6">
+                      <div class="input-group">
+                        <input type="text" class="j-iterate-over form-control">
+                        <span class="input-group-btn">
+                          <button class="j-iterate-over btn btn-default" type="button">Iterate over</button>
+                        </span>
+                      </div><!-- /input-group -->
+                    </div><!-- /.col-lg-6 -->
+                    <div class="col-lg-6">
+                      <div class="input-group">
+                        <input type="text" class="j-iterate-until form-control">
+                        <span class="input-group-btn">
+                          <button class="j-iterate-until btn btn-default" type="button">Iterate until</button>
+                        </span>
+                      </div><!-- /input-group -->
+                    </div><!-- /.col-lg-6 -->
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="tab-pane" id="profile">...</div>
-            <div class="tab-pane" id="messages">...</div>
-            <div class="tab-pane" id="settings">...</div>
+            <div class="tab-pane panel-group" id="inspectors">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse-road-inspector">RoadInspector</a>
+                  </h3>
+                </div>
+                <div id="collapse-road-inspector" class="panel-collapse collapse in">
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-lg-6">
+                        <div class="form-group">
+                          <label for="inspection-area">Inspection area</label>
+                          <input type="text" class="form-control" id="inspection-area" value="20">
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                      <div class="col-lg-6">
+                        <div class="form-group">
+                          <label for="distance-factor">Max. distance factor</label>
+                          <input type="text" class="form-control" id="distance-factor" value="3">
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse-node-inspector">NodeInspector</a>
+                  </h3>
+                </div>
+                <div id="collapse-node-inspector" class="panel-collapse collapse">
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-lg-6">
+                        <div class="form-group">
+                          <label for="initial-radius">Initial radius</label>
+                          <input type="text" class="form-control" id="initial-radius" value="6">
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                      <div class="col-lg-6">
+                        <div class="form-group">
+                          <label for="radius-increment">Radius increment</label>
+                          <input type="text" class="form-control" id="radius-increment" value="4">
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="builders">...</div>
+            <div class="tab-pane" id="planners">...</div>
           </div>
 
         </div>

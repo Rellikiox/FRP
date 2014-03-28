@@ -7,11 +7,10 @@ extend = (obj, mixin) ->
 
 class CityModel extends ABM.Model
 
+    @instance: null
 
     @log = (msg) ->
         console.log msg if @instance?.debugging
-
-    @instance: null
 
     @get_patch_at: (point) ->
         return @instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
@@ -22,7 +21,8 @@ class CityModel extends ABM.Model
     @link_agents: (agent_a, agent_b) ->
         @instance.links.create(agent_a, agent_b)
 
-    setup: ->
+    reset: (@config, start) ->
+        super(start)
         CityModel.instance = this
         @set_up_AStar_helpers()
 
@@ -31,6 +31,8 @@ class CityModel extends ABM.Model
 
         @init_patches()
         @spawn_entities()
+
+    setup: ->
 
     step: ->
         # console.log @anim.toString() if @anim.ticks % 100 == 0
@@ -51,7 +53,7 @@ class CityModel extends ABM.Model
         RoadNode.initialize_module(@road_nodes)
         RoadBuilder.initialize_module(@road_makers)
         HouseBuilder.initialize_module(@house_makers)
-        Inspector.initialize_module(@inspectors)
+        Inspector.initialize_module(@inspectors, @config.inspectors)
         Planner.initialize_module(@planners)
         MessageBoard.initialize_module()
 
