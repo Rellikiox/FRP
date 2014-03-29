@@ -1,6 +1,7 @@
 class BaseAgent
 
     current_state: null
+    current_state_name: null
 
     init: () ->
 
@@ -9,18 +10,25 @@ class BaseAgent
 
     _set_state: (new_state) ->
         @_log("#{@id}: #{@label} -> #{new_state}")
-        @label = @_get_label(new_state)
-        @current_state = @['s_' + new_state]
+        @_update_state(new_state)
+
 
     _set_initial_state: (state) ->
         @_log("#{@id}: @#{state}")
-        @label = @_get_label(state)
-        @current_state = @['s_' + state]
+        @_update_state(state)
 
-    _get_label: (state) ->
+    _update_state: (state) ->
+        @current_state_name = state
+        @label = @_get_label()
+        @current_state = @['s_' + @current_state_name]
+
+    update_label: () ->
+        @label = @_get_label()
+
+    _get_label: () ->
         label = "#{@id}" if @show_ids
         label += ": " if @show_ids and @show_states
-        label += "#{state}" if @show_states
+        label += "#{@current_state_name}" if @show_states
         return label
 
     _log: (msg) ->

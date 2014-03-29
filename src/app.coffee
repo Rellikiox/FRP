@@ -9,16 +9,21 @@ class App
 
     setup_model: () ->
         @model = new CityModel(@element_id, 16, -16, 16, -16, 16)
-        @seed = GPW.pronounceable(8)
+        $('#seed').val(GPW.pronounceable(8))
         # @seed = "therinet"
+
 
     run: () ->
         config = @get_config()
-        Math.seedrandom(@seed)
+        @get_and_update_seed()
         @model.reset(config, not @paused)
 
     restart: () ->
         @run()
+
+    get_and_update_seed: () ->
+        @seed = $('#seed').val()
+        Math.seedrandom(@seed)
 
     get_int_val: (id) ->
         parseInt($(id).val())
@@ -79,6 +84,18 @@ class App
 
         $('button.j-iterate-until').click(() =>
             @animateTo(parseInt($('input.j-iterate-until').val())))
+
+        $('input.j-update-debug-info').click () =>
+            @update_debug_info()
+
+    update_debug_info: () ->
+        config =
+            agents:
+                show_states: @get_cb_val('#show-state')
+                show_ids: @get_cb_val('#show-id')
+                show_logs: @get_cb_val('#show-logs')
+
+        @model.update_debug_config(config)
 
     get_model: () ->
         return @model

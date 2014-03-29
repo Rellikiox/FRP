@@ -51,6 +51,11 @@ class CityModel extends ABM.Model
     #         when "connectivity" then @draw_connectivity_color()
     #     super
 
+    update_debug_config: (debug_config) ->
+        @config.debug = debug_config
+        @set_agent_debug_info()
+        agent.update_label?() for agent in @agents
+
     initialize_modules: () ->
         Road.initialize_module(@roads)
         RoadNode.initialize_module(@road_nodes)
@@ -73,6 +78,9 @@ class CityModel extends ABM.Model
         @refreshPatches = true
         @draw_mode = "normal"
 
+        @set_agent_debug_info()
+
+    set_agent_debug_info: () ->
         for key, value of @config.debug.agents
             @agents.setDefault(key, value)
 

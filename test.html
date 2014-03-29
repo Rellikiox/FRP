@@ -64,30 +64,50 @@
               <div class="panel panel-default">
                 <div class="panel-heading">
                   <h3 class="panel-title">
-                    <a data-toggle="collapse" href="#debug-road-inspector">Debug</a>
+                    <a data-toggle="collapse" href="#general">General</a>
                   </h3>
                 </div>
-                <div id="debug-road-inspector" class="panel-collapse collapse in">
+                <div id="general" class="panel-collapse collapse in">
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-lg-4">
+                        <div class="form-group">
+                          <label for="inspection-area">Seed</label>
+                          <input type="text" class="form-control" id="seed" value="">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#debug">Debug</a>
+                  </h3>
+                </div>
+                <div id="debug" class="panel-collapse collapse in">
                   <div class="panel-body">
                     <div class="row">
                       <div class="col-lg-4">
                         <div class="checkbox">
                           <label>
-                            <input type="checkbox" id="show-state"> Show states
+                            <input type="checkbox" class="j-update-debug-info" id="show-state"> Show states
                           </label>
                         </div>
                       </div><!-- /.col-lg-4 -->
                       <div class="col-lg-4">
                         <div class="checkbox">
                           <label>
-                            <input type="checkbox" id="show-id"> Show IDs
+                            <input type="checkbox" class="j-update-debug-info" id="show-id"> Show IDs
                           </label>
                         </div>
                       </div><!-- /.col-lg-4 -->
                       <div class="col-lg-4">
                         <div class="checkbox">
                           <label>
-                            <input type="checkbox" id="show-logs"> Show logs
+                            <input type="checkbox" class="j-update-debug-info" id="show-logs"> Show logs
                           </label>
                         </div>
                       </div><!-- /.col-lg-4 -->
