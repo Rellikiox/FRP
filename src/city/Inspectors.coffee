@@ -9,6 +9,8 @@ class Inspector
         @inspectors = inspectors_breed
         @inspectors.setDefault('color', @default_color)
 
+        RoadInspector.construction_points = []
+
         for key, value of config.node_inspector
             NodeInspector.prototype[key] = value
         for key, value of config.road_inspector
@@ -96,9 +98,6 @@ class NodeInspector extends Inspector
 
 
 class RoadInspector extends Inspector
-
-    @construction_points = []
-
     ring_increment: 4
     ring_radius: 6
 
