@@ -59,35 +59,43 @@
 
           <!-- Tab panes -->
           <div class="tab-content">
-            <div class="tab-pane active" id="simulation">
+            <div class="tab-pane active panel-group" id="simulation">
+
               <div class="panel panel-default">
-                <div class="panel-body">
-                  <div class="row">
-                    <div class="col-lg-6">
-                      <div class="input-group">
-                        <input type="text" class="j-iterate-over form-control">
-                        <span class="input-group-btn">
-                          <button class="j-iterate-over btn btn-default" type="button">Iterate over</button>
-                        </span>
-                      </div><!-- /input-group -->
-                    </div><!-- /.col-lg-6 -->
-                    <div class="col-lg-6">
-                      <div class="input-group">
-                        <input type="text" class="j-iterate-until form-control">
-                        <span class="input-group-btn">
-                          <button class="j-iterate-until btn btn-default" type="button">Iterate until</button>
-                        </span>
-                      </div><!-- /input-group -->
-                    </div><!-- /.col-lg-6 -->
+                <div class="panel-heading">
+                  <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#debug-road-inspector">Debug</a>
+                  </h3>
+                </div>
+                <div id="debug-road-inspector" class="panel-collapse collapse in">
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-lg-6">
+                        <div class="checkbox">
+                          <label>
+                            <input type="checkbox" id="show-state"> Show state
+                          </label>
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                      <div class="col-lg-6">
+                        <div class="checkbox">
+                          <label>
+                            <input type="checkbox" id="show-id"> Show ID
+                          </label>
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+
             <div class="tab-pane panel-group" id="inspectors">
+
               <div class="panel panel-default">
                 <div class="panel-heading">
                   <h3 class="panel-title">
-                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse-road-inspector">RoadInspector</a>
+                    <a data-toggle="collapse"href="#collapse-road-inspector">RoadInspector</a>
                   </h3>
                 </div>
                 <div id="collapse-road-inspector" class="panel-collapse collapse in">
@@ -112,7 +120,7 @@
               <div class="panel panel-default">
                 <div class="panel-heading">
                   <h3 class="panel-title">
-                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse-node-inspector">NodeInspector</a>
+                    <a data-toggle="collapse"  href="#collapse-node-inspector">NodeInspector</a>
                   </h3>
                 </div>
                 <div id="collapse-node-inspector" class="panel-collapse collapse">
@@ -135,7 +143,9 @@
                 </div>
               </div>
             </div>
+
             <div class="tab-pane" id="builders">...</div>
+
             <div class="tab-pane" id="planners">...</div>
           </div>
 

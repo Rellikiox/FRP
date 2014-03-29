@@ -23,6 +23,9 @@ class App
     get_int_val: (id) ->
         parseInt($(id).val())
 
+    get_cb_val: (id) ->
+        $(id).prop('checked')
+
     get_config: () ->
         inspectors:
             node_inspector:
@@ -31,6 +34,9 @@ class App
             road_inspector:
                 ring_radius: @get_int_val('#initial-radius')
                 ring_increment: @get_int_val('#radius-increment')
+        debug:
+            show_states: @get_cb_val('#show-state')
+            show_ids: @get_cb_val('#show-id')
 
     play_pause_model: () ->
         if @paused

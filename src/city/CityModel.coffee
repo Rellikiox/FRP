@@ -12,6 +12,9 @@ class CityModel extends ABM.Model
     @log = (msg) ->
         console.log msg if @instance?.debugging
 
+    @debug_info: () ->
+        return @instance?.config.debug
+
     @get_patch_at: (point) ->
         return @instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
 
@@ -69,6 +72,9 @@ class CityModel extends ABM.Model
         @anim.setRate 120, false
         @refreshPatches = true
         @draw_mode = "normal"
+
+        @agents.setDefault('show_ids', @config.debug.show_ids)
+        @agents.setDefault('show_states', @config.debug.show_states)
 
     spawn_entities: () ->
         @city_hall = @create_city_hall(0, 0)

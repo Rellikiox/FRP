@@ -9,13 +9,19 @@ class BaseAgent
 
     _set_state: (new_state) ->
         CityModel.log("#{@id}: #{@label} -> #{new_state}")
-        @label = new_state
+        @label = @_get_label(new_state)
         @current_state = @['s_' + new_state]
 
     _set_initial_state: (state) ->
         CityModel.log("#{@id}: @#{state}")
-        @label = state
+        @label = @_get_label(state)
         @current_state = @['s_' + state]
+
+    _get_label: (state) ->
+        label = "#{@id}" if @show_ids
+        label += ": " if @show_ids and @show_states
+        label += "#{state}" if @show_states
+        return label
 
     _move: (point) ->
         @_face_point point
