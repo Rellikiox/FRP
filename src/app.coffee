@@ -35,8 +35,10 @@ class App
                 ring_radius: @get_int_val('#initial-radius')
                 ring_increment: @get_int_val('#radius-increment')
         debug:
-            show_states: @get_cb_val('#show-state')
-            show_ids: @get_cb_val('#show-id')
+            agents:
+                show_states: @get_cb_val('#show-state')
+                show_ids: @get_cb_val('#show-id')
+                show_logs: @get_cb_val('#show-logs')
 
     play_pause_model: () ->
         if @paused

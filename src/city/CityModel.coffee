@@ -73,8 +73,8 @@ class CityModel extends ABM.Model
         @refreshPatches = true
         @draw_mode = "normal"
 
-        @agents.setDefault('show_ids', @config.debug.show_ids)
-        @agents.setDefault('show_states', @config.debug.show_states)
+        for key, value of @config.debug.agents
+            @agents.setDefault(key, value)
 
     spawn_entities: () ->
         @city_hall = @create_city_hall(0, 0)
