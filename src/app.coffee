@@ -48,19 +48,16 @@ class App
     play_pause_model: () ->
         if @paused
             @model.start()
-            $('#step').attr('disabled', true);
             $('#play-pause').find('.btn-text').text('Pause')
         else
             @model.stop()
-            $('#step').attr('disabled', false);
             $('#play-pause').find('.btn-text').text('Play')
         @paused = not @paused
         null
 
     step_model: () ->
-        if @paused
-            @model.anim.step()
-            @model.anim.draw()
+        steps = @get_int_val('input.step')
+        @animate(steps)
 
     set_key_command: (key, fn) ->
         $(document).bind 'keydown', key, fn
@@ -73,17 +70,11 @@ class App
             @play_pause_model()
             $('#play-pause span.glyphicon').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
 
-        $('#step').click () =>
+        $('a#step').click () =>
             @step_model()
 
         $('#reload').click () =>
             @restart()
-
-        $('button.j-iterate-over').click(() =>
-            @animate(parseInt($('input.j-iterate-over').val())))
-
-        $('button.j-iterate-until').click(() =>
-            @animateTo(parseInt($('input.j-iterate-until').val())))
 
         $('input.j-update-debug-info').click () =>
             @update_debug_info()
@@ -106,15 +97,6 @@ class App
         while i < ticks
             @model.anim.step()
             i += 1
-        if not @paused
-            @model.start()
-        else
-            @model.anim.draw()
-
-    animateTo: (ticks) ->
-        @model.stop()
-        while @model.anim.ticks < ticks
-            @model.anim.step()
         if not @paused
             @model.start()
         else

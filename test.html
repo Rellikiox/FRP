@@ -12,38 +12,30 @@
       </div>
       <div class="row">
         <div class="col-md-6">
-          <div style="text-align: center;">
-            <a href="#" id="play-pause" class="btn btn-default btn-xs">
-              <span class="glyphicon glyphicon-pause"></span>
-              <span class="btn-text">Pause</span>
-            </a>
-            <a href="#" id="step" disabled="disabled" class="btn btn-default btn-xs">
-              <span class="glyphicon glyphicon-step-forward"></span>
-              <span class="btn-text">Step</span>
-            </a>
-            <a href="#" id="reload" class="btn btn-default btn-xs">
-              <span class="glyphicon glyphicon-refresh"></span>
-              <span class="btn-text">Restart</span>
-            </a>
-          </div>
-
-          <div class="row" style="margin: 5px;">
-            <div class="col-lg-6">
+          <div class="row" style="margin-bottom: 10px;">
+            <div class="col-md-4"  style="text-align: right;">
+              <a href="#" id="play-pause" class="btn btn-default btn-xs">
+                <span class="glyphicon glyphicon-pause"></span>
+                <span class="btn-text">Pause</span>
+              </a>
+            </div>
+            <div class="col-md-4">
               <div class="input-group">
-                <input type="text" class="j-iterate-over form-control">
+                <input type="text" class="step form-control" value="1">
                 <span class="input-group-btn">
-                  <button class="j-iterate-over btn btn-default" type="button">Iterate over</button>
+                  <a href="#" id="step" class="btn btn-default btn-xs">
+                    <span class="glyphicon glyphicon-step-forward"></span>
+                    <span class="btn-text">Step</span>
+                  </a>
                 </span>
-              </div><!-- /input-group -->
-            </div><!-- /.col-lg-6 -->
-            <div class="col-lg-6">
-              <div class="input-group">
-                <input type="text" class="j-iterate-until form-control">
-                <span class="input-group-btn">
-                  <button class="j-iterate-until btn btn-default" type="button">Iterate until</button>
-                </span>
-              </div><!-- /input-group -->
-            </div><!-- /.col-lg-6 -->
+              </div>
+            </div>
+            <div class="col-md-4">
+              <a href="#" id="reload" class="btn btn-default btn-xs">
+                <span class="glyphicon glyphicon-refresh"></span>
+                <span class="btn-text">Restart</span>
+              </a>
+            </div>
           </div>
 
           <div id="layers"></div>
