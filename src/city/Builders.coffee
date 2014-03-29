@@ -62,7 +62,7 @@ class RoadExtender extends RoadBuilder
         @points_to_report = [@endpoint]
 
         @_set_initial_state('go_to_point_state')
-        @msg_reader = MessageBoard.get_board('inspect_node')
+        @msg_reader = MessageBoard.get_board('node_built')
 
     s_go_to_point_state: ->
         if not @path?
@@ -87,7 +87,7 @@ class RoadConnector extends RoadBuilder
         @points_to_report = [@startpoint, @endpoint]
 
         @_set_initial_state('build_to_point_state')
-        @msg_reader = MessageBoard.get_board('inspect_node')
+        @msg_reader = MessageBoard.get_board('node_built')
 
 
 

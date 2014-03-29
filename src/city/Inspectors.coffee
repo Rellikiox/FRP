@@ -41,16 +41,18 @@ class NodeInspector extends Inspector
     init: () ->
         @_set_initial_state('get_message')
         @msg_boards =
-            inspect: MessageBoard.get_board('inspect_node')
-            connect: MessageBoard.get_board('connect_nodes')
+            inspect: MessageBoard.get_board('node_built')
+            connect: MessageBoard.get_board('nodes_unconnected')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
         if @current_message?
-            @path = CityModel.instance.roadAStar.getPath(@, @current_message.patch)
             @_set_state('go_to_endpoint')
 
     s_go_to_endpoint: () ->
+        if not @path?
+            @path = CityModel.instance.roadAStar.getPath(@, @current_message.patch)
+
         @_move(@path[0])
 
         if @_in_point(@path[0])
@@ -68,7 +70,6 @@ class NodeInspector extends Inspector
             @nodes_under_investigation = []
             @current_message = null
             @_set_state('get_message')
-
 
     _inspect_node: (node) ->
         if node.factor > @max_distance_factor
@@ -103,7 +104,7 @@ class RoadInspector extends Inspector
 
     init: () ->
         @_set_initial_state('get_inspection_point')
-        @build_endpoint_board = MessageBoard.get_board('build_endpoint')
+        @build_endpoint_board = MessageBoard.get_board('possible_node')
 
     s_get_inspection_point: () ->
         @inspection_point = @_get_point_to_inspect()

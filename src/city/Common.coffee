@@ -34,6 +34,12 @@ class BaseAgent
     _log: (msg) ->
         console.log(msg) if @show_logs
 
+    _link_to: (agent) ->
+        CityModel.link_agents(@, agent) if @show_links
+
+    _clear_links: () ->
+        link.die() for link in @myLinks()
+
     _move: (point) ->
         @_face_point point
         @forward(@speed)
