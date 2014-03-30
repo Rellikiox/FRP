@@ -201,6 +201,7 @@ class LotInspector
 
     init: () ->
         @_set_initial_state('get_message')
+        @patches_to_check = []
         @msg_boards =
             inspect: MessageBoard.get_board('inspect_lot')
             built: MessageBoard.get_board('lot_built')
@@ -224,12 +225,12 @@ class LotInspector
     # This checks each of the 8 surrounding patches
     # to see if they are part of a completed lot
     s_check_possible_lots: () ->
-        if not @patches_to_check?
+        if @patches_to_check.length is 0
             @patches_to_check = @_get_patches_to_check()
 
         @_check_patch(@patches_to_check.shift())
 
-        if @patches_to_check.length == 0
+        if @patches_to_check.length is 0
             @_set_state('get_message')
 
     _get_patches_to_check: () ->
@@ -264,6 +265,7 @@ class LotInspector
         # Look north
         edge = false
         for offset in offsets
+            current_patch = patch
             while not edge
                 current_patch = @_get_path_with_offset(current_patch, offset)
                 if Road.is_road(current_patch)
