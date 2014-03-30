@@ -24,7 +24,7 @@ class RoadBuilder
 
     @spawn_road_maker: (patch, klass) ->
         road_maker = patch.sprout(1, @road_makers)[0]
-        extend(road_maker, FSMAgent, klass)
+        extend(road_maker, FSMAgent, MovingAgent, klass)
         return road_maker
 
     # Utils
