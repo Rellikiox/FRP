@@ -34,6 +34,8 @@ class Inspector
 
     speed: 0.05
 
+    test: 1
+
 
 class NodeInspector extends Inspector
 
@@ -193,3 +195,88 @@ class RoadInspector extends Inspector
 
     _lap_completed: () ->
         return @angle_moved >= 2 * Math.PI
+
+
+class LotInspector
+
+    init: () ->
+        @_set_initial_state('get_message')
+        @msg_boards =
+            inspect: MessageBoard.get_board('inspect_lot')
+            built: MessageBoard.get_board('lot_built')
+
+    s_get_message: () ->
+        @current_message = @msg_boards.inspect.get_message()
+        if @current_message?
+            @inspection_point = @current_message.patch
+            @_set_state('go_to_point')
+
+    s_go_to_point: () ->
+        if not @inspection_point?
+            @_set_state('s_get_message')
+            return
+
+        @_move(@inspection_point)
+
+        if @_in_point(@inspection_point)
+            @_set_state('check_possible_lots')
+
+    # This checks each of the 8 surrounding patches
+    # to see if they are part of a completed lot
+    s_check_possible_lots: () ->
+        if not @patches_to_check?
+            @patches_to_check = @_get_patches_to_check()
+
+        @_check_patch(@patches_to_check.shift())
+
+        if @patches_to_check.length == 0
+            @_set_state('get_message')
+
+    _get_patches_to_check: () ->
+        patches = (p for p in @p.n when not Road.is_road(p))
+
+        invalid = []
+        for i in [patches.length-1..0] by -1
+            for j in [0..patches.length-1]
+                if i == j
+                    break
+                if @_adyacent(patches[i], patches[j])
+                    invalid.push(patches[j])
+
+        return (p for p in patches when not ABM.util.contains(invalid, p))
+
+
+    _adyacent: (patch_a, patch_b) ->
+        horizontal = Math.abs(patch_a.x - patch_b.x) == 1 and patch_a.y == patch_b.y
+        adyacent = horizontal or patch_a.x == patch_b.x and Math.abs(patch_a.y - patch_b.y) == 1
+        return adyacent
+
+    _check_patch: (patch) ->
+        if not @_any_edge_visible(patch)
+            possible_lot = @_get_lot(patch)
+            if possible_lot?
+                @msg_boards.built.post_message({lot: possible_lot})
+
+    _any_edge_visible: (patch) ->
+        current_patch = patch
+
+        offsets = [{x: 0, y: 1}, {x: 1, y: 0}, {x: 0, y: -1}, {x: -1, y: 0}]
+        # Look north
+        edge = false
+        for offset in offsets
+            while not edge
+                current_patch = @_get_path_with_offset(current_patch, offset)
+                if Road.is_road(current_patch)
+                    break
+                if current_patch.isOnEdge()
+                    edge = true
+            if edge
+                break
+        return edge
+
+    _get_path_with_offset: (patch, offset) ->
+        point = {x: patch.x + offset.x, y: patch.y + offset.y}
+        return CityModel.get_patch_at(point)
+
+    _get_lot: (patch) ->
+

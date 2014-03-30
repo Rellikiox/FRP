@@ -71,11 +71,13 @@ class LotPlanner
     @available_lots: []
 
     init: () ->
-        @msg_reader = MessageBoard.get_board('possible_lot')
+        @boards =
+            possible: MessageBoard.get_board('possible_lot')
+            inspect: MessageBoard.get_board('inspect_lot')
         @_set_initial_state('get_message')
 
     s_get_message: () ->
-        @message = @msg_reader.get_message()
+        @message = @boards.possible.get_message()
         if @message?
             @_set_state('send_lot_inspector')
 
@@ -84,7 +86,7 @@ class LotPlanner
             @_set_state('get_message')
             return
 
-        Inspector.spawn_lot_inspector(@message.patch)
+        @boards.inspect.post_message({patch: @message.patch})
         @message = null
         @_set_state('get_message')
 

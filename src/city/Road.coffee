@@ -109,7 +109,7 @@ class Road
     @get_connectivity: (patch) ->
         return patch.dist_to_road
 
-    @_get_road_neighbours: (patch) ->
+    @get_road_neighbours: (patch) ->
         return (road for road in patch.n4 when Road.is_road(road))
 
 
@@ -161,7 +161,7 @@ class RoadNode
             RoadNode.split_link_at(n_road)
 
     @_get_nodes_connecting: (road) ->
-        neighbour_roads = Road._get_road_neighbours(road)
+        neighbour_roads = Road.get_road_neighbours(road)
         [road_a, road_b] = @_get_aligned_patches(neighbour_roads)
         [a_dir, b_dir] = @_get_direction(road_a, road_b)
 

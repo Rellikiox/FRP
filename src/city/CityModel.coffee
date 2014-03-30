@@ -110,6 +110,7 @@ class CityModel extends ABM.Model
             patch = u.oneOf(@city_hall.n4)
             Inspector.spawn_node_inspector(patch)
             Inspector.spawn_road_inspector(patch)
+            Inspector.spawn_lot_inspector(patch)
             i += 1
 
     spawn_planners: (ammount) ->

@@ -51,6 +51,8 @@ class FSMAgent
 
 class MovingAgent
 
+    speed: 0.05
+
     _move: (point) ->
         @_face_point point
         @forward(@speed)

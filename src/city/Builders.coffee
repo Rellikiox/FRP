@@ -86,7 +86,31 @@ class RoadConnector extends RoadBuilder
         @points_to_report = [@startpoint, @endpoint]
 
         @_set_initial_state('build_to_point_state')
-        @msg_reader = MessageBoard.get_board('node_built')
+
+        @msg_boards =
+            node: MessageBoard.get_board('node_built')
+            lot: MessageBoard.get_board('possible_lot')
+
+    s_build_to_point_state: ->
+        if not @path?
+            @path = @_get_terrain_path_to(@endpoint)
+
+        @_move @path[0]
+
+        if not Road.is_road @p
+            @_drop_road()
+            @_check_for_lots()
+
+        if @_in_point(@path[0])
+            @path.shift()
+            if @path.length is 0
+                for point in @points_to_report
+                    @msg_boards.node.post_message({patch: point})
+                @_set_state('die')
+
+    _check_for_lots: () ->
+        if Road.get_road_neighbours(@p).length >= 2
+            @msg_boards.lot.post_message({patch: @p})
 
 
 
