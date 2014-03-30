@@ -1,4 +1,11 @@
-class BaseAgent
+
+extend = (obj, mixin_list...) ->
+    for mixin in mixin_list
+        obj[name] = method for name, method of mixin.prototype
+        obj
+
+
+class FSMAgent
 
     current_state: null
     current_state_name: null
@@ -26,7 +33,6 @@ class BaseAgent
         @label = @_get_label()
 
     _get_label: () ->
-        label = ""
         label = "#{@id}" if @show_ids
         label += ": " if @show_ids and @show_states
         label += "#{@current_state_name}" if @show_states
@@ -40,6 +46,9 @@ class BaseAgent
 
     _clear_links: () ->
         link.die() for link in @myLinks()
+
+
+class MovingAgent
 
     _move: (point) ->
         @_face_point point

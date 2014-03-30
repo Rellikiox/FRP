@@ -13,19 +13,18 @@ class RoadBuilder
         @road_makers.setDefault('color', @default_color)
 
     @spawn_road_connector: (road_a, road_b) ->
-        road_maker = @spawn_road_maker(road_a, RoadConnector.prototype)
+        road_maker = @spawn_road_maker(road_a, RoadConnector)
         road_maker.init(road_b)
         return road_maker
 
     @spawn_road_extender: (endpoint) ->
-        road_maker = @spawn_road_maker(CityModel.instance.city_hall, RoadExtender.prototype)
+        road_maker = @spawn_road_maker(CityModel.instance.city_hall, RoadExtender)
         road_maker.init(endpoint)
         return road_maker
 
-    @spawn_road_maker: (patch, prototype) ->
+    @spawn_road_maker: (patch, klass) ->
         road_maker = patch.sprout(1, @road_makers)[0]
-        extend(road_maker, BaseAgent.prototype)
-        extend(road_maker, prototype)
+        extend(road_maker, FSMAgent, klass)
         return road_maker
 
     # Utils

@@ -1,9 +1,5 @@
 u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
 
-extend = (obj, mixin) ->
-  obj[name] = method for name, method of mixin
-  obj
-
 
 class CityModel extends ABM.Model
 
@@ -121,7 +117,7 @@ class CityModel extends ABM.Model
         while i < ammount
             Planner.spawn_road_planner()
             Planner.spawn_node_planner()
-            Planner.spawn_growth_planner()
+            # Planner.spawn_growth_planner()
             i += 1
 
 

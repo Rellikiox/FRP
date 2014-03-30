@@ -18,15 +18,14 @@ class Inspector
         null
 
     @spawn_road_inspector: (patch) ->
-        return @spawn_inspector(patch, RoadInspector.prototype)
+        return @spawn_inspector(patch, RoadInspector)
 
     @spawn_node_inspector: (patch) ->
-        return @spawn_inspector(patch, NodeInspector.prototype)
+        return @spawn_inspector(patch, NodeInspector)
 
-    @spawn_inspector: (patch, prototype) ->
+    @spawn_inspector: (patch, klass) ->
         inspector = patch.sprout(1, @inspectors)[0]
-        extend(inspector, BaseAgent.prototype)
-        extend(inspector, prototype)
+        extend(inspector, FSMAgent, MovingAgent, klass)
         inspector.init()
         return inspector
 
