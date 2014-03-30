@@ -9,7 +9,7 @@ class BaseAgent
         @current_state()
 
     _set_state: (new_state) ->
-        @_log("#{@id}: #{@label} -> #{new_state}")
+        @_log("#{@id}: #{@current_state_name} -> #{new_state}")
         @_update_state(new_state)
 
 
@@ -26,6 +26,7 @@ class BaseAgent
         @label = @_get_label()
 
     _get_label: () ->
+        label = ""
         label = "#{@id}" if @show_ids
         label += ": " if @show_ids and @show_states
         label += "#{@current_state_name}" if @show_states
