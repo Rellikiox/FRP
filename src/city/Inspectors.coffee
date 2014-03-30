@@ -112,7 +112,7 @@ class RoadInspector extends Inspector
     s_get_inspection_point: () ->
         @inspection_point = @_get_point_to_inspect()
 
-        if @inspection_point?
+        if @_valid_point(@inspection_point)
             @_set_state('go_to_inspection_point')
 
     s_go_to_inspection_point: () ->
@@ -149,6 +149,9 @@ class RoadInspector extends Inspector
             @ring_radius += @ring_increment
             @_set_state('get_inspection_point')
 
+
+    _valid_point: (point) ->
+        return point? and CityModel.is_on_world(point) and not Road.is_road(CityModel.get_patch_at(point))
 
     _get_point_to_inspect: () ->
         rand_angle  = ABM.util.randomFloat(2 * Math.PI)

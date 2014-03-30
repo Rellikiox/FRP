@@ -4,6 +4,7 @@ class Planner
     @initialize_module: (planners_breed) ->
         @planners = planners_breed
         @planners.setDefault 'hidden', true
+        LotKeeperPlanner.available_lots = []
 
     @spawn_road_planner: () ->
         return @spawn_planner(RoadPlanner)
@@ -16,6 +17,12 @@ class Planner
 
     @spawn_lot_planner: () ->
         return @spawn_planner(LotPlanner)
+
+    @spawn_housing_planner: () ->
+        return @spawn_planner(HousingPlanner)
+
+    @spawn_lot_keeper_planner: () ->
+        return @spawn_planner(LotKeeperPlanner)
 
     @spawn_planner: (klass) ->
         planner = @planners.create(1)[0]
@@ -68,8 +75,6 @@ class RoadPlanner
 
 class LotPlanner
 
-    @available_lots: []
-
     init: () ->
         @boards =
             possible: MessageBoard.get_board('possible_lot')
@@ -89,6 +94,42 @@ class LotPlanner
         @boards.inspect.post_message({patch: @message.patch})
         @message = null
         @_set_state('get_message')
+
+
+class LotKeeperPlanner
+
+    @available_lots: []
+
+    init: () ->
+        @board = MessageBoard.get_board('lot_built')
+        @_set_initial_state('get_message')
+
+    s_get_message: () ->
+        @message = @board.get_message()
+        if @message?
+            LotKeeperPlanner.available_lots.push(@message.lot)
+
+
+class HousingPlanner
+
+    init: () ->
+        @board = MessageBoard.get_board('new_citizen')
+        @_set_initial_state('get_message')
+
+    s_get_message: () ->
+        @message = @board.get_message()
+        if @message?
+            @_set_state('send_house_builder')
+
+    s_send_house_builder: () ->
+        if LotKeeperPlanner.available_lots.length > 0
+            lot = @_random_choice(LotKeeperPlanner.available_lots)
+            block = @_random_choice(lot)
+            HouseBuilder.spawn_house_maker(block)
+            @_set_state('get_message')
+
+    _random_choice: (list) ->
+        return list[ABM.util.randomInt(list.length)]
 
 
 class GrowthPlanner

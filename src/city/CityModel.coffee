@@ -120,6 +120,8 @@ class CityModel extends ABM.Model
             Planner.spawn_node_planner()
             Planner.spawn_growth_planner()
             Planner.spawn_lot_planner()
+            Planner.spawn_housing_planner()
+            Planner.spawn_lot_keeper_planner()
             i += 1
 
 

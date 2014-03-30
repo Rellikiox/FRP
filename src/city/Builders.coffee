@@ -119,41 +119,47 @@ class HouseBuilder
     @house_makers: null
 
     # Appearance
-    @default_color: [255,0,0]
+    @default_color: [100,0,0]
 
     @initialize_module: (house_makers_breed) ->
         @house_makers = house_makers_breed
         @house_makers.setDefault('color', @default_color)
 
     @spawn_house_maker: (patch) ->
-        house_maker = patch.sprout(1, @house_makers)[0]
-        extend(house_maker, BaseAgent.prototype)
-        extend(house_maker, HouseMaker.prototype)
-        house_maker.init()
+        house_maker = CityModel.instance.city_hall.sprout(1, @house_makers)[0]
+        extend(house_maker, FSMAgent, MovingAgent, HouseBuilder)
+        house_maker.init(patch)
         return house_maker
-
 
     speed: 0.05
 
-    init: () ->
-        @_set_initial_state('move_and_place')
+    init: (@block) ->
+        @_set_initial_state('go_to_lot')
 
-    s_move_and_place: () ->
-        # Check if there are any patches where a house might go
-        near_patches = ABM.util.shuffle @p.n
-        for patch in near_patches
-            if not House.isHouseHere(patch) and not Road.is_road(patch)
-                @_place_house(patch)
-                # Exit as soon as we place one
-                break
+    s_go_to_lot: ->
+        if not @path?
+            closest_road_to_target = Road.get_closest_road_to(@block)
+            @path = @_get_road_path_to(closest_road_to_target)
 
-        # Move to a random new patch
-        near_patches = ABM.util.shuffle @p.n4
-        for patch in near_patches
-            if Road.is_road patch
-                @_move(patch)
-                break
+        @_move(@path[0])
 
-    _place_house: (patch) ->
-        House.set_breed patch
+        if @_in_point(@path[0])
+            @path.shift()
+            if @path.length is 0
+                @_set_state('go_to_block')
+
+    s_go_to_block: () ->
+        @_move(@block)
+
+        if @_in_point(@block)
+            @_house_citizen(@p)
+            @_set_state('die')
+
+    s_die: () ->
+        @die()
+
+    _house_citizen: (patch) ->
+        if not House.isHouseHere(patch)
+            House.set_breed patch
+        patch.color = ABM.util.scaleColor(patch.color, 1.05)
 

@@ -16,6 +16,9 @@ class FSMAgent
     step: () ->
         @current_state()
 
+    s_die: () ->
+        @die()
+
     _set_state: (new_state) ->
         @_log("#{@id}: #{@current_state_name} -> #{new_state}")
         @_update_state(new_state)
