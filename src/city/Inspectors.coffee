@@ -256,6 +256,8 @@ class LotInspector
         if not @_any_edge_visible(patch)
             possible_lot = @_get_lot(patch)
             if possible_lot?
+                for p in possible_lot
+                    p.color = ABM.util.randomGray(140, 170)
                 @msg_boards.built.post_message({lot: possible_lot})
 
     _any_edge_visible: (patch) ->
@@ -280,5 +282,21 @@ class LotInspector
         point = {x: patch.x + offset.x, y: patch.y + offset.y}
         return CityModel.get_patch_at(point)
 
+    # It's just a flood fill
     _get_lot: (patch) ->
+        closed_list = []
+        open_list = [patch]
+        edge = false
+        while open_list.length > 0
+            p = open_list.shift()
+            if p.isOnEdge()
+                edge = true
+                break
+            open_list.push(n) for n in p.n when not Road.is_road(n) and not ABM.util.contains(open_list, n) and not ABM.util.contains(closed_list, n)
+            closed_list.push(p)
+        if not edge
+            return closed_list
+        else
+            return null
+
 
