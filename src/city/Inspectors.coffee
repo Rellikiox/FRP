@@ -23,6 +23,9 @@ class Inspector
     @spawn_node_inspector: (patch) ->
         return @spawn_inspector(patch, NodeInspector)
 
+    @spawn_lot_inspector: (patch) ->
+        return @spawn_inspector(patch, LotInspector)
+
     @spawn_inspector: (patch, klass) ->
         inspector = patch.sprout(1, @inspectors)[0]
         extend(inspector, FSMAgent, MovingAgent, klass)

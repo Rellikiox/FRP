@@ -1,7 +1,8 @@
 
 extend = (obj, mixin_list...) ->
     for mixin in mixin_list
-        obj[name] = method for name, method of mixin.prototype
+        for name, method of mixin.prototype
+            obj[name] = method
         obj
 
 

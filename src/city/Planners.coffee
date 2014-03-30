@@ -11,8 +11,11 @@ class Planner
     @spawn_node_planner: () ->
         return @spawn_planner(NodeInterconnectivityPlanner)
 
-    # @spawn_growth_planner: () ->
-    #     return @spawn_planner(GrowthPlanner)
+    @spawn_growth_planner: () ->
+        return @spawn_planner(GrowthPlanner)
+
+    @spawn_lot_planner: () ->
+        return @spawn_planner(LotPlanner)
 
     @spawn_planner: (klass) ->
         planner = @planners.create(1)[0]
@@ -51,9 +54,9 @@ class RoadPlanner
     s_get_message: () ->
         @message = @msg_reader.get_message()
         if @message?
-            @_set_state('emit_road_extender')
+            @_set_state('send_road_extender')
 
-    s_emit_road_extender: () ->
+    s_send_road_extender: () ->
         if not @message?
             @_set_state('get_message')
             return
@@ -63,20 +66,45 @@ class RoadPlanner
         @_set_state('get_message')
 
 
-# class GrowthPlanner
+class LotPlanner
 
-#     ticks_per_citizen: 30
+    @available_lots: []
 
-#     init: () ->
-#         @msg_reader = MessageBoard.get_board('new_citizen')
-#         @ticks_since_last_citizen = 0
+    init: () ->
+        @msg_reader = MessageBoard.get_board('possible_lot')
+        @_set_initial_state('get_message')
 
-#     step: () ->
-#         @_grow_population()
+    s_get_message: () ->
+        @message = @msg_reader.get_message()
+        if @message?
+            @_set_state('send_lot_inspector')
 
-#     _grow_population: () ->
-#         @ticks_since_last_citizen += 1
+    s_send_lot_inspector: () ->
+        if not @message?
+            @_set_state('get_message')
+            return
 
-#         if @ticks_since_last_citizen >= @ticks_per_citizen
-#             @msg_reader.post_message()
-#             @ticks_since_last_citizen = 0
+        Inspector.spawn_lot_inspector(@message.patch)
+        @message = null
+        @_set_state('get_message')
+
+
+class GrowthPlanner
+
+    ticks_per_citizen: 30
+
+    init: () ->
+        @msg_reader = MessageBoard.get_board('new_citizen')
+        @ticks_since_last_citizen = 0
+        @_set_initial_state('wait_until_ready')
+
+    s_wait_until_ready: () ->
+        @ticks_since_last_citizen += 1
+        if @ticks_since_last_citizen >= @ticks_per_citizen
+            @_set_state('grow_population')
+
+    s_grow_population: () ->
+        @msg_reader.post_message()
+        @ticks_since_last_citizen = 0
+        @_set_state('wait_until_ready')
+
