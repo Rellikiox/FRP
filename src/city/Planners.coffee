@@ -1,10 +1,9 @@
 class Planner
     @planners = null
 
-    @initialize_module: (planners_breed) ->
-        @planners = planners_breed
+    @initialize_module: (@planners) ->
         @planners.setDefault 'hidden', true
-        LotKeeperPlanner.available_lots = []
+        PlotKeeperPlanner.available_plots = []
 
     @spawn_road_planner: () ->
         return @spawn_planner(RoadPlanner)
@@ -15,14 +14,14 @@ class Planner
     @spawn_growth_planner: () ->
         return @spawn_planner(GrowthPlanner)
 
-    @spawn_lot_planner: () ->
-        return @spawn_planner(LotPlanner)
+    @spawn_plot_planner: () ->
+        return @spawn_planner(PlotPlanner)
 
     @spawn_housing_planner: () ->
         return @spawn_planner(HousingPlanner)
 
-    @spawn_lot_keeper_planner: () ->
-        return @spawn_planner(LotKeeperPlanner)
+    @spawn_plot_keeper_planner: () ->
+        return @spawn_planner(PlotKeeperPlanner)
 
     @spawn_planner: (klass) ->
         planner = @planners.create(1)[0]
@@ -73,20 +72,20 @@ class RoadPlanner
         @_set_state('get_message')
 
 
-class LotPlanner
+class PlotPlanner
 
     init: () ->
         @boards =
-            possible: MessageBoard.get_board('possible_lot')
-            inspect: MessageBoard.get_board('inspect_lot')
+            possible: MessageBoard.get_board('possible_plot')
+            inspect: MessageBoard.get_board('inspect_plot')
         @_set_initial_state('get_message')
 
     s_get_message: () ->
         @message = @boards.possible.get_message()
         if @message?
-            @_set_state('send_lot_inspector')
+            @_set_state('send_plot_inspector')
 
-    s_send_lot_inspector: () ->
+    s_send_plot_inspector: () ->
         if not @message?
             @_set_state('get_message')
             return
@@ -96,18 +95,18 @@ class LotPlanner
         @_set_state('get_message')
 
 
-class LotKeeperPlanner
+class PlotKeeperPlanner
 
-    @available_lots: []
+    @available_plots: []
 
     init: () ->
-        @board = MessageBoard.get_board('lot_built')
+        @board = MessageBoard.get_board('plot_built')
         @_set_initial_state('get_message')
 
     s_get_message: () ->
         @message = @board.get_message()
         if @message?
-            LotKeeperPlanner.available_lots.push(@message.lot)
+            PlotKeeperPlanner.available_plots.push(@message.plot)
 
 
 class HousingPlanner
@@ -122,9 +121,9 @@ class HousingPlanner
             @_set_state('send_house_builder')
 
     s_send_house_builder: () ->
-        if LotKeeperPlanner.available_lots.length > 0
-            lot = @_random_choice(LotKeeperPlanner.available_lots)
-            block = @_random_choice(lot)
+        if PlotKeeperPlanner.available_plots.length > 0
+            plot = @_random_choice(PlotKeeperPlanner.available_plots)
+            block = @_random_choice(plot)
             HouseBuilder.spawn_house_maker(block)
             @_set_state('get_message')
 

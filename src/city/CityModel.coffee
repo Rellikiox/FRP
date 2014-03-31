@@ -59,6 +59,7 @@ class CityModel extends ABM.Model
         HouseBuilder.initialize_module(@house_makers)
         Inspector.initialize_module(@inspectors, @config.inspectors)
         Planner.initialize_module(@planners)
+        House.initialize_module(@houses)
         MessageBoard.initialize_module()
 
     create_city_hall: (x, y) ->
@@ -110,7 +111,7 @@ class CityModel extends ABM.Model
             patch = u.oneOf(@city_hall.n4)
             Inspector.spawn_node_inspector(patch)
             Inspector.spawn_road_inspector(patch)
-            Inspector.spawn_lot_inspector(patch)
+            Inspector.spawn_plot_inspector(patch)
             i += 1
 
     spawn_planners: (ammount) ->
@@ -119,9 +120,9 @@ class CityModel extends ABM.Model
             Planner.spawn_road_planner()
             Planner.spawn_node_planner()
             Planner.spawn_growth_planner()
-            Planner.spawn_lot_planner()
+            Planner.spawn_plot_planner()
             Planner.spawn_housing_planner()
-            Planner.spawn_lot_keeper_planner()
+            Planner.spawn_plot_keeper_planner()
             i += 1
 
 

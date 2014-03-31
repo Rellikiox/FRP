@@ -23,8 +23,8 @@ class Inspector
     @spawn_node_inspector: (patch) ->
         return @spawn_inspector(patch, NodeInspector)
 
-    @spawn_lot_inspector: (patch) ->
-        return @spawn_inspector(patch, LotInspector)
+    @spawn_plot_inspector: (patch) ->
+        return @spawn_inspector(patch, PlotInspector)
 
     @spawn_inspector: (patch, klass) ->
         inspector = patch.sprout(1, @inspectors)[0]
@@ -200,14 +200,14 @@ class RoadInspector extends Inspector
         return @angle_moved >= 2 * Math.PI
 
 
-class LotInspector
+class PlotInspector
 
     init: () ->
         @_set_initial_state('get_message')
         @patches_to_check = []
         @msg_boards =
-            inspect: MessageBoard.get_board('inspect_lot')
-            built: MessageBoard.get_board('lot_built')
+            inspect: MessageBoard.get_board('inspect_plot')
+            built: MessageBoard.get_board('plot_built')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
@@ -223,11 +223,11 @@ class LotInspector
         @_move(@inspection_point)
 
         if @_in_point(@inspection_point)
-            @_set_state('check_possible_lots')
+            @_set_state('check_possible_plots')
 
     # This checks each of the 8 surrounding patches
-    # to see if they are part of a completed lot
-    s_check_possible_lots: () ->
+    # to see if they are part of a completed plot
+    s_check_possible_plots: () ->
         if @patches_to_check.length is 0
             @patches_to_check = @_get_patches_to_check()
 
@@ -257,11 +257,11 @@ class LotInspector
 
     _check_patch: (patch) ->
         if not @_any_edge_visible(patch)
-            possible_lot = @_get_lot(patch)
-            if possible_lot?
-                for p in possible_lot
+            possible_plot = @_get_plot(patch)
+            if possible_plot?
+                for p in possible_plot
                     p.color = ABM.util.randomGray(140, 170)
-                @msg_boards.built.post_message({lot: possible_lot})
+                @msg_boards.built.post_message({plot: possible_plot})
 
     _any_edge_visible: (patch) ->
         current_patch = patch
@@ -286,7 +286,7 @@ class LotInspector
         return CityModel.get_patch_at(point)
 
     # It's just a flood fill
-    _get_lot: (patch) ->
+    _get_plot: (patch) ->
         closed_list = []
         open_list = [patch]
         edge = false

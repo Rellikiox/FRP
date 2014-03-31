@@ -6,8 +6,7 @@ class Road
     @too_connected_threshold = 2
 
 
-    @initialize_module: (road_breed) ->
-        @roads = road_breed
+    @initialize_module: (@roads) ->
         @roads.setDefault("color", @default_color)
 
     @set_breed: (patch, city_hall_dist=null) ->
@@ -122,8 +121,7 @@ class RoadNode
     @road_nodes: null
     @default_color: [160,160,160]
 
-    @initialize_module: (road_nodes_breed) ->
-        @road_nodes = road_nodes_breed
+    @initialize_module: (@road_nodes) ->
         @road_nodes.setDefault('color', @default_color)
         @road_nodes.setDefault('shape', 'circle')
         @road_nodes.setDefault('size', 0.4)

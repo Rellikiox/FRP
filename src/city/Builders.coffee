@@ -89,7 +89,7 @@ class RoadConnector extends RoadBuilder
 
         @msg_boards =
             node: MessageBoard.get_board('node_built')
-            lot: MessageBoard.get_board('possible_lot')
+            plot: MessageBoard.get_board('possible_plot')
 
     s_build_to_point_state: ->
         if not @path?
@@ -99,7 +99,7 @@ class RoadConnector extends RoadBuilder
 
         if not Road.is_road @p
             @_drop_road()
-            @_check_for_lots()
+            @_check_for_plots()
 
         if @_in_point(@path[0])
             @path.shift()
@@ -108,9 +108,9 @@ class RoadConnector extends RoadBuilder
                     @msg_boards.node.post_message({patch: point})
                 @_set_state('die')
 
-    _check_for_lots: () ->
+    _check_for_plots: () ->
         if Road.get_road_neighbours(@p).length >= 2
-            @msg_boards.lot.post_message({patch: @p})
+            @msg_boards.plot.post_message({patch: @p})
 
 
 
@@ -134,9 +134,9 @@ class HouseBuilder
     speed: 0.05
 
     init: (@block) ->
-        @_set_initial_state('go_to_lot')
+        @_set_initial_state('go_to_plot')
 
-    s_go_to_lot: ->
+    s_go_to_plot: ->
         if not @path?
             closest_road_to_target = Road.get_closest_road_to(@block)
             @path = @_get_road_path_to(closest_road_to_target)
@@ -159,7 +159,7 @@ class HouseBuilder
         @die()
 
     _house_citizen: (patch) ->
-        if not House.isHouseHere(patch)
-            House.set_breed patch
+        if not House.is_house(patch)
+            House.make_here(patch)
         patch.color = ABM.util.scaleColor(patch.color, 1.05)
 
