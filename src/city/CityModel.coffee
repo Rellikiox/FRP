@@ -1,17 +1,15 @@
 u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
 
-extend = (obj, mixin) ->
-  obj[name] = method for name, method of mixin
-  obj
-
 
 class CityModel extends ABM.Model
 
+    @instance: null
 
     @log = (msg) ->
-    console.log msg if @instance?.debugging
+        console.log msg if @instance?.debugging
 
-    @instance: null
+    @debug_info: () ->
+        return @instance?.config.debug
 
     @get_patch_at: (point) ->
         return @instance.patches.patchXY(Math.round(point.x), Math.round(point.y))
@@ -22,7 +20,8 @@ class CityModel extends ABM.Model
     @link_agents: (agent_a, agent_b) ->
         @instance.links.create(agent_a, agent_b)
 
-    setup: ->
+    reset: (@config, start) ->
+        super(start)
         CityModel.instance = this
         @set_up_AStar_helpers()
 
@@ -31,6 +30,8 @@ class CityModel extends ABM.Model
 
         @init_patches()
         @spawn_entities()
+
+    setup: ->
 
     step: ->
         # console.log @anim.toString() if @anim.ticks % 100 == 0
@@ -46,12 +47,17 @@ class CityModel extends ABM.Model
     #         when "connectivity" then @draw_connectivity_color()
     #     super
 
+    update_debug_config: (debug_config) ->
+        @config.debug = debug_config
+        @set_agent_debug_info()
+        agent.update_label?() for agent in @agents
+
     initialize_modules: () ->
         Road.initialize_module(@roads)
         RoadNode.initialize_module(@road_nodes)
-        RoadMaker.initialize_module(@road_makers)
-        HouseMaker.initialize_module(@house_makers)
-        Inspector.initialize_module(@inspectors)
+        RoadBuilder.initialize_module(@road_makers)
+        HouseBuilder.initialize_module(@house_makers)
+        Inspector.initialize_module(@inspectors, @config.inspectors)
         Planner.initialize_module(@planners)
         MessageBoard.initialize_module()
 
@@ -68,13 +74,19 @@ class CityModel extends ABM.Model
         @refreshPatches = true
         @draw_mode = "normal"
 
+        @set_agent_debug_info()
+
+    set_agent_debug_info: () ->
+        for key, value of @config.debug.agents
+            @agents.setDefault(key, value)
+
     spawn_entities: () ->
         @city_hall = @create_city_hall(0, 0)
         Road.set_breed(patch, 1) for patch in @city_hall.n4
         for patch in @city_hall.n
             Road.set_breed(patch, 2) if not (patch.breed is @roads)
 
-        @spawn_house_makers(1)
+        @spawn_house_makers(0)
         @spawn_inspectors(1)
         @spawn_planners(1)
 
@@ -82,14 +94,14 @@ class CityModel extends ABM.Model
         i = 0
         while i < ammount
             patch = u.oneOf(@city_hall.n4)
-            RoadMaker.spawn_road_maker(patch)
+            RoadBuilder.spawn_road_maker(patch)
             i += 1
 
     spawn_house_makers: (ammount) ->
         i = 0
         while i < ammount
             patch = u.oneOf(@city_hall.n4)
-            HouseMaker.spawn_house_maker(patch)
+            HouseBuilder.spawn_house_maker(patch)
             i += 1
 
     spawn_inspectors: (ammount) ->
@@ -98,6 +110,7 @@ class CityModel extends ABM.Model
             patch = u.oneOf(@city_hall.n4)
             Inspector.spawn_node_inspector(patch)
             Inspector.spawn_road_inspector(patch)
+            Inspector.spawn_lot_inspector(patch)
             i += 1
 
     spawn_planners: (ammount) ->
@@ -105,6 +118,10 @@ class CityModel extends ABM.Model
         while i < ammount
             Planner.spawn_road_planner()
             Planner.spawn_node_planner()
+            Planner.spawn_growth_planner()
+            Planner.spawn_lot_planner()
+            Planner.spawn_housing_planner()
+            Planner.spawn_lot_keeper_planner()
             i += 1
 
 

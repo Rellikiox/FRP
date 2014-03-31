@@ -1,16 +1,60 @@
-class BaseAgent
+
+extend = (obj, mixin_list...) ->
+    for mixin in mixin_list
+        for name, method of mixin.prototype
+            obj[name] = method
+        obj
+
+
+class FSMAgent
 
     current_state: null
+    current_state_name: null
 
     init: () ->
 
     step: () ->
         @current_state()
 
+    s_die: () ->
+        @die()
+
     _set_state: (new_state) ->
-        console.log("Transitioning from #{@label} to #{new_state}")
-        @label = new_state
-        @current_state = @['s_' + new_state]
+        @_log("#{@id}: #{@current_state_name} -> #{new_state}")
+        @_update_state(new_state)
+
+
+    _set_initial_state: (state) ->
+        @_log("#{@id}: @#{state}")
+        @_update_state(state)
+
+    _update_state: (state) ->
+        @current_state_name = state
+        @label = @_get_label()
+        @current_state = @['s_' + @current_state_name]
+
+    update_label: () ->
+        @label = @_get_label()
+
+    _get_label: () ->
+        label = "#{@id}" if @show_ids
+        label += ": " if @show_ids and @show_states
+        label += "#{@current_state_name}" if @show_states
+        return label
+
+    _log: (msg) ->
+        console.log(msg) if @show_logs
+
+    _link_to: (agent) ->
+        CityModel.link_agents(@, agent) if @show_links
+
+    _clear_links: () ->
+        link.die() for link in @myLinks()
+
+
+class MovingAgent
+
+    speed: 0.05
 
     _move: (point) ->
         @_face_point point

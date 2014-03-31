@@ -12,14 +12,16 @@ class MessageBoard
     @get_board: (topic) ->
         return new MessageBoard(topic)
 
-
-    constructor: (topic) ->
+    constructor: (@topic) ->
         @queue = @constructor._get_or_create_queue(topic)
 
     get_message: () ->
         return @queue.shift()
 
     post_message: (message) ->
+        message ?= {}
+        message.type = @topic
+        message.timestamp = Date.now()
         @queue.push(message)
 
 

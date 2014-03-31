@@ -1,94 +1,103 @@
 
-(($, window) ->
+class App
+    pause: false
 
-    # Define the plugin class
-    class CitySimulation
+    constructor: (@element_id) ->
+        @setup_hotkeys()
+        @setup_model()
+        @setup_buttons()
 
-        defaults:
-            paramA: 'foo'
-            paramB: 'bar'
+    setup_model: () ->
+        @model = new CityModel(@element_id, 16, -16, 16, -16, 16)
+        $('#seed').val(GPW.pronounceable(8))
+        # @seed = "therinet"
 
-        constructor: (el, options) ->
-            @options = $.extend({}, @defaults, options)
-            @$el = $(el)
 
-            @pause = false
+    run: () ->
+        config = @get_config()
+        @get_and_update_seed()
+        @model.reset(config, not @paused)
 
-            @setup_hotkeys()
-            @setup_model()
-            @setup_buttons()
+    restart: () ->
+        @run()
 
-        # Additional plugin methods go here
-        setup_model: () ->
-            @model = new CityModel(@$el.attr('id'), 16, -16, 16, -16, 16)
-            @seed = GPW.pronounceable(8)
-            # @seed = "ousphoun"
+    get_and_update_seed: () ->
+        @seed = $('#seed').val()
+        Math.seedrandom(@seed)
 
-        run: () ->
-            Math.seedrandom(@seed);
-            @model.debug();
-            @model.start();
+    get_int_val: (id) ->
+        parseInt($(id).val())
 
-        restart: () ->
-            Math.seedrandom(@seed);
-            @model.reset(true)
+    get_cb_val: (id) ->
+        $(id).prop('checked')
 
-        play_pause_model: () ->
-            if @paused
-                @model.start()
-            else
-                @model.stop()
-            @paused = not @paused
+    get_config: () ->
+        inspectors:
+            node_inspector:
+                inspection_radius: @get_int_val('#inspection-area')
+                max_distance_factor: @get_int_val('#distance-factor')
+            road_inspector:
+                ring_radius: @get_int_val('#initial-radius')
+                ring_increment: @get_int_val('#radius-increment')
+        debug:
+            agents:
+                show_states: @get_cb_val('#show-state')
+                show_ids: @get_cb_val('#show-id')
+                show_logs: @get_cb_val('#show-logs')
 
-        set_key_command: (key, fn) ->
-            $(document).bind 'keydown', key, fn
-
-        setup_hotkeys: () ->
-            @set_key_command 'r', () => @restart()
-
-        setup_buttons: () ->
-            $('#play-pause').click () =>
-                @play_pause_model()
-                $('#play-pause span').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
-            $('#reload').click () =>
-                @restart()
-
-            $('button.j-iterate-over').click(() =>
-                @animate(parseInt($('input.j-iterate-over').val())))
-
-            $('button.j-iterate-until').click(() =>
-                @animateTo(parseInt($('input.j-iterate-until').val())))
-
-        get_model: () ->
-            return @model
-
-        animate: (ticks) ->
-            @model.stop()
-            i = 0
-            while i < ticks
-                @model.anim.step()
-                i += 1
+    play_pause_model: () ->
+        if @paused
             @model.start()
-
-        animateTo: (ticks) ->
+            $('#play-pause').find('.btn-text').text('Pause')
+        else
             @model.stop()
-            while @model.anim.ticks < ticks
-                @model.anim.step()
+            $('#play-pause').find('.btn-text').text('Play')
+        @paused = not @paused
+        null
+
+    step_model: () ->
+        steps = @get_int_val('input.step')
+        @animate(steps)
+
+    set_key_command: (key, fn) ->
+        $(document).bind 'keydown', key, fn
+
+    setup_hotkeys: () ->
+        @set_key_command 'r', () => @restart()
+
+    setup_buttons: () ->
+        $('#play-pause').click () =>
+            @play_pause_model()
+            $('#play-pause span.glyphicon').toggleClass('glyphicon-play').toggleClass('glyphicon-pause')
+
+        $('a#step').click () =>
+            @step_model()
+
+        $('#reload').click () =>
+            @restart()
+
+        $('input.j-update-debug-info').click () =>
+            @update_debug_info()
+
+    update_debug_info: () ->
+        config =
+            agents:
+                show_states: @get_cb_val('#show-state')
+                show_ids: @get_cb_val('#show-id')
+                show_logs: @get_cb_val('#show-logs')
+
+        @model.update_debug_config(config)
+
+    get_model: () ->
+        return @model
+
+    animate: (ticks) ->
+        @model.stop()
+        i = 0
+        while i < ticks
+            @model.anim.step()
+            i += 1
+        if not @paused
             @model.start()
-
-
-
-    # Define the plugin
-    $.fn.extend CitySimulation: (option, args...) ->
-        ret_val = null
-        @each ->
-            $this = $(this)
-            data = $this.data('CitySimulation')
-
-            if !data
-                ret_val = $this.data 'CitySimulation', (data = new CitySimulation(this, option))
-            if typeof option == 'string'
-                ret_val = data[option].apply(data, args)
-        return if ret_val? then ret_val else $(this)
-
-) window.jQuery, window
+        else
+            @model.anim.draw()
