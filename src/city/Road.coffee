@@ -11,33 +11,38 @@ class Road
 
     @set_breed: (patch, city_hall_dist=null) ->
         @roads.setBreed(patch)
-        CityModel.instance.roadAStar.setWalkable(patch)
-        @_update_distances(patch, 0, city_hall_dist)
-        if RoadNode.check_patch(patch)
-            RoadNode.spawn_node(patch)
+        extend(patch, Road)
+        patch.init(city_hall_dist)
+
+    init: (city_hall_dist) ->
+        @_update_navigation()
+        @_update_distances(0, city_hall_dist)
+        if RoadNode.check_patch(@)
+            RoadNode.spawn_node(@)
         null
 
-    @recalculate_distances: () ->
-        @_update_distances(road, 0, null) for road in @roads
+    _update_navigation: () ->
+        CityModel.set_road_nav_patch_walkable(@)
 
-    @_update_distances: (patch, dist_to_road, city_hall_dist) ->
-        city_hall_dist ?= @_get_min_neighbour(patch, "dist_to_city_hall", get_value: true) + 1
-        patch.dist_to_road = dist_to_road
-        @_set_city_hall_dist(patch, city_hall_dist)
-        roads_to_update = @_get_roads_to_update(patch, 0)
+    _update_distances: (@dist_to_road, city_hall_dist) ->
+        city_hall_dist ?= Road._get_min_neighbour(@, "dist_to_city_hall", get_value: true) + 1
+        @_set_city_hall_dist(city_hall_dist)
+        roads_to_update = Road._get_roads_to_update(@, 0)
         while roads_to_update.length > 0
             [road, new_distance] = roads_to_update.pop()
             road.dist_to_road = new_distance
             # road.label = new_distance
-            roads_to_update.push(n_road) for n_road in @_get_roads_to_update(road, new_distance)
+            roads_to_update.push(n_road) for n_road in Road._get_roads_to_update(road, new_distance)
         null
 
-    @_set_city_hall_dist: (road, dist_to_city_hall) ->
-        road.dist_to_city_hall = dist_to_city_hall
-        # road.label = road.dist_to_city_hall
-        for n_road in road.n4 when n_road.breed is @roads
+    _set_city_hall_dist: (@dist_to_city_hall) ->
+        for n_road in @n4 when Road.is_road(n_road)
             if not n_road.dist_to_city_hall? or n_road.dist_to_city_hall > dist_to_city_hall + 1
                 @_set_city_hall_dist(n_road, dist_to_city_hall + 1)
+
+
+    @recalculate_distances: () ->
+        @_update_distances(road, 0, null) for road in @roads
 
     @_get_roads_to_update: (road, new_distance) ->
         to_update = []

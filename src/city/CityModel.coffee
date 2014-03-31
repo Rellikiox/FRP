@@ -39,6 +39,9 @@ class CityModel extends ABM.Model
     @link_agents: (agent_a, agent_b) ->
         @instance.links.create(agent_a, agent_b)
 
+    @set_road_nav_patch_walkable: (patch, walkable=true) ->
+        CityModel.instance.roadAStar.setWalkable(patch, walkable)
+
     reset: (@config, start) ->
         super(start)
 
