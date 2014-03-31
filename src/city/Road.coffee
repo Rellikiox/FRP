@@ -27,29 +27,37 @@ class Road
     _update_distances: (@dist_to_road, city_hall_dist) ->
         city_hall_dist ?= Road._get_min_neighbour(@, "dist_to_city_hall", get_value: true) + 1
         @_set_city_hall_dist(city_hall_dist)
-        roads_to_update = Road._get_roads_to_update(@, 0)
-        while roads_to_update.length > 0
-            [road, new_distance] = roads_to_update.pop()
-            road.dist_to_road = new_distance
-            # road.label = new_distance
-            roads_to_update.push(n_road) for n_road in Road._get_roads_to_update(road, new_distance)
+        @_update_patches_dist_to_road()
+
+    _update_patches_dist_to_road: () ->
+        patches_to_update = Road._get_patches_to_update(@, 0)
+        while patches_to_update.length > 0
+            [patch, new_distance] = patches_to_update.pop()
+            patch.dist_to_road = new_distance
+            patches_to_update.push(n_road) for n_road in Road._get_patches_to_update(patch, new_distance)
         null
 
     _set_city_hall_dist: (@dist_to_city_hall) ->
-        for n_road in @n4 when Road.is_road(n_road)
-            if not n_road.dist_to_city_hall? or n_road.dist_to_city_hall > dist_to_city_hall + 1
-                @_set_city_hall_dist(n_road, dist_to_city_hall + 1)
+        _has_to_update = (road) ->
+            if not road.dist_to_city_hall?
+                return true
+            else
+                return road.dist_to_city_hall > dist_to_city_hall + 1
 
+        for n_road in @n4 when Road.is_road(n_road)
+            if _has_to_update(n_road)
+                n_road._set_city_hall_dist(dist_to_city_hall + 1)
+
+
+    @_get_patches_to_update: (patch, new_distance) ->
+        to_update = []
+        for n_patch in patch.n4
+            if not n_patch.dist_to_road? or n_patch.dist_to_road > new_distance + 1
+                to_update.push([n_patch, new_distance + 1])
+        return to_update
 
     @recalculate_distances: () ->
         @_update_distances(road, 0, null) for road in @roads
-
-    @_get_roads_to_update: (road, new_distance) ->
-        to_update = []
-        for n_road in road.n4
-            if not n_road.dist_to_road? or n_road.dist_to_road > new_distance + 1
-                to_update.push([n_road, new_distance + 1])
-        return to_update
 
     @_spread_connectivity: (patch) ->
         new_distance = patch.dist_to_road + 1
