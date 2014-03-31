@@ -42,6 +42,9 @@ class CityModel extends ABM.Model
     @set_road_nav_patch_walkable: (patch, walkable=true) ->
         CityModel.instance.roadAStar.setWalkable(patch, walkable)
 
+    @set_terrain_nav_patch_walkable: (patch, walkable=true) ->
+        CityModel.instance.terrainAStar.setWalkable(patch, walkable)
+
     reset: (@config, start) ->
         super(start)
 

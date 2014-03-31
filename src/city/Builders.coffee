@@ -137,7 +137,7 @@ class HouseBuilder
         @_set_initial_state('go_to_plot')
 
     s_go_to_plot: ->
-        if not @path?
+        if not @path? or @path.length is 0
             closest_road_to_target = Road.get_closest_road_to(@block)
             @path = @_get_road_path_to(closest_road_to_target)
 
@@ -161,7 +161,12 @@ class HouseBuilder
     _house_citizen: (patch) ->
         if not House.is_house(patch)
             House.make_here(patch)
-        patch.color = ABM.util.scaleColor(patch.color, 1.05)
+
+        if patch.has_free_space()
+            patch.increase_citizens()
+        else
+            @block = patch.plot.get_available_block
+
 
 
 CityModel.register_module(HouseBuilder, ['house_builders'], [])

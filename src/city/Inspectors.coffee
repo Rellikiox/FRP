@@ -258,9 +258,8 @@ class PlotInspector
         if not @_any_edge_visible(patch)
             possible_plot = @_get_plot(patch)
             if possible_plot?
-                for p in possible_plot
-                    p.color = ABM.util.randomGray(140, 170)
-                @msg_boards.built.post_message({plot: possible_plot})
+                plot = Plot.make_plot(possible_plot)
+                @msg_boards.built.post_message({plot: plot})
 
     _any_edge_visible: (patch) ->
         current_patch = patch
