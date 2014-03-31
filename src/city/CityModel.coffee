@@ -59,7 +59,7 @@ class CityModel extends ABM.Model
     step: ->
         # console.log @anim.toString() if @anim.ticks % 100 == 0
 
-        agent.step() for agent in @agents by -1
+        agent.step?() for agent in @agents by -1
 
         # road_maker.step() for road_maker in @road_makers
         # house_maker.step() for house_maker in @house_makers

@@ -137,11 +137,14 @@ class RoadNode
         node.connect()
         return node
 
+    @_make_node: (road) ->
+        new_node = road.sprout(1, @road_nodes)[0]
+        extend(new_node, RoadNode)
+        road.node = new_node
+        return new_node
+
     @split_link_at: (road) ->
         [node_a, node_b] = RoadNode._get_nodes_connecting(road)
-        # upstream_node = RoadNode._find_upstream_node(road)
-        # downstream_node = RoadNode._find_downstream_node(road)
-
         RoadNode._remove_link_between(node_a, node_b)
 
         node = RoadNode._make_node(road)
@@ -149,12 +152,6 @@ class RoadNode
 
         CityModel.link_agents(node_a, node)
         CityModel.link_agents(node, node_b)
-
-    @_make_node: (road) ->
-        new_node = road.sprout(1, @road_nodes)[0]
-        extend(new_node, RoadNode)
-        road.node = new_node
-        return new_node
 
     @_prepare_neighbour_roads: (road) ->
         for n_road in road.n4 when Road.is_road(n_road) and not n_road.node?
@@ -198,10 +195,7 @@ class RoadNode
         null
 
 
-
     creating: true
-
-    step: () ->
 
     connect: () ->
         if @_any_neighbours_nodes()
