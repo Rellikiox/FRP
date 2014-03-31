@@ -5,8 +5,7 @@ class Inspector
     # Appearance
     @default_color: [0, 0, 255]
 
-    @initialize_module: (inspectors_breed, config) ->
-        @inspectors = inspectors_breed
+    @initialize: (@inspectors, config) ->
         @inspectors.setDefault('color', @default_color)
 
         RoadInspector.construction_points = []
@@ -302,4 +301,5 @@ class PlotInspector
         else
             return null
 
+CityModel.register_module(Inspector, ['inspectors'], [])
 

@@ -1,7 +1,7 @@
 class Planner
     @planners = null
 
-    @initialize_module: (@planners) ->
+    @initialize: (@planners) ->
         @planners.setDefault 'hidden', true
         PlotKeeperPlanner.available_plots = []
 
@@ -124,7 +124,7 @@ class HousingPlanner
         if PlotKeeperPlanner.available_plots.length > 0
             plot = @_random_choice(PlotKeeperPlanner.available_plots)
             block = @_random_choice(plot)
-            HouseBuilder.spawn_house_maker(block)
+            HouseBuilder.spawn_house_builder(block)
             @_set_state('get_message')
 
     _random_choice: (list) ->
@@ -149,4 +149,7 @@ class GrowthPlanner
         @msg_reader.post_message()
         @ticks_since_last_citizen = 0
         @_set_state('wait_until_ready')
+
+
+CityModel.register_module(Planner, ['planners'], [])
 

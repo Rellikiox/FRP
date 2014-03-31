@@ -1,6 +1,6 @@
 class RoadBuilder
     # Agentscript stuff
-    @road_makers: null
+    @road_builders: null
 
     # Appearance
     @default_color: [255,255,255]
@@ -8,24 +8,23 @@ class RoadBuilder
     # Behavior
     @radius_increment = 3
 
-    @initialize_module: (road_makers_breed) ->
-        @road_makers = road_makers_breed
-        @road_makers.setDefault('color', @default_color)
+    @initialize: (@road_builders) ->
+        @road_builders.setDefault('color', @default_color)
 
     @spawn_road_connector: (road_a, road_b) ->
-        road_maker = @spawn_road_maker(road_a, RoadConnector)
-        road_maker.init(road_b)
-        return road_maker
+        road_builder = @spawn_road_builder(road_a, RoadConnector)
+        road_builder.init(road_b)
+        return road_builder
 
     @spawn_road_extender: (endpoint) ->
-        road_maker = @spawn_road_maker(CityModel.instance.city_hall, RoadExtender)
-        road_maker.init(endpoint)
-        return road_maker
+        road_builder = @spawn_road_builder(CityModel.instance.city_hall, RoadExtender)
+        road_builder.init(endpoint)
+        return road_builder
 
-    @spawn_road_maker: (patch, klass) ->
-        road_maker = patch.sprout(1, @road_makers)[0]
-        extend(road_maker, FSMAgent, MovingAgent, klass)
-        return road_maker
+    @spawn_road_builder: (patch, klass) ->
+        road_builder = patch.sprout(1, @road_builders)[0]
+        extend(road_builder, FSMAgent, MovingAgent, klass)
+        return road_builder
 
     # Utils
 
@@ -113,23 +112,24 @@ class RoadConnector extends RoadBuilder
             @msg_boards.plot.post_message({patch: @p})
 
 
+CityModel.register_module(RoadBuilder, ['road_builders'], [])
+
 
 class HouseBuilder
     # Agentscript stuff
-    @house_makers: null
+    @house_builders: null
 
     # Appearance
     @default_color: [100,0,0]
 
-    @initialize_module: (house_makers_breed) ->
-        @house_makers = house_makers_breed
-        @house_makers.setDefault('color', @default_color)
+    @initialize: (@house_builders) ->
+        @house_builders.setDefault('color', @default_color)
 
-    @spawn_house_maker: (patch) ->
-        house_maker = CityModel.instance.city_hall.sprout(1, @house_makers)[0]
-        extend(house_maker, FSMAgent, MovingAgent, HouseBuilder)
-        house_maker.init(patch)
-        return house_maker
+    @spawn_house_builder: (patch) ->
+        house_builder = CityModel.instance.city_hall.sprout(1, @house_builders)[0]
+        extend(house_builder, FSMAgent, MovingAgent, HouseBuilder)
+        house_builder.init(patch)
+        return house_builder
 
     speed: 0.05
 
@@ -163,3 +163,5 @@ class HouseBuilder
             House.make_here(patch)
         patch.color = ABM.util.scaleColor(patch.color, 1.05)
 
+
+CityModel.register_module(HouseBuilder, ['house_builders'], [])

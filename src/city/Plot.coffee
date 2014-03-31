@@ -16,7 +16,7 @@ class House
 
     @default_color: [100, 0, 0]
 
-    @initialize_module: (@houses) ->
+    @initialize: (@houses) ->
         @houses.setDefault('color', @default_color)
 
     @make_here: (patch) ->
@@ -36,5 +36,6 @@ class House
 
 
 
+CityModel.register_module(House, [], ['houses'])
 
 

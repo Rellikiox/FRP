@@ -3,6 +3,25 @@ u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
 
 class CityModel extends ABM.Model
 
+    @modules: []
+    @agent_breeds_names: ""
+    @patch_breeds_names: ""
+
+    @register_module: (klass, agents, patches) ->
+        module =
+            klass: klass
+            agent_breeds: agents
+            patch_breeds: patches
+
+        @modules.push(module)
+        @load_module(module)
+
+    @load_module: (module) ->
+        @agent_breeds_names += " " + breed_name for breed_name in module.agent_breeds
+        @patch_breeds_names += " " + breed_name for breed_name in module.patch_breeds
+        @agent_breeds_names.trim()
+        @patch_breeds_names.trim()
+
     @instance: null
 
     @log = (msg) ->
@@ -22,11 +41,12 @@ class CityModel extends ABM.Model
 
     reset: (@config, start) ->
         super(start)
-        CityModel.instance = this
-        @set_up_AStar_helpers()
 
         @set_default_params()
         @initialize_modules()
+
+        CityModel.instance = this
+        @set_up_AStar_helpers()
 
         @init_patches()
         @spawn_entities()
@@ -53,14 +73,15 @@ class CityModel extends ABM.Model
         agent.update_label?() for agent in @agents
 
     initialize_modules: () ->
-        Road.initialize_module(@roads)
-        RoadNode.initialize_module(@road_nodes)
-        RoadBuilder.initialize_module(@road_makers)
-        HouseBuilder.initialize_module(@house_makers)
-        Inspector.initialize_module(@inspectors, @config.inspectors)
-        Planner.initialize_module(@planners)
-        House.initialize_module(@houses)
-        MessageBoard.initialize_module()
+        for module in CityModel.modules
+            @initialize_module(module)
+
+    initialize_module: (module) ->
+        breeds = []
+        breeds.push(@[breed_name]) for breed_name in module.agent_breeds
+        breeds.push(@[breed_name]) for breed_name in module.patch_breeds
+
+        module.klass.initialize(breeds..., @config)
 
     create_city_hall: (x, y) ->
         patch = @patches.patchXY(x, y)
@@ -69,9 +90,10 @@ class CityModel extends ABM.Model
         return patch
 
     set_default_params: () ->
-        @patchBreeds "roads houses"
-        @agentBreeds "road_makers house_makers road_nodes inspectors planners"
-        @anim.setRate 120, false
+        @patchBreeds(CityModel.patch_breeds_names)
+        @agentBreeds(CityModel.agent_breeds_names)
+
+        @anim.setRate(120, false)
         @refreshPatches = true
         @draw_mode = "normal"
 

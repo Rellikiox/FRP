@@ -1,7 +1,7 @@
 class MessageBoard
     @message_queues: {}
 
-    @initialize_module: () ->
+    @initialize: () ->
         @message_queues = {}
 
     @_get_or_create_queue: (type) ->
@@ -26,3 +26,4 @@ class MessageBoard
         @queue.push(message)
 
 
+CityModel.register_module(MessageBoard, [], [])

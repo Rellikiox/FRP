@@ -6,11 +6,11 @@ class Road
     @too_connected_threshold = 2
 
 
-    @initialize_module: (@roads) ->
+    @initialize: (@roads) ->
         @roads.setDefault("color", @default_color)
 
     @set_breed: (patch, city_hall_dist=null) ->
-        @roads.setBreed patch
+        @roads.setBreed(patch)
         CityModel.instance.roadAStar.setWalkable(patch)
         @_update_distances(patch, 0, city_hall_dist)
         if RoadNode.check_patch(patch)
@@ -111,6 +111,7 @@ class Road
     @get_road_neighbours: (patch) ->
         return (road for road in patch.n4 when Road.is_road(road))
 
+CityModel.register_module(Road, [], ['roads'])
 
 
 
@@ -121,7 +122,7 @@ class RoadNode
     @road_nodes: null
     @default_color: [160,160,160]
 
-    @initialize_module: (@road_nodes) ->
+    @initialize: (@road_nodes) ->
         @road_nodes.setDefault('color', @default_color)
         @road_nodes.setDefault('shape', 'circle')
         @road_nodes.setDefault('size', 0.4)
@@ -238,3 +239,4 @@ class RoadNode
                 @die()
 
 
+CityModel.register_module(RoadNode, ['road_nodes'], [])
