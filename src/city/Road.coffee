@@ -56,16 +56,6 @@ class Road
                 to_update.push([n_patch, new_distance + 1])
         return to_update
 
-    @recalculate_distances: () ->
-        @_update_distances(road, 0, null) for road in @roads
-
-    @_spread_connectivity: (patch) ->
-        new_distance = patch.dist_to_road + 1
-        for n_patch in patch.n4
-            if not n_patch.dist_to_road? or n_patch.dist_to_road > new_distance
-                @_set_distance_to_road(n_patch, new_distance)
-        null
-
     @is_road: (patch) ->
         return patch.breed is @roads
 
@@ -107,9 +97,6 @@ class Road
         else
             return max_patch
 
-    @add_road_node: (road) ->
-        @road_nodes.push(road)
-
     @_get_distance: (road_a, road_b) ->
         dx = Math.abd(road_a.x, road_b.x)
         dy = Math.abd(road_a.y, road_b.y)
@@ -123,6 +110,7 @@ class Road
 
     @get_road_neighbours: (patch) ->
         return (road for road in patch.n4 when Road.is_road(road))
+
 
 CityModel.register_module(Road, [], ['roads'])
 
