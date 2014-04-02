@@ -13,9 +13,11 @@ class Plot
         for p in patches
             p.color = ABM.util.randomGray(140, 170)
 
+        @_set_patch_references()
+
     _set_patch_references: () ->
-        for patch in patches
-            patch.lot = @
+        for patch in @patches
+            patch.plot = @
 
     get_available_block: () ->
         shuffled = @patches
