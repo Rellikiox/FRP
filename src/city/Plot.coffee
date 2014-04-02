@@ -1,9 +1,24 @@
 class Plot
 
+    @plots: null
+    @initialize: () ->
+        @plots = []
+
     @make_plot: (patches) ->
         if patches? and patches.length > 0
-            return new Plot(patches)
+            plot = new Plot(patches)
+            @plots.push(plot)
+            return plot
 
+    @is_part_of_plot: (patch) ->
+        return patch?.plot?
+
+    @get_random_plot: () ->
+        if @plots.length > 0
+            for i in ABM.util.shuffle([0..@plots.length-1])
+                if @plots[i].has_free_space()
+                    return @plots[i]
+        return null
 
     patches: null
     blocks: null
@@ -20,12 +35,16 @@ class Plot
             patch.plot = @
 
     get_available_block: () ->
-        shuffled = @patches
-        ABM.util.shuffle(shuffled)
+        for i in ABM.util.shuffle([0..@patches.length-1])
+            if not House.is_house(@patches[i]) or @patches[i].has_free_space()
+                return @patches[i]
+        return null
 
-        for patch in @patches
-            if not House.is_house(patch) or patch.has_free_space()
-                return patch
+    has_free_space: () ->
+        return @get_available_block()?
+
+CityModel.register_module(Plot, [], [])
+
 
 
 class Block
@@ -75,7 +94,6 @@ class House
         if @has_free_space()
             @citizens += 1
             @color = ABM.util.scaleColor(@color, 1.05)
-
 
 
 CityModel.register_module(House, [], ['houses'])

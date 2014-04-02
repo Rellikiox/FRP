@@ -121,15 +121,12 @@ class HousingPlanner
             @_set_state('send_house_builder')
 
     s_send_house_builder: () ->
-        if PlotKeeperPlanner.available_plots.length > 0
-            plot = @_random_choice(PlotKeeperPlanner.available_plots)
+        plot = Plot.get_random_plot()
+        if plot?
             block = plot.get_available_block()
             if block?
                 HouseBuilder.spawn_house_builder(block)
                 @_set_state('get_message')
-
-    _random_choice: (list) ->
-        return list[ABM.util.randomInt(list.length)]
 
 
 class GrowthPlanner
