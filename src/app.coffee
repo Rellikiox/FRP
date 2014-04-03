@@ -39,6 +39,9 @@ class App
             road_inspector:
                 ring_radius: @get_int_val('#initial-radius')
                 ring_increment: @get_int_val('#radius-increment')
+        buildings:
+            road:
+                road_distance: @get_int_val('#road-distance')
         debug:
             agents:
                 show_states: @get_cb_val('#show-state')

@@ -6,8 +6,10 @@ class Road
     @too_connected_threshold = 2
 
 
-    @initialize: (@roads) ->
+    @initialize: (@roads, @config) ->
         @roads.setDefault("color", @default_color)
+
+        Road.too_connected_threshold = config.buildings.road.road_distance
 
     @set_breed: (patch, city_hall_dist=null) ->
         @roads.setBreed(patch)
