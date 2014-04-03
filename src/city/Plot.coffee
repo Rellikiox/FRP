@@ -21,6 +21,10 @@ class Plot
                     return plot
         return null
 
+    @destroy_plot: (plot) ->
+        ABM.util.removeItem(@plots, plot)
+        plot._unset_patch_references()
+
     patches: null
     blocks: null
     under_construction: null
@@ -29,13 +33,18 @@ class Plot
         @under_construction = false
 
         for p in @patches
-            p.color = ABM.util.randomGray(140, 170)
+            if not House.is_house(p)
+                p.color = ABM.util.randomGray(140, 170)
 
         @_set_patch_references()
 
     _set_patch_references: () ->
         for patch in @patches
             patch.plot = @
+
+    _unset_patch_references: () ->
+        for patch in @patches
+            patch.plot = null
 
     get_available_block: () ->
         for i in ABM.util.shuffle([0..@patches.length-1])

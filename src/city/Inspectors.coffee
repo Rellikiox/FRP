@@ -264,7 +264,10 @@ class PlotInspector
         return adyacent
 
     _check_patch: (patch) ->
-        if not Plot.is_part_of_plot(patch) and not @_any_edge_visible(patch)
+        if Plot.is_part_of_plot(patch)
+            Plot.destroy_plot(patch.plot)
+
+        if not @_any_edge_visible(patch)
             possible_plot = @_get_plot(patch)
             if possible_plot?
                 plot = Plot.make_plot(possible_plot)
