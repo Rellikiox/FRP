@@ -151,6 +151,7 @@ class CityModel extends ABM.Model
             Planner.spawn_plot_planner()
             Planner.spawn_housing_planner()
             Planner.spawn_plot_keeper_planner()
+            Planner.spawn_bulldozer_planner()
             i += 1
 
 

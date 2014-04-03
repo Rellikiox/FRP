@@ -112,6 +112,9 @@ class House
             @citizens += 1
             @color = ABM.util.scaleColor(@color, 1.05)
 
+    reallocate_citizens: () ->
+        console.log "Uninplemented"
+
 
 CityModel.register_module(House, [], ['houses'])
 

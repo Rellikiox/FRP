@@ -48,6 +48,7 @@ class NodeInspector extends Inspector
         @msg_boards =
             inspect: MessageBoard.get_board('node_built')
             connect: MessageBoard.get_board('nodes_unconnected')
+            bulldoze: MessageBoard.get_board('bulldoze_path')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
@@ -78,10 +79,15 @@ class NodeInspector extends Inspector
     _inspect_node: (node) ->
         if node.factor > @max_distance_factor
             path = @_get_terrain_path_to(node.node.p)
+            crosses_plot = false
             for patch in path
                 if patch.plot?
+                    crosses_plot = true
                     patch.plot.under_construction = true
-            @msg_boards.connect.post_message({path: path})
+            if crosses_plot
+                @msg_boards.bulldoze.post_message({path: path})
+            else
+                @msg_boards.connect.post_message({path: path})
             return true
         return false
 

@@ -11,6 +11,9 @@ class Planner
     @spawn_node_planner: () ->
         return @spawn_planner(NodeInterconnectivityPlanner)
 
+    @spawn_bulldozer_planner: () ->
+        return @spawn_planner(BulldozerPlanner)
+
     @spawn_growth_planner: () ->
         return @spawn_planner(GrowthPlanner)
 
@@ -147,6 +150,27 @@ class GrowthPlanner
         @msg_reader.post_message()
         @ticks_since_last_citizen = 0
         @_set_state('wait_until_ready')
+
+
+class BulldozerPlanner
+
+    init: () ->
+        @msg_reader = MessageBoard.get_board('bulldoze_path')
+        @_set_initial_state('get_message')
+
+    s_get_message: () ->
+        @message = @msg_reader.get_message()
+        if @message?
+            @_set_state('emit_bulldozer')
+
+    s_emit_bulldozer: () ->
+        if not @message?
+            @_set_state('get_message')
+            return
+
+        Bulldozer.spawn_bulldozer(@message.path)
+        @message = null
+        @_set_state('get_message')
 
 
 CityModel.register_module(Planner, ['planners'], [])

@@ -84,13 +84,13 @@ class RoadConnector extends RoadBuilder
 
         @points_to_report = [@startpoint, @endpoint]
 
-        @_set_initial_state('build_to_point_state')
+        @_set_initial_state('build_to_point')
 
         @msg_boards =
             node: MessageBoard.get_board('node_built')
             plot: MessageBoard.get_board('possible_plot')
 
-    s_build_to_point_state: ->
+    s_build_to_point: ->
         if not @path?
             @path = @_get_terrain_path_to(@endpoint)
 
@@ -168,6 +168,58 @@ class HouseBuilder
         else
             @block = patch.plot.get_available_block
 
-
-
 CityModel.register_module(HouseBuilder, ['house_builders'], [])
+
+
+
+class Bulldozer
+    @bulldozers: null
+    @default_color: [255, 255, 0]
+
+    @initialize: (@bulldozers) ->
+        @bulldozers.setDefault('color', @default_color)
+
+    @spawn_bulldozer: (path) ->
+        bulldozer = path[0].sprout(1, @bulldozers)[0]
+        extend(bulldozer, FSMAgent, MovingAgent, Bulldozer)
+        bulldozer.init(path)
+        return bulldozer
+
+    init: (@path) ->
+        @path_copy = (p for p in @path)
+        @_set_initial_state('bulldoze_to_point')
+        @board = MessageBoard.get_board('nodes_unconnected')
+
+    s_bulldoze_to_point: ->
+        if not @path?
+            @path = @_get_terrain_path_to(@endpoint)
+
+        @_move @path[0]
+
+        if not Road.is_road(@p)
+            @_bulldoze_patch()
+
+        if @_in_point(@path[0])
+            @path.shift()
+            if @path.length is 0
+                @board.post_message({path: @path_copy})
+                @_set_state('die')
+
+    s_die: () ->
+        @die()
+
+
+    _bulldoze_patch: () ->
+        if House.is_house(@p)
+            @p.reallocate_citizens()
+            CityModel.patches.setBreed(@p)
+
+        @p.color = ABM.util.randomGray(100, 150)
+        [r, g, b] = @p.color
+        @p.color = [r, g * 2, b]
+
+
+
+
+CityModel.register_module(Bulldozer, ['bulldozers'], [])
+
