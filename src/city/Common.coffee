@@ -74,7 +74,9 @@ class MovingAgent
         return 0.1 > ABM.util.distance @x, @y, point.x, point.y
 
     _get_terrain_path_to: (point) ->
-        return CityModel.instance.terrainAStar.getPath(@, point)
+        path = CityModel.instance.terrainAStar.getPath(@, point)
+        return (CityModel.get_patch_at(p) for p in path)
 
     _get_road_path_to: (point) ->
-        return CityModel.instance.roadAStar.getPath(@, point)
+        path = CityModel.instance.roadAStar.getPath(@, point)
+        return (CityModel.get_patch_at(p) for p in path)

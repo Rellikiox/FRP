@@ -68,7 +68,6 @@ class NodeInspector extends Inspector
                 @_set_state('inspect_endpoint')
 
     s_inspect_endpoint: () ->
-
         node_connected = @_inspect_node(@nodes_under_investigation.shift())
 
         if node_connected or @nodes_under_investigation.length is 0
@@ -78,7 +77,11 @@ class NodeInspector extends Inspector
 
     _inspect_node: (node) ->
         if node.factor > @max_distance_factor
-            @msg_boards.connect.post_message({patch_a: @.p, patch_b: node.node.p})
+            path = @_get_terrain_path_to(node.node.p)
+            for patch in path
+                if patch.plot?
+                    patch.plot.under_construction = true
+            @msg_boards.connect.post_message({path: path})
             return true
         return false
 

@@ -11,9 +11,9 @@ class RoadBuilder
     @initialize: (@road_builders) ->
         @road_builders.setDefault('color', @default_color)
 
-    @spawn_road_connector: (road_a, road_b) ->
-        road_builder = @spawn_road_builder(road_a, RoadConnector)
-        road_builder.init(road_b)
+    @spawn_road_connector: (path) ->
+        road_builder = @spawn_road_builder(path[0], RoadConnector)
+        road_builder.init(path)
         return road_builder
 
     @spawn_road_extender: (endpoint) ->
@@ -78,9 +78,9 @@ class RoadExtender extends RoadBuilder
 
 class RoadConnector extends RoadBuilder
 
-    init: (endpoint) ->
-        @startpoint = @p
-        @endpoint = endpoint
+    init: (@path) ->
+        @startpoint = @path[0]
+        @endpoint = @path[@path.length-1]
 
         @points_to_report = [@startpoint, @endpoint]
 

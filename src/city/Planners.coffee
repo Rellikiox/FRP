@@ -46,7 +46,7 @@ class NodeInterconnectivityPlanner extends Planner
             @_set_state('get_message')
             return
 
-        RoadBuilder.spawn_road_connector(@message.patch_a, @message.patch_b)
+        RoadBuilder.spawn_road_connector(@message.path)
         @message = null
         @_set_state('get_message')
 

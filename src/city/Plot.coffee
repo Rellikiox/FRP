@@ -16,16 +16,19 @@ class Plot
     @get_random_plot: () ->
         if @plots.length > 0
             for i in ABM.util.shuffle([0..@plots.length-1])
-                if @plots[i].has_free_space()
-                    return @plots[i]
+                plot = @plots[i]
+                if plot.is_available() and plot.has_free_space()
+                    return plot
         return null
 
     patches: null
     blocks: null
+    under_construction: null
     constructor: (@patches) ->
-        blocks = []
+        @blocks = []
+        @under_construction = false
 
-        for p in patches
+        for p in @patches
             p.color = ABM.util.randomGray(140, 170)
 
         @_set_patch_references()
@@ -52,6 +55,9 @@ class Plot
                 min_dist = dist
                 min_patch = p
         return min_patch
+
+    is_available: () ->
+        return not @under_construction
 
 
 CityModel.register_module(Plot, [], [])
