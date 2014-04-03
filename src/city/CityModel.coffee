@@ -155,8 +155,8 @@ class CityModel extends ABM.Model
 
 
     set_up_AStar_helpers: ->
-        width = @world.maxX - @world.minX
-        height = @world.maxY - @world.minY
+        width = (@world.maxX - @world.minX) + 1
+        height = (@world.maxY - @world.minY) + 1
 
         x_to_grid_transform = (x) => x - @world.minX
         y_to_grid_transform = (y) => -y - @world.minY

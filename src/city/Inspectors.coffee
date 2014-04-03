@@ -271,9 +271,9 @@ class PlotInspector
             current_patch = patch
             while not edge
                 current_patch = @_get_path_with_offset(current_patch, offset)
-                if Road.is_road(current_patch)
+                if current_patch? and Road.is_road(current_patch)
                     break
-                if current_patch.isOnEdge()
+                if not current_patch? or current_patch.isOnEdge()
                     edge = true
             if edge
                 break

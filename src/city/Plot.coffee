@@ -43,6 +43,17 @@ class Plot
     has_free_space: () ->
         return @get_available_block()?
 
+    get_closes_patch_to: (patch) ->
+        min_dist = null
+        min_patch = null
+        for p in @patches
+            dist = ABM.util.distance(p.x, p.y, patch.x, patch.y)
+            if not min_dist? or dist < min_dist
+                min_dist = dist
+                min_patch = p
+        return min_patch
+
+
 CityModel.register_module(Plot, [], [])
 
 

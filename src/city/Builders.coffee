@@ -138,8 +138,9 @@ class HouseBuilder
 
     s_go_to_plot: ->
         if not @path? or @path.length is 0
-            closest_road_to_target = Road.get_closest_road_to(@block)
-            @path = @_get_road_path_to(closest_road_to_target)
+            patch = @block.plot.get_closes_patch_to(@p)
+            road = ABM.util.oneOf(Road.get_road_neighbours(patch))
+            @path = @_get_road_path_to(road)
 
         @_move(@path[0])
 
