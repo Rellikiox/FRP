@@ -1,6 +1,6 @@
 class RoadBuilder
     # Agentscript stuff
-    @road_makers: null
+    @road_builders: null
 
     # Appearance
     @default_color: [255,255,255]
@@ -8,24 +8,23 @@ class RoadBuilder
     # Behavior
     @radius_increment = 3
 
-    @initialize_module: (road_makers_breed) ->
-        @road_makers = road_makers_breed
-        @road_makers.setDefault('color', @default_color)
+    @initialize: (@road_builders) ->
+        @road_builders.setDefault('color', @default_color)
 
-    @spawn_road_connector: (road_a, road_b) ->
-        road_maker = @spawn_road_maker(road_a, RoadConnector)
-        road_maker.init(road_b)
-        return road_maker
+    @spawn_road_connector: (path) ->
+        road_builder = @spawn_road_builder(path[0], RoadConnector)
+        road_builder.init(path)
+        return road_builder
 
     @spawn_road_extender: (endpoint) ->
-        road_maker = @spawn_road_maker(CityModel.instance.city_hall, RoadExtender)
-        road_maker.init(endpoint)
-        return road_maker
+        road_builder = @spawn_road_builder(CityModel.instance.city_hall, RoadExtender)
+        road_builder.init(endpoint)
+        return road_builder
 
-    @spawn_road_maker: (patch, klass) ->
-        road_maker = patch.sprout(1, @road_makers)[0]
-        extend(road_maker, FSMAgent, MovingAgent, klass)
-        return road_maker
+    @spawn_road_builder: (patch, klass) ->
+        road_builder = patch.sprout(1, @road_builders)[0]
+        extend(road_builder, FSMAgent, MovingAgent, klass)
+        return road_builder
 
     # Utils
 
@@ -79,19 +78,19 @@ class RoadExtender extends RoadBuilder
 
 class RoadConnector extends RoadBuilder
 
-    init: (endpoint) ->
-        @startpoint = @p
-        @endpoint = endpoint
+    init: (@path) ->
+        @startpoint = @path[0]
+        @endpoint = @path[@path.length-1]
 
         @points_to_report = [@startpoint, @endpoint]
 
-        @_set_initial_state('build_to_point_state')
+        @_set_initial_state('build_to_point')
 
         @msg_boards =
             node: MessageBoard.get_board('node_built')
-            lot: MessageBoard.get_board('possible_lot')
+            plot: MessageBoard.get_board('possible_plot')
 
-    s_build_to_point_state: ->
+    s_build_to_point: ->
         if not @path?
             @path = @_get_terrain_path_to(@endpoint)
 
@@ -99,7 +98,7 @@ class RoadConnector extends RoadBuilder
 
         if not Road.is_road @p
             @_drop_road()
-            @_check_for_lots()
+            @_check_for_plots()
 
         if @_in_point(@path[0])
             @path.shift()
@@ -108,38 +107,40 @@ class RoadConnector extends RoadBuilder
                     @msg_boards.node.post_message({patch: point})
                 @_set_state('die')
 
-    _check_for_lots: () ->
+    _check_for_plots: () ->
         if Road.get_road_neighbours(@p).length >= 2
-            @msg_boards.lot.post_message({patch: @p})
+            @msg_boards.plot.post_message({patch: @p})
 
+
+CityModel.register_module(RoadBuilder, ['road_builders'], [])
 
 
 class HouseBuilder
     # Agentscript stuff
-    @house_makers: null
+    @house_builders: null
 
     # Appearance
     @default_color: [100,0,0]
 
-    @initialize_module: (house_makers_breed) ->
-        @house_makers = house_makers_breed
-        @house_makers.setDefault('color', @default_color)
+    @initialize: (@house_builders) ->
+        @house_builders.setDefault('color', @default_color)
 
-    @spawn_house_maker: (patch) ->
-        house_maker = CityModel.instance.city_hall.sprout(1, @house_makers)[0]
-        extend(house_maker, FSMAgent, MovingAgent, HouseBuilder)
-        house_maker.init(patch)
-        return house_maker
+    @spawn_house_builder: (patch) ->
+        house_builder = CityModel.instance.city_hall.sprout(1, @house_builders)[0]
+        extend(house_builder, FSMAgent, MovingAgent, HouseBuilder)
+        house_builder.init(patch)
+        return house_builder
 
     speed: 0.05
 
     init: (@block) ->
-        @_set_initial_state('go_to_lot')
+        @_set_initial_state('go_to_plot')
 
-    s_go_to_lot: ->
-        if not @path?
-            closest_road_to_target = Road.get_closest_road_to(@block)
-            @path = @_get_road_path_to(closest_road_to_target)
+    s_go_to_plot: ->
+        if not @path? or @path.length is 0
+            patch = @block.plot.get_closes_patch_to(@p)
+            road = ABM.util.oneOf(Road.get_road_neighbours(patch))
+            @path = @_get_road_path_to(road)
 
         @_move(@path[0])
 
@@ -159,7 +160,66 @@ class HouseBuilder
         @die()
 
     _house_citizen: (patch) ->
-        if not House.isHouseHere(patch)
-            House.set_breed patch
-        patch.color = ABM.util.scaleColor(patch.color, 1.05)
+        if not House.is_house(patch)
+            House.make_here(patch)
+
+        if patch.has_free_space()
+            patch.increase_citizens()
+        else
+            @block = patch.plot.get_available_block
+
+CityModel.register_module(HouseBuilder, ['house_builders'], [])
+
+
+
+class Bulldozer
+    @bulldozers: null
+    @default_color: [255, 255, 0]
+
+    @initialize: (@bulldozers) ->
+        @bulldozers.setDefault('color', @default_color)
+
+    @spawn_bulldozer: (path) ->
+        bulldozer = path[0].sprout(1, @bulldozers)[0]
+        extend(bulldozer, FSMAgent, MovingAgent, Bulldozer)
+        bulldozer.init(path)
+        return bulldozer
+
+    init: (@path) ->
+        @path_copy = (p for p in @path)
+        @_set_initial_state('bulldoze_to_point')
+        @board = MessageBoard.get_board('nodes_unconnected')
+
+    s_bulldoze_to_point: ->
+        if not @path?
+            @path = @_get_terrain_path_to(@endpoint)
+
+        @_move @path[0]
+
+        if not Road.is_road(@p)
+            @_bulldoze_patch()
+
+        if @_in_point(@path[0])
+            @path.shift()
+            if @path.length is 0
+                @board.post_message({path: @path_copy})
+                @_set_state('die')
+
+    s_die: () ->
+        @die()
+
+
+    _bulldoze_patch: () ->
+        if House.is_house(@p)
+            @p.reallocate_citizens()
+            CityModel.patches.setBreed(@p)
+
+        @p.color = ABM.util.randomGray(100, 150)
+        [r, g, b] = @p.color
+        @p.color = [r, g * 2, b]
+
+
+
+
+CityModel.register_module(Bulldozer, ['bulldozers'], [])
 

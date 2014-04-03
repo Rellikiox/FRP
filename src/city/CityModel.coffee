@@ -3,6 +3,25 @@ u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
 
 class CityModel extends ABM.Model
 
+    @modules: []
+    @agent_breeds_names: ""
+    @patch_breeds_names: ""
+
+    @register_module: (klass, agents, patches) ->
+        module =
+            klass: klass
+            agent_breeds: agents
+            patch_breeds: patches
+
+        @modules.push(module)
+        @load_module(module)
+
+    @load_module: (module) ->
+        @agent_breeds_names += " " + breed_name for breed_name in module.agent_breeds
+        @patch_breeds_names += " " + breed_name for breed_name in module.patch_breeds
+        @agent_breeds_names.trim()
+        @patch_breeds_names.trim()
+
     @instance: null
 
     @log = (msg) ->
@@ -20,13 +39,20 @@ class CityModel extends ABM.Model
     @link_agents: (agent_a, agent_b) ->
         @instance.links.create(agent_a, agent_b)
 
+    @set_road_nav_patch_walkable: (patch, walkable=true) ->
+        CityModel.instance.roadAStar.setWalkable(patch, walkable)
+
+    @set_terrain_nav_patch_walkable: (patch, walkable=true) ->
+        CityModel.instance.terrainAStar.setWalkable(patch, walkable)
+
     reset: (@config, start) ->
         super(start)
-        CityModel.instance = this
-        @set_up_AStar_helpers()
 
         @set_default_params()
         @initialize_modules()
+
+        CityModel.instance = this
+        @set_up_AStar_helpers()
 
         @init_patches()
         @spawn_entities()
@@ -36,7 +62,7 @@ class CityModel extends ABM.Model
     step: ->
         # console.log @anim.toString() if @anim.ticks % 100 == 0
 
-        agent.step() for agent in @agents by -1
+        agent.step?() for agent in @agents by -1
 
         # road_maker.step() for road_maker in @road_makers
         # house_maker.step() for house_maker in @house_makers
@@ -53,13 +79,15 @@ class CityModel extends ABM.Model
         agent.update_label?() for agent in @agents
 
     initialize_modules: () ->
-        Road.initialize_module(@roads)
-        RoadNode.initialize_module(@road_nodes)
-        RoadBuilder.initialize_module(@road_makers)
-        HouseBuilder.initialize_module(@house_makers)
-        Inspector.initialize_module(@inspectors, @config.inspectors)
-        Planner.initialize_module(@planners)
-        MessageBoard.initialize_module()
+        for module in CityModel.modules
+            @initialize_module(module)
+
+    initialize_module: (module) ->
+        breeds = []
+        breeds.push(@[breed_name]) for breed_name in module.agent_breeds
+        breeds.push(@[breed_name]) for breed_name in module.patch_breeds
+
+        module.klass.initialize(breeds..., @config)
 
     create_city_hall: (x, y) ->
         patch = @patches.patchXY(x, y)
@@ -68,9 +96,10 @@ class CityModel extends ABM.Model
         return patch
 
     set_default_params: () ->
-        @patchBreeds "roads houses"
-        @agentBreeds "road_makers house_makers road_nodes inspectors planners"
-        @anim.setRate 120, false
+        @patchBreeds(CityModel.patch_breeds_names)
+        @agentBreeds(CityModel.agent_breeds_names)
+
+        @anim.setRate(120, false)
         @refreshPatches = true
         @draw_mode = "normal"
 
@@ -110,7 +139,7 @@ class CityModel extends ABM.Model
             patch = u.oneOf(@city_hall.n4)
             Inspector.spawn_node_inspector(patch)
             Inspector.spawn_road_inspector(patch)
-            Inspector.spawn_lot_inspector(patch)
+            Inspector.spawn_plot_inspector(patch)
             i += 1
 
     spawn_planners: (ammount) ->
@@ -119,15 +148,16 @@ class CityModel extends ABM.Model
             Planner.spawn_road_planner()
             Planner.spawn_node_planner()
             Planner.spawn_growth_planner()
-            Planner.spawn_lot_planner()
+            Planner.spawn_plot_planner()
             Planner.spawn_housing_planner()
-            Planner.spawn_lot_keeper_planner()
+            Planner.spawn_plot_keeper_planner()
+            Planner.spawn_bulldozer_planner()
             i += 1
 
 
     set_up_AStar_helpers: ->
-        width = @world.maxX - @world.minX
-        height = @world.maxY - @world.minY
+        width = (@world.maxX - @world.minX) + 1
+        height = (@world.maxY - @world.minY) + 1
 
         x_to_grid_transform = (x) => x - @world.minX
         y_to_grid_transform = (y) => -y - @world.minY

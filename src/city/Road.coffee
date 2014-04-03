@@ -6,53 +6,55 @@ class Road
     @too_connected_threshold = 2
 
 
-    @initialize_module: (road_breed) ->
-        @roads = road_breed
+    @initialize: (@roads) ->
         @roads.setDefault("color", @default_color)
 
     @set_breed: (patch, city_hall_dist=null) ->
-        @roads.setBreed patch
-        CityModel.instance.roadAStar.setWalkable(patch)
-        @_update_distances(patch, 0, city_hall_dist)
-        if RoadNode.check_patch(patch)
-            RoadNode.spawn_node(patch)
+        @roads.setBreed(patch)
+        extend(patch, Road)
+        patch.init(city_hall_dist)
+
+    init: (city_hall_dist) ->
+        @_update_navigation()
+        @_update_distances(0, city_hall_dist)
+        if RoadNode.check_patch(@)
+            RoadNode.spawn_node(@)
         null
 
-    @recalculate_distances: () ->
-        @_update_distances(road, 0, null) for road in @roads
+    _update_navigation: () ->
+        CityModel.set_road_nav_patch_walkable(@)
 
-    @_update_distances: (patch, dist_to_road, city_hall_dist) ->
-        city_hall_dist ?= @_get_min_neighbour(patch, "dist_to_city_hall", get_value: true) + 1
-        patch.dist_to_road = dist_to_road
-        @_set_city_hall_dist(patch, city_hall_dist)
-        roads_to_update = @_get_roads_to_update(patch, 0)
-        while roads_to_update.length > 0
-            [road, new_distance] = roads_to_update.pop()
-            road.dist_to_road = new_distance
-            # road.label = new_distance
-            roads_to_update.push(n_road) for n_road in @_get_roads_to_update(road, new_distance)
+    _update_distances: (@dist_to_road, city_hall_dist) ->
+        city_hall_dist ?= Road._get_min_neighbour(@, "dist_to_city_hall", get_value: true) + 1
+        @_set_city_hall_dist(city_hall_dist)
+        @_update_patches_dist_to_road()
+
+    _update_patches_dist_to_road: () ->
+        patches_to_update = Road._get_patches_to_update(@, 0)
+        while patches_to_update.length > 0
+            [patch, new_distance] = patches_to_update.pop()
+            patch.dist_to_road = new_distance
+            patches_to_update.push(n_road) for n_road in Road._get_patches_to_update(patch, new_distance)
         null
 
-    @_set_city_hall_dist: (road, dist_to_city_hall) ->
-        road.dist_to_city_hall = dist_to_city_hall
-        # road.label = road.dist_to_city_hall
-        for n_road in road.n4 when n_road.breed is @roads
-            if not n_road.dist_to_city_hall? or n_road.dist_to_city_hall > dist_to_city_hall + 1
-                @_set_city_hall_dist(n_road, dist_to_city_hall + 1)
+    _set_city_hall_dist: (@dist_to_city_hall) ->
+        _has_to_update = (road) ->
+            if not road.dist_to_city_hall?
+                return true
+            else
+                return road.dist_to_city_hall > dist_to_city_hall + 1
 
-    @_get_roads_to_update: (road, new_distance) ->
+        for n_road in @n4 when Road.is_road(n_road)
+            if _has_to_update(n_road)
+                n_road._set_city_hall_dist(dist_to_city_hall + 1)
+
+
+    @_get_patches_to_update: (patch, new_distance) ->
         to_update = []
-        for n_road in road.n4
-            if not n_road.dist_to_road? or n_road.dist_to_road > new_distance + 1
-                to_update.push([n_road, new_distance + 1])
-        return to_update
-
-    @_spread_connectivity: (patch) ->
-        new_distance = patch.dist_to_road + 1
         for n_patch in patch.n4
-            if not n_patch.dist_to_road? or n_patch.dist_to_road > new_distance
-                @_set_distance_to_road(n_patch, new_distance)
-        null
+            if not n_patch.dist_to_road? or n_patch.dist_to_road > new_distance + 1
+                to_update.push([n_patch, new_distance + 1])
+        return to_update
 
     @is_road: (patch) ->
         return patch.breed is @roads
@@ -95,9 +97,6 @@ class Road
         else
             return max_patch
 
-    @add_road_node: (road) ->
-        @road_nodes.push(road)
-
     @_get_distance: (road_a, road_b) ->
         dx = Math.abd(road_a.x, road_b.x)
         dy = Math.abd(road_a.y, road_b.y)
@@ -113,6 +112,8 @@ class Road
         return (road for road in patch.n4 when Road.is_road(road))
 
 
+CityModel.register_module(Road, [], ['roads'])
+
 
 
 class RoadNode
@@ -122,8 +123,7 @@ class RoadNode
     @road_nodes: null
     @default_color: [160,160,160]
 
-    @initialize_module: (road_nodes_breed) ->
-        @road_nodes = road_nodes_breed
+    @initialize: (@road_nodes) ->
         @road_nodes.setDefault('color', @default_color)
         @road_nodes.setDefault('shape', 'circle')
         @road_nodes.setDefault('size', 0.4)
@@ -137,11 +137,14 @@ class RoadNode
         node.connect()
         return node
 
+    @_make_node: (road) ->
+        new_node = road.sprout(1, @road_nodes)[0]
+        extend(new_node, RoadNode)
+        road.node = new_node
+        return new_node
+
     @split_link_at: (road) ->
         [node_a, node_b] = RoadNode._get_nodes_connecting(road)
-        # upstream_node = RoadNode._find_upstream_node(road)
-        # downstream_node = RoadNode._find_downstream_node(road)
-
         RoadNode._remove_link_between(node_a, node_b)
 
         node = RoadNode._make_node(road)
@@ -149,12 +152,6 @@ class RoadNode
 
         CityModel.link_agents(node_a, node)
         CityModel.link_agents(node, node_b)
-
-    @_make_node: (road) ->
-        new_node = road.sprout(1, @road_nodes)[0]
-        extend(new_node, RoadNode)
-        road.node = new_node
-        return new_node
 
     @_prepare_neighbour_roads: (road) ->
         for n_road in road.n4 when Road.is_road(n_road) and not n_road.node?
@@ -198,10 +195,7 @@ class RoadNode
         null
 
 
-
     creating: true
-
-    step: () ->
 
     connect: () ->
         if @_any_neighbours_nodes()
@@ -240,3 +234,4 @@ class RoadNode
                 @die()
 
 
+CityModel.register_module(RoadNode, ['road_nodes'], [])

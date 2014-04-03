@@ -1,10 +1,9 @@
 class Planner
     @planners = null
 
-    @initialize_module: (planners_breed) ->
-        @planners = planners_breed
+    @initialize: (@planners) ->
         @planners.setDefault 'hidden', true
-        LotKeeperPlanner.available_lots = []
+        PlotKeeperPlanner.available_plots = []
 
     @spawn_road_planner: () ->
         return @spawn_planner(RoadPlanner)
@@ -12,17 +11,20 @@ class Planner
     @spawn_node_planner: () ->
         return @spawn_planner(NodeInterconnectivityPlanner)
 
+    @spawn_bulldozer_planner: () ->
+        return @spawn_planner(BulldozerPlanner)
+
     @spawn_growth_planner: () ->
         return @spawn_planner(GrowthPlanner)
 
-    @spawn_lot_planner: () ->
-        return @spawn_planner(LotPlanner)
+    @spawn_plot_planner: () ->
+        return @spawn_planner(PlotPlanner)
 
     @spawn_housing_planner: () ->
         return @spawn_planner(HousingPlanner)
 
-    @spawn_lot_keeper_planner: () ->
-        return @spawn_planner(LotKeeperPlanner)
+    @spawn_plot_keeper_planner: () ->
+        return @spawn_planner(PlotKeeperPlanner)
 
     @spawn_planner: (klass) ->
         planner = @planners.create(1)[0]
@@ -47,7 +49,7 @@ class NodeInterconnectivityPlanner extends Planner
             @_set_state('get_message')
             return
 
-        RoadBuilder.spawn_road_connector(@message.patch_a, @message.patch_b)
+        RoadBuilder.spawn_road_connector(@message.path)
         @message = null
         @_set_state('get_message')
 
@@ -73,20 +75,20 @@ class RoadPlanner
         @_set_state('get_message')
 
 
-class LotPlanner
+class PlotPlanner
 
     init: () ->
         @boards =
-            possible: MessageBoard.get_board('possible_lot')
-            inspect: MessageBoard.get_board('inspect_lot')
+            possible: MessageBoard.get_board('possible_plot')
+            inspect: MessageBoard.get_board('inspect_plot')
         @_set_initial_state('get_message')
 
     s_get_message: () ->
         @message = @boards.possible.get_message()
         if @message?
-            @_set_state('send_lot_inspector')
+            @_set_state('send_plot_inspector')
 
-    s_send_lot_inspector: () ->
+    s_send_plot_inspector: () ->
         if not @message?
             @_set_state('get_message')
             return
@@ -96,18 +98,18 @@ class LotPlanner
         @_set_state('get_message')
 
 
-class LotKeeperPlanner
+class PlotKeeperPlanner
 
-    @available_lots: []
+    @available_plots: []
 
     init: () ->
-        @board = MessageBoard.get_board('lot_built')
+        @board = MessageBoard.get_board('plot_built')
         @_set_initial_state('get_message')
 
     s_get_message: () ->
         @message = @board.get_message()
         if @message?
-            LotKeeperPlanner.available_lots.push(@message.lot)
+            PlotKeeperPlanner.available_plots.push(@message.plot)
 
 
 class HousingPlanner
@@ -122,14 +124,12 @@ class HousingPlanner
             @_set_state('send_house_builder')
 
     s_send_house_builder: () ->
-        if LotKeeperPlanner.available_lots.length > 0
-            lot = @_random_choice(LotKeeperPlanner.available_lots)
-            block = @_random_choice(lot)
-            HouseBuilder.spawn_house_maker(block)
-            @_set_state('get_message')
-
-    _random_choice: (list) ->
-        return list[ABM.util.randomInt(list.length)]
+        plot = Plot.get_random_plot()
+        if plot?
+            block = plot.get_available_block()
+            if block?
+                HouseBuilder.spawn_house_builder(block)
+                @_set_state('get_message')
 
 
 class GrowthPlanner
@@ -150,4 +150,28 @@ class GrowthPlanner
         @msg_reader.post_message()
         @ticks_since_last_citizen = 0
         @_set_state('wait_until_ready')
+
+
+class BulldozerPlanner
+
+    init: () ->
+        @msg_reader = MessageBoard.get_board('bulldoze_path')
+        @_set_initial_state('get_message')
+
+    s_get_message: () ->
+        @message = @msg_reader.get_message()
+        if @message?
+            @_set_state('emit_bulldozer')
+
+    s_emit_bulldozer: () ->
+        if not @message?
+            @_set_state('get_message')
+            return
+
+        Bulldozer.spawn_bulldozer(@message.path)
+        @message = null
+        @_set_state('get_message')
+
+
+CityModel.register_module(Planner, ['planners'], [])
 
