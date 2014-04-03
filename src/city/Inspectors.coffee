@@ -10,9 +10,9 @@ class Inspector
 
         RoadInspector.construction_points = []
 
-        for key, value of config.node_inspector
+        for key, value of config.inspectors.node_inspector
             NodeInspector.prototype[key] = value
-        for key, value of config.road_inspector
+        for key, value of config.inspectors.road_inspector
             RoadInspector.prototype[key] = value
         null
 

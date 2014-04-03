@@ -64,9 +64,6 @@ class CityModel extends ABM.Model
 
         agent.step?() for agent in @agents by -1
 
-        # road_maker.step() for road_maker in @road_makers
-        # house_maker.step() for house_maker in @house_makers
-
     # draw: ->
     #     switch @draw_mode
     #         when "normal" then @draw_normal_color()
@@ -154,7 +151,6 @@ class CityModel extends ABM.Model
             Planner.spawn_bulldozer_planner()
             i += 1
 
-
     set_up_AStar_helpers: ->
         width = (@world.maxX - @world.minX) + 1
         height = (@world.maxY - @world.minY) + 1
@@ -179,14 +175,3 @@ class CityModel extends ABM.Model
             [r, g, b] = p.color
             p.color = [r, g * 2, b]
             p.default_color = p.color
-
-    set_draw_mode: (mode) ->
-        @draw_mode = mode
-
-    draw_normal_color: ->
-        for patch in @patches when patch.breed.name is "patches"
-            patch.color = patch.default_color
-
-    draw_connectivity_color: ->
-        for patch in @patches when patch.breed.name is "patches"
-            patch.color = if patch.connectivity_color? then patch.connectivity_color else patch.color
