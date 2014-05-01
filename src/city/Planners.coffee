@@ -118,6 +118,7 @@ class PlotKeeperPlanner
 class HousingPlanner
 
     init: () ->
+        @default_starting_point = CityModel.instance.city_hall
         @board = MessageBoard.get_board('new_citizen')
         @_set_initial_state('get_message')
 
@@ -131,7 +132,9 @@ class HousingPlanner
         if plot?
             block = plot.get_available_block()
             if block?
-                HouseBuilder.spawn_house_builder(block)
+                starting_point = if @message.starting_point? then @message.starting_point else @default_starting_point
+                HouseBuilder.spawn_house_builder(starting_point, block)
+                @message = null
                 @_set_state('get_message')
 
 
@@ -199,6 +202,11 @@ class NeedsPlanner
 
     _process_hospital_need: (house) ->
         NeedsPlanner.needs.hospital.push(house)
+        @_check_if_sufficient_needs()
+
+    _check_if_sufficient_needs: () ->
+        # for house in NeedsPlanner.needs.hospital
+
 
 
 CityModel.register_module(Planner, ['planners'], [])

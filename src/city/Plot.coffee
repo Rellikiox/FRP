@@ -25,6 +25,9 @@ class Plot
         ABM.util.removeItem(@plots, plot)
         plot._unset_patch_references()
 
+    @get_available_block: () ->
+        return @get_random_plot()?.get_available_block()
+
 
     patches: null
     blocks: null
@@ -144,7 +147,7 @@ class House
 
     reallocate_citizens: () ->
         for i in [0..@citizens]
-            @board.post_message()
+            HouseBuilder.spawn_house_builder(@, Plot.get_available_block())
         @inspector.die()
 
 

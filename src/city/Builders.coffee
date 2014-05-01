@@ -129,8 +129,8 @@ class HouseBuilder
     @initialize: (@house_builders) ->
         @house_builders.setDefault('color', @default_color)
 
-    @spawn_house_builder: (patch) ->
-        house_builder = CityModel.instance.city_hall.sprout(1, @house_builders)[0]
+    @spawn_house_builder: (starting_point, patch) ->
+        house_builder = starting_point.sprout(1, @house_builders)[0]
         extend(house_builder, FSMAgent, MovingAgent, HouseBuilder)
         house_builder.init(patch)
         return house_builder
@@ -138,10 +138,24 @@ class HouseBuilder
     speed: 0.05
 
     init: (@block) ->
-        @_set_initial_state('go_to_plot')
         @board = MessageBoard.get_board('new_citizen')
 
-    s_go_to_plot: ->
+        if Road.get_road_neighbours(@p).length > 0
+            @_set_initial_state('go_to_plot')
+        else
+            @_set_initial_state('go_to_road')
+
+    s_go_to_road: () ->
+        if not @road?
+            @road = Road.get_closest_road_to(@p)
+
+        @_move(@road)
+
+        if @_in_point(@road)
+            @_set_state('go_to_plot')
+
+
+    s_go_to_plot: () ->
         if not @path? or @path.length is 0
             patch = @block.plot.get_closes_patch_to(@p)
             road = ABM.util.oneOf(Road.get_road_neighbours(patch))
