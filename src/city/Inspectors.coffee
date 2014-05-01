@@ -17,18 +17,28 @@ class Inspector
         null
 
     @spawn_road_inspector: (patch) ->
-        return @spawn_inspector(patch, RoadInspector)
+        inspector = @spawn_inspector(patch, RoadInspector)
+        inspector.init()
+        return inspector
 
     @spawn_node_inspector: (patch) ->
-        return @spawn_inspector(patch, NodeInspector)
+        inspector = @spawn_inspector(patch, NodeInspector)
+        inspector.init()
+        return inspector
 
     @spawn_plot_inspector: (patch) ->
-        return @spawn_inspector(patch, PlotInspector)
+        inspector = @spawn_inspector(patch, PlotInspector)
+        inspector.init()
+        return inspector
+
+    @spawn_house_inspector: (patch) ->
+        inspector = @spawn_inspector(patch, HouseInspector)
+        inspector.init(patch)
+        return inspector
 
     @spawn_inspector: (patch, klass) ->
         inspector = patch.sprout(1, @inspectors)[0]
         extend(inspector, FSMAgent, MovingAgent, klass)
-        inspector.init()
         return inspector
 
     speed: 0.05
@@ -116,6 +126,8 @@ class RoadInspector extends Inspector
     init: () ->
         @_set_initial_state('get_inspection_point')
         @build_endpoint_board = MessageBoard.get_board('possible_node')
+        @nodes_built_board = MessageBoard.get_board('node_built')
+
 
     s_get_inspection_point: () ->
         @inspection_point = @_get_point_to_inspect()
@@ -152,10 +164,15 @@ class RoadInspector extends Inspector
             @_set_state('find_new_endpoint')
 
         if @_lap_completed()
+            @_set_state('increment_radius')
             @circular_direction = null
             @start_angle = null
+
+    s_increment_radius: () ->
+        if House.houses_below_minimum() and @nodes_built_board.message_count() == 0
             @ring_radius += @ring_increment
             @_set_state('get_inspection_point')
+
 
 
     _valid_point: (point) ->
@@ -311,6 +328,31 @@ class PlotInspector
             return closed_list
         else
             return null
+
+
+class HouseInspector
+    @ticks_per_report = 100
+
+    init: (@house) ->
+        @hidden = true
+        @_set_initial_state('report_state')
+        @msg_board = MessageBoard.get_board('population_needs')
+
+    s_report_state: () ->
+        @msg_board.post_message(
+            'type': 'hospital'
+            'value': @house.hospital_distance
+            'population': @house.citizens
+        )
+        @ticks_since_report = 0
+        @_set_state('wait')
+
+    s_wait: () ->
+        if @ticks_since_report > HouseInspector.ticks_per_report
+            @_set_state('report_state')
+        else
+            @ticks_since_report += 1
+
 
 CityModel.register_module(Inspector, ['inspectors'], [])
 

@@ -90,6 +90,9 @@ class House
 
     @max_citizens: 10
 
+    @minimum_housing_available = 0.1
+
+
     @initialize: (@houses) ->
         @houses.setDefault('color', @default_color)
 
@@ -101,20 +104,37 @@ class House
     @is_house: (patch) ->
         return patch.breed is @houses
 
+    @houses_below_minimum: () ->
+        free_space = 0
+        total_space = 0
+        for house in @houses
+            total_space += house.space
+            free_space += house.free_space()
+
+        return (free_space / total_space) < House.minimum_housing_available
+
     @_update_navigation: (house) ->
         CityModel.set_terrain_nav_patch_walkable(house, false)
 
 
     block: null
     citizens: 0
+    space: 0
 
     init: () ->
         @block = new Block(@)
         House._update_navigation(@)
         @citizens = 0
+        @space = House.max_citizens
+        @inpector = Inspector.spawn_house_inspector(@)
+        @board = MessageBoard.get_board('new_citizen')
+        @hospital_distance = 1
 
     has_free_space: () ->
-        return @citizens < House.max_citizens
+        return @citizens < @space
+
+    free_space: () ->
+        return @space - @citizens
 
     increase_citizens: () ->
         if @has_free_space()
@@ -122,7 +142,9 @@ class House
             @color = ABM.util.scaleColor(@color, 1.05)
 
     reallocate_citizens: () ->
-        console.log "Uninplemented"
+        for i in [0..@citizens]
+            @board.post_message()
+        @Inspector.die()
 
 
 CityModel.register_module(House, [], ['houses'])

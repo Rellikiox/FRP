@@ -173,5 +173,23 @@ class BulldozerPlanner
         @_set_state('get_message')
 
 
+class NeedsPlanner
+    @needs = {}
+
+    init: () ->
+        @msg_reader = MessageBoard.get_board('population_needs')
+        @_set_initial_state('get_message')
+
+    s_get_message: () ->
+        @message = @msg_reader.get_message()
+        if @message?
+            @_set_state('process_message')
+
+    s_process_message: () ->
+
+
+        @message = null
+        @_set_state('get_message')
+
 CityModel.register_module(Planner, ['planners'], [])
 

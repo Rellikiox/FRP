@@ -25,5 +25,8 @@ class MessageBoard
         message.timestamp = Date.now()
         @queue.push(message)
 
+    message_count: () ->
+        return @queue.length
+
 
 CityModel.register_module(MessageBoard, [], [])
