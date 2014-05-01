@@ -37,7 +37,7 @@ class RoadBuilder
             @_check_for_plots()
 
     _check_for_plots: () ->
-        if Road.get_road_neighbours(@p).length >= 2
+        if Road.get_roads_in_n8(@p).length >= 2
             @msg_boards.plot.post_message({patch: @p})
 
     s_build_to_point_state: ->

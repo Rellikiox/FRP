@@ -113,6 +113,9 @@ class Road
     @get_road_neighbours: (patch) ->
         return (road for road in patch.n4 when Road.is_road(road))
 
+    @get_roads_in_n8: (patch) ->
+        return (road for road in patch.n when Road.is_road(road))
+
 
 CityModel.register_module(Road, [], ['roads'])
 

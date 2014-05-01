@@ -323,7 +323,7 @@ class PlotInspector
             if p.isOnEdge() or p.under_construction
                 invalid = true
                 break
-            open_list.push(n) for n in p.n when not Road.is_road(n) and not ABM.util.contains(open_list, n) and not ABM.util.contains(closed_list, n)
+            open_list.push(n) for n in p.n4 when not Road.is_road(n) and not ABM.util.contains(open_list, n) and not ABM.util.contains(closed_list, n)
             closed_list.push(p)
         if not invalid
             return closed_list
