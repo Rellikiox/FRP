@@ -31,7 +31,13 @@ class RoadBuilder
     speed: 0.05
 
     _drop_road: ->
-        Road.set_breed(@p)
+        if not Road.is_road @p
+            Road.set_breed(@p)
+            @_check_for_plots()
+
+    _check_for_plots: () ->
+        if Road.get_road_neighbours(@p).length >= 2
+            @msg_boards.plot.post_message({patch: @p})
 
     s_build_to_point_state: ->
         if not @path?
@@ -46,7 +52,7 @@ class RoadBuilder
             @path.shift()
             if @path.length is 0
                 for point in @points_to_report
-                    @msg_reader.post_message({patch: point})
+                    @msg_boards.node.post_message({patch: point})
                 @_set_state('die')
 
     s_die: ->
@@ -60,7 +66,10 @@ class RoadExtender extends RoadBuilder
         @points_to_report = [@endpoint]
 
         @_set_initial_state('go_to_point_state')
-        @msg_reader = MessageBoard.get_board('node_built')
+
+        @msg_boards =
+            node: MessageBoard.get_board('node_built')
+            plot: MessageBoard.get_board('possible_plot')
 
     s_go_to_point_state: ->
         if not @path?
@@ -96,9 +105,7 @@ class RoadConnector extends RoadBuilder
 
         @_move @path[0]
 
-        if not Road.is_road @p
-            @_drop_road()
-            @_check_for_plots()
+        @_drop_road()
 
         if @_in_point(@path[0])
             @path.shift()
@@ -106,10 +113,6 @@ class RoadConnector extends RoadBuilder
                 for point in @points_to_report
                     @msg_boards.node.post_message({patch: point})
                 @_set_state('die')
-
-    _check_for_plots: () ->
-        if Road.get_road_neighbours(@p).length >= 2
-            @msg_boards.plot.post_message({patch: @p})
 
 
 CityModel.register_module(RoadBuilder, ['road_builders'], [])
