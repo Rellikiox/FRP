@@ -135,6 +135,7 @@ class HouseBuilder
 
     init: (@block) ->
         @_set_initial_state('go_to_plot')
+        @board = MessageBoard.get_board('new_citizen')
 
     s_go_to_plot: ->
         if not @path? or @path.length is 0
@@ -166,7 +167,7 @@ class HouseBuilder
         if patch.has_free_space()
             patch.increase_citizens()
         else
-            @block = patch.plot.get_available_block
+            @board.post_message()
 
 CityModel.register_module(HouseBuilder, ['house_builders'], [])
 
