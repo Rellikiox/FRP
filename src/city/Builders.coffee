@@ -217,7 +217,7 @@ class Bulldozer
     _bulldoze_patch: () ->
         if House.is_house(@p)
             @p.reallocate_citizens()
-            CityModel.patches.setBreed(@p)
+            CityModel.get_patches().setBreed(@p)
 
         @p.color = ABM.util.randomGray(100, 150)
         [r, g, b] = @p.color

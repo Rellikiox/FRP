@@ -115,7 +115,7 @@ class House
         return (free_space / total_space) < House.minimum_housing_available
 
     @_update_navigation: (house) ->
-        CityModel.set_terrain_nav_patch_walkable(house, false)
+        # CityModel.set_terrain_nav_patch_walkable(house, false)
 
 
     block: null
@@ -127,7 +127,7 @@ class House
         House._update_navigation(@)
         @citizens = 0
         @space = House.max_citizens
-        @inpector = Inspector.spawn_house_inspector(@)
+        @inspector = Inspector.spawn_house_inspector(@)
         @board = MessageBoard.get_board('new_citizen')
         @hospital_distance = 1
 
@@ -145,7 +145,7 @@ class House
     reallocate_citizens: () ->
         for i in [0..@citizens]
             @board.post_message()
-        @Inspector.die()
+        @inspector.die()
 
 
 CityModel.register_module(House, [], ['houses'])

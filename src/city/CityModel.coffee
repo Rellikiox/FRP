@@ -45,6 +45,9 @@ class CityModel extends ABM.Model
     @set_terrain_nav_patch_walkable: (patch, walkable=true) ->
         CityModel.instance.terrainAStar.setWalkable(patch, walkable)
 
+    @get_patches: () ->
+        return @instance?.patches
+
     reset: (@config, start) ->
         super(start)
 
@@ -149,6 +152,7 @@ class CityModel extends ABM.Model
             Planner.spawn_housing_planner()
             Planner.spawn_plot_keeper_planner()
             Planner.spawn_bulldozer_planner()
+            Planner.spawn_needs_planner()
             i += 1
 
     set_up_AStar_helpers: ->

@@ -341,9 +341,8 @@ class HouseInspector
 
     s_report_state: () ->
         @msg_board.post_message(
-            'type': 'hospital'
-            'value': @house.hospital_distance
-            'population': @house.citizens
+            'need': 'hospital'
+            'house': @house
         )
         @ticks_since_report = 0
         @_set_state('wait')

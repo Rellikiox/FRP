@@ -26,6 +26,9 @@ class Planner
     @spawn_plot_keeper_planner: () ->
         return @spawn_planner(PlotKeeperPlanner)
 
+    @spawn_needs_planner: () ->
+        return @spawn_planner(NeedsPlanner)
+
     @spawn_planner: (klass) ->
         planner = @planners.create(1)[0]
         extend(planner, FSMAgent, klass)
@@ -174,7 +177,9 @@ class BulldozerPlanner
 
 
 class NeedsPlanner
-    @needs = {}
+    @needs:
+        'hospital': []
+
 
     init: () ->
         @msg_reader = MessageBoard.get_board('population_needs')
@@ -186,10 +191,15 @@ class NeedsPlanner
             @_set_state('process_message')
 
     s_process_message: () ->
-
+        switch @message.need
+            when 'hospital' then @_process_hospital_need(@message.house)
 
         @message = null
         @_set_state('get_message')
+
+    _process_hospital_need: (house) ->
+        NeedsPlanner.needs.hospital.push(house)
+
 
 CityModel.register_module(Planner, ['planners'], [])
 
