@@ -94,6 +94,7 @@ class NodeInspector extends Inspector
                 if patch.plot?
                     crosses_plot = true
                     patch.plot.under_construction = true
+                patch.under_construction = true
             if crosses_plot
                 @msg_boards.bulldoze.post_message({path: path})
             else
@@ -316,15 +317,15 @@ class PlotInspector
     _get_plot: (patch) ->
         closed_list = []
         open_list = [patch]
-        edge = false
+        invalid = false
         while open_list.length > 0
             p = open_list.shift()
-            if p.isOnEdge()
-                edge = true
+            if p.isOnEdge() or p.under_construction
+                invalid = true
                 break
             open_list.push(n) for n in p.n when not Road.is_road(n) and not ABM.util.contains(open_list, n) and not ABM.util.contains(closed_list, n)
             closed_list.push(p)
-        if not edge
+        if not invalid
             return closed_list
         else
             return null

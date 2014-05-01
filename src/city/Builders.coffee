@@ -30,8 +30,9 @@ class RoadBuilder
 
     speed: 0.05
 
-    _drop_road: ->
+    _drop_road: () ->
         if not Road.is_road @p
+            @p.under_construction = false
             Road.set_breed(@p)
             @_check_for_plots()
 

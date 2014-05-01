@@ -25,6 +25,7 @@ class Plot
         ABM.util.removeItem(@plots, plot)
         plot._unset_patch_references()
 
+
     patches: null
     blocks: null
     under_construction: null
@@ -90,7 +91,7 @@ class House
 
     @max_citizens: 10
 
-    @minimum_housing_available = 0.1
+    @minimum_housing_available = 0.3
 
 
     @initialize: (@houses) ->
