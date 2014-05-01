@@ -208,7 +208,7 @@ class RoadInspector extends Inspector
     _is_valid_construction_point: (patch) ->
         road_dist = Road.get_connectivity(@p)
         construction_dist = @_get_construction_dist(@p)
-        return road_dist > Road.too_connected_threshold && (not construction_dist? or construction_dist > 2)
+        return road_dist > Road.too_connected_threshold && (not construction_dist? or construction_dist > Road.too_connected_threshold)
 
     _issue_construction: (patch) ->
         @constructor.construction_points.push(patch)
