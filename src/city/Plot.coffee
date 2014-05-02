@@ -14,10 +14,20 @@ class Plot
         return patch?.plot?
 
     @get_random_plot: () ->
-        if @plots.length > 0
-            for i in ABM.util.shuffle([0..@plots.length-1])
-                plot = @plots[i]
-                if plot.is_available() and plot.has_free_space()
+        if @plots.length is 0
+            return null
+
+        total_free_space = 0
+        for plot in @plots
+            if plot.is_available()
+                total_free_space += plot.free_space()
+
+        random_number = ABM.util.randomInt(total_free_space)
+
+        for plot in @plots
+            if plot.is_available()
+                random_number -= plot.free_space()
+                if random_number <= 0
                     return plot
         return null
 
@@ -32,9 +42,13 @@ class Plot
     patches: null
     blocks: null
     under_construction: null
+    citizens: 0
+    space: 0
+
     constructor: (@patches) ->
         @blocks = []
         @under_construction = false
+        @space = @patches.length * 10
 
         for p in @patches
             if not House.is_house(p)
@@ -59,6 +73,10 @@ class Plot
     has_free_space: () ->
         return @get_available_block()?
 
+    free_space: () ->
+        return @space - @citizens
+
+
     get_closes_patch_to: (patch) ->
         min_dist = null
         min_patch = null
@@ -72,6 +90,9 @@ class Plot
     is_available: () ->
         return not @under_construction
 
+    increase_citizens: () ->
+        @citizens += 1
+
 
 CityModel.register_module(Plot, [], [])
 
@@ -81,10 +102,17 @@ class Block
 
     houses: null
     plot: null
+    citizens: 0
+    space: 0
 
     constructor: (house) ->
         @houses = [house]
         @plot = house.plot
+        @space = house.space
+
+    increase_citizens: () ->
+        @citizens += 1
+        @plot.increase_citizens()
 
 
 class House
@@ -94,8 +122,9 @@ class House
 
     @max_citizens: 10
 
-    @minimum_housing_available = 0.3
+    @minimum_housing_available = 0.5
 
+    @total_citizens = 0
 
     @initialize: (@houses) ->
         @houses.setDefault('color', @default_color)
@@ -143,6 +172,8 @@ class House
     increase_citizens: () ->
         if @has_free_space()
             @citizens += 1
+            House.total_citizens += 1
+            @block.increase_citizens()
             @color = ABM.util.scaleColor(@color, 1.05)
 
     reallocate_citizens: () ->
