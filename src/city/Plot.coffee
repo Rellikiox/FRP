@@ -151,7 +151,7 @@ class House
 
     @minimum_housing_available = 0.5
 
-    @total_citizens = 0
+    @population = 0
 
     @make_here: (block) ->
         if Block.is_block(block)
@@ -176,7 +176,6 @@ class House
     @get_available_block: () ->
 
 
-
     block_type: 'house'
     color: [100, 0, 0]
 
@@ -199,11 +198,12 @@ class House
     increase_citizens: () ->
         if @has_free_space()
             @citizens += 1
-            House.total_citizens += 1
+            House.population += 1
             @color = ABM.util.scaleColor(@color, 1.05)
 
     reallocate_citizens: () ->
         for i in [0..@citizens]
+            House.population -= 1
             HouseBuilder.spawn_house_builder(@, Plot.get_available_block())
         @inspector.die()
 

@@ -143,22 +143,27 @@ class HousingPlanner
 
 class GrowthPlanner
 
-    ticks_per_citizen: 30
+    base_growth: 0.03  # 1 person every 6 days (1 person/ (6 days * 5 ticks per day))
+
+    ###
+        10% population growth per year. Each 1 person contributes to 10/100 of a new person each year
+    ###
+    growth_per_capita: (1 / 1825) * (10 / 100)
 
     init: () ->
         @msg_reader = MessageBoard.get_board('new_citizen')
-        @ticks_since_last_citizen = 0
-        @_set_initial_state('wait_until_ready')
-
-    s_wait_until_ready: () ->
-        @ticks_since_last_citizen += 1
-        if @ticks_since_last_citizen >= @ticks_per_citizen
-            @_set_state('grow_population')
+        @citizen_percentage = 0
+        @_set_initial_state('grow_population')
 
     s_grow_population: () ->
+        @citizen_percentage += @base_growth + @growth_per_capita * House.population
+        if @citizen_percentage >= 1
+            @citizen_percentage -= 1
+            @_set_state('spawn_citizen')
+
+    s_spawn_citizen: () ->
         @msg_reader.post_message()
-        @ticks_since_last_citizen = 0
-        @_set_state('wait_until_ready')
+        @_set_state('grow_population')
 
 
 class BulldozerPlanner
