@@ -190,7 +190,7 @@ class HouseBuilder
         @die()
 
     _house_citizen: (patch) ->
-        if not Block.is_block(patch) or patch.under_construction
+        if not Block.is_block(patch) or (not patch.is_available() and not House.is_house(patch))
             return false
 
         if not House.is_house(patch)

@@ -43,7 +43,6 @@ class Plot
     constructor: (patches) ->
         @blocks = []
         @under_construction = false
-        @space = patches.length * 10
 
         for p in patches
             if not Block.is_block(p)
@@ -67,8 +66,7 @@ class Plot
         return @get_available_block()?
 
     free_space: () ->
-        return @space - @citizens()
-
+        return @space() - @citizens()
 
     get_closest_block_to: (patch) ->
         min_dist = null
@@ -85,6 +83,13 @@ class Plot
             if block.is_available()
                 return true
         return false
+
+    space: () ->
+        sum = 0
+        for block in @blocks
+            if House.is_house(block) or block.is_available()
+                sum += House.max_citizens
+        return sum
 
     citizens: () ->
         sum = 0
@@ -207,19 +212,24 @@ class House
 class Building
     @buildings: null
 
-    @default_color: [174, 131, 0]
-
     @initialize: (@buildings) ->
         @buildings.setDefault('color', @default_color)
 
-    @make_here: (patch) ->
-        @buildings.setBreed(patch)
-        extend(patch, Building)
-        patch.init()
+    @make_here: (block) ->
+        if Block.is_block(block)
+            if House.is_house(block)
+                block.reallocate_citizens()
+            extend(block, Building)
+            block.init()
 
     @is_building: (patch) ->
         return patch.breed is @buildings
 
-    init: () ->
+    block_type: 'building'
+    building_type: null
+    color: [174, 131, 0]
+
+    init: (@building_type) ->
+
 
 CityModel.register_module(Building, [], ['buildings'])

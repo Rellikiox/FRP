@@ -3,7 +3,8 @@ class Planner
 
     @initialize: (@planners) ->
         @planners.setDefault 'hidden', true
-        PlotKeeperPlanner.available_plots = []
+        PlotKeeperPlanner.initialize()
+        NeedsPlanner.initialize()
 
     @spawn_road_planner: () ->
         return @spawn_planner(RoadPlanner)
@@ -105,6 +106,10 @@ class PlotKeeperPlanner
 
     @available_plots: []
 
+    @initialize: () ->
+        @available_plots = []
+
+
     init: () ->
         @board = MessageBoard.get_board('plot_built')
         @_set_initial_state('get_message')
@@ -183,6 +188,10 @@ class NeedsPlanner
 
     @supplied_needs:
         hospital: 0
+
+    @initialize: () ->
+        @needs.hospital = {}
+        @supplied_needs.hospital = 0
 
 
     init: () ->
