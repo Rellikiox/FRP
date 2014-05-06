@@ -242,3 +242,69 @@ class Bulldozer
 
 CityModel.register_module(Bulldozer, ['bulldozers'], [])
 
+
+
+class BuildingBuilder
+    # Agentscript stuff
+    @building_builders: null
+
+    # Appearance
+    @default_color: [255, 193, 0]
+
+    @initialize: (@building_builders) ->
+        @building_builders.setDefault('color', @default_color)
+
+    @spawn_building_builder: (starting_point, patch) ->
+        building_builder = starting_point.sprout(1, @building_builders)[0]
+        extend(building_builder, FSMAgent, MovingAgent, BuildingBuilder)
+        building_builder.init(patch)
+        return building_builder
+
+    speed: 0.05
+
+    init: (@block) ->
+        if Road.get_road_neighbours(@p).length > 0
+            @_set_initial_state('go_to_plot')
+        else
+            @_set_initial_state('go_to_road')
+
+    s_go_to_road: () ->
+        if not @road?
+            @road = Road.get_closest_road_to(@p)
+
+        @_move(@road)
+
+        if @_in_point(@road)
+            @_set_state('go_to_plot')
+
+
+    s_go_to_plot: () ->
+        if not @path? or @path.length is 0
+            patch = @block.plot.get_closes_patch_to(@p)
+            road = ABM.util.oneOf(Road.get_road_neighbours(patch))
+            @path = @_get_road_path_to(road)
+
+        @_move(@path[0])
+
+        if @_in_point(@path[0])
+            @path.shift()
+            if @path.length is 0
+                @_set_state('go_to_block')
+
+    s_go_to_block: () ->
+        @_move(@block)
+
+        if @_in_point(@block)
+            @_set_state('build')
+
+    s_build: () ->
+        @build()
+        @_set_state('die')
+
+    s_die: () ->
+        @die()
+
+    build: () ->
+        Building.make_here(@p)
+
+CityModel.register_module(BuildingBuilder, ['building_builders'], [])

@@ -181,7 +181,10 @@ class BulldozerPlanner
 
 class NeedsPlanner
     @needs:
-        'hospital': []
+        hospital: {}
+
+    @supplied_needs:
+        hospital: 0
 
 
     init: () ->
@@ -201,10 +204,25 @@ class NeedsPlanner
         @_set_state('get_message')
 
     _process_hospital_need: (house) ->
-        NeedsPlanner.needs.hospital.push(house)
-        # if NeedsPlanner.needs.hospital.length > 20
-            # kmeans = new KMeans(NeedsPlanner.needs.hospital, Math.floor(NeedsPlanner.needs.hospital.length / 20))
-            # kmeans.run()
+        if not (house.id of NeedsPlanner.needs.hospital)
+            NeedsPlanner.needs.hospital[house.id] = house
+
+        people = 0
+        for id, house of NeedsPlanner.needs.hospital
+            people += house.citizens
+        needed_ammount = Math.floor(people / 100)
+        if needed_ammount > NeedsPlanner.supplied_needs.hospital
+            houses_array = (house for id, house of NeedsPlanner.needs.hospital)
+            kmeans = new KMeans(houses_array, needed_ammount)
+            kmeans.run()
+            NeedsPlanner.supplied_needs.hospital = kmeans.centroids().length
+            for patch in @_get_patches(kmeans.centroids())
+                BuildingBuilder.spawn_building_builder(CityModel.instance.city_hall, patch)
+
+
+    _get_patches: (points) ->
+        points = (x: Math.round(point.x), y: Math.round(point.y) for point in points)
+        return (Block.closest_block(CityModel.get_patch_at(point)) for point in points)
 
 
 CityModel.register_module(Planner, ['planners'], [])

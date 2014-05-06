@@ -101,6 +101,22 @@ CityModel.register_module(Plot, [], [])
 
 
 class Block
+    @blocks: null
+
+    CityModel.register_module(House, [], ['houses'])
+
+    @initialize: (@blocks) ->
+
+    @closest_block: (patch) ->
+        open_list = [patch]
+        closed_list = []
+        while open_list.length > 0
+            p = open_list.shift()
+            if p.block?
+                return p
+            open_list.push(n) for n in p.n4 when not ABM.util.contains(open_list, n) and not ABM.util.contains(closed_list, n)
+            closed_list.push(p)
+        return null
 
     houses: null
     plot: null
@@ -119,7 +135,6 @@ class Block
 
 
 class House
-    @houses: null
 
     @default_color: [100, 0, 0]
 
@@ -128,9 +143,6 @@ class House
     @minimum_housing_available = 0.5
 
     @total_citizens = 0
-
-    @initialize: (@houses) ->
-        @houses.setDefault('color', @default_color)
 
     @make_here: (patch) ->
         @houses.setBreed(patch)
@@ -184,6 +196,23 @@ class House
         @inspector.die()
 
 
-CityModel.register_module(House, [], ['houses'])
 
+class Building
+    @buildings: null
 
+    @default_color: [174, 131, 0]
+
+    @initialize: (@buildings) ->
+        @buildings.setDefault('color', @default_color)
+
+    @make_here: (patch) ->
+        @buildings.setBreed(patch)
+        extend(patch, Building)
+        patch.init()
+
+    @is_building: (patch) ->
+        return patch.breed is @buildings
+
+    init: () ->
+
+CityModel.register_module(Building, [], ['buildings'])
