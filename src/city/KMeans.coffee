@@ -55,8 +55,12 @@ class KMeans
                 mean_position.x += point.x * point.weight
                 mean_position.y += point.y * point.weight
                 summed_weights += point.weight
-            mean_position.x /= summed_weights
-            mean_position.y /= summed_weights
+            if summed_weights is 0 or cluster.points.length is 0
+                index = ABM.util.randomInt(@points.length)
+                mean_position = x: @points[index].x, y: @points[index].y
+            else
+                mean_position.x /= summed_weights
+                mean_position.y /= summed_weights
 
             moved = moved or not KMeans._points_are_equal(cluster.center, mean_position)
             cluster.center = mean_position

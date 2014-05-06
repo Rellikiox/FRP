@@ -223,8 +223,12 @@ class NeedsPlanner
             kmeans = new KMeans(houses_array, needed_ammount)
             kmeans.run()
             NeedsPlanner.supplied_needs.hospital = kmeans.centroids().length
+
+            for building in Building.get_of_type('hospital')
+                Bulldozer.spawn_bulldozer([building])
+
             for patch in @_get_patches(kmeans.centroids())
-                BuildingBuilder.spawn_building_builder(CityModel.instance.city_hall, patch)
+                BuildingBuilder.spawn_building_builder(CityModel.instance.city_hall, patch, 'hospital')
 
 
     _get_patches: (points) ->

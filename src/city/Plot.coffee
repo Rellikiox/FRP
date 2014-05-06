@@ -210,20 +210,19 @@ class House
 
 
 class Building
-    @buildings: null
 
-    @initialize: (@buildings) ->
-        @buildings.setDefault('color', @default_color)
-
-    @make_here: (block) ->
+    @make_here: (block, type) ->
         if Block.is_block(block)
             if House.is_house(block)
                 block.reallocate_citizens()
             extend(block, Building)
-            block.init()
+            block.init(type)
 
     @is_building: (patch) ->
-        return patch.breed is @buildings
+        return Block.is_block(patch) and patch.block_type is 'building'
+
+    @get_of_type: (type) ->
+        return (block for block in Block.blocks when @is_building(block) and block.building_type == type)
 
     block_type: 'building'
     building_type: null
@@ -231,5 +230,3 @@ class Building
 
     init: (@building_type) ->
 
-
-CityModel.register_module(Building, [], ['buildings'])

@@ -269,15 +269,15 @@ class BuildingBuilder
     @initialize: (@building_builders) ->
         @building_builders.setDefault('color', @default_color)
 
-    @spawn_building_builder: (starting_point, patch) ->
+    @spawn_building_builder: (starting_point, patch, type) ->
         building_builder = starting_point.sprout(1, @building_builders)[0]
         extend(building_builder, FSMAgent, MovingAgent, BuildingBuilder)
-        building_builder.init(patch)
+        building_builder.init(patch, type)
         return building_builder
 
     speed: 0.05
 
-    init: (@block) ->
+    init: (@block, @type) ->
         if Road.get_road_neighbours(@p).length > 0
             @_set_initial_state('go_to_plot')
         else
@@ -320,6 +320,6 @@ class BuildingBuilder
         @die()
 
     build: () ->
-        Building.make_here(@p)
+        Building.make_here(@p, @type)
 
 CityModel.register_module(BuildingBuilder, ['building_builders'], [])
