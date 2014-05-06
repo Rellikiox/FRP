@@ -48,8 +48,17 @@ class CityModel extends ABM.Model
     @get_patches: () ->
         return @instance?.patches
 
+    @transformSeed: (seed) ->
+        value = 0
+        for i in [0...seed.length]
+            value += seed.charCodeAt(i)
+        return value
+
+
     reset: (@config, start) ->
         super(start)
+
+        ABM.util.randomSeed(CityModel.transformSeed(@config.seed))
 
         @set_default_params()
         @initialize_modules()
@@ -72,6 +81,10 @@ class CityModel extends ABM.Model
     #         when "normal" then @draw_normal_color()
     #         when "connectivity" then @draw_connectivity_color()
     #     super
+
+    save: () ->
+        return "#{@config.seed}:#{@anim.ticks}"
+
 
     update_debug_config: (debug_config) ->
         @config.debug = debug_config

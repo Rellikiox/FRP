@@ -15,15 +15,10 @@ class App
 
     run: () ->
         config = @get_config()
-        @get_and_update_seed()
         @model.reset(config, not @paused)
 
     restart: () ->
         @run()
-
-    get_and_update_seed: () ->
-        @seed = $('#seed').val()
-        Math.seedrandom(@seed)
 
     get_int_val: (id) ->
         parseInt($(id).val())
@@ -47,6 +42,7 @@ class App
                 show_states: @get_cb_val('#show-state')
                 show_ids: @get_cb_val('#show-id')
                 show_logs: @get_cb_val('#show-logs')
+        seed: $('#seed').val()
 
     play_pause_model: () ->
         if @paused
