@@ -42,7 +42,6 @@ class Plot
     patches: null
     blocks: null
     under_construction: null
-    citizens: 0
     space: 0
 
     constructor: (@patches) ->
@@ -74,7 +73,7 @@ class Plot
         return @get_available_block()?
 
     free_space: () ->
-        return @space - @citizens
+        return @space - @citizens()
 
 
     get_closes_patch_to: (patch) ->
@@ -90,8 +89,11 @@ class Plot
     is_available: () ->
         return not @under_construction
 
-    increase_citizens: () ->
-        @citizens += 1
+    citizens: () ->
+        sum = 0
+        for block in @blocks
+            sum += block.citizens()
+        return sum
 
 
 CityModel.register_module(Plot, [], [])
@@ -102,7 +104,6 @@ class Block
 
     houses: null
     plot: null
-    citizens: 0
     space: 0
 
     constructor: (house) ->
@@ -110,9 +111,11 @@ class Block
         @plot = house.plot
         @space = house.space
 
-    increase_citizens: () ->
-        @citizens += 1
-        @plot.increase_citizens()
+    citizens: () ->
+        sum = 0
+        for house in @houses
+            sum += house.citizens
+        return sum
 
 
 class House
@@ -173,7 +176,6 @@ class House
         if @has_free_space()
             @citizens += 1
             House.total_citizens += 1
-            @block.increase_citizens()
             @color = ABM.util.scaleColor(@color, 1.05)
 
     reallocate_citizens: () ->

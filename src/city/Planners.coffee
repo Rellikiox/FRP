@@ -202,11 +202,9 @@ class NeedsPlanner
 
     _process_hospital_need: (house) ->
         NeedsPlanner.needs.hospital.push(house)
-        @_check_if_sufficient_needs()
-
-    _check_if_sufficient_needs: () ->
-        # for house in NeedsPlanner.needs.hospital
-
+        # if NeedsPlanner.needs.hospital.length > 20
+            # kmeans = new KMeans(NeedsPlanner.needs.hospital, Math.floor(NeedsPlanner.needs.hospital.length / 20))
+            # kmeans.run()
 
 
 CityModel.register_module(Planner, ['planners'], [])
