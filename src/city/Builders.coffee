@@ -214,13 +214,13 @@ class Bulldozer
     @initialize: (@bulldozers) ->
         @bulldozers.setDefault('color', @default_color)
 
-    @spawn_bulldozer: (path) ->
+    @spawn_bulldozer: (path, end_action) ->
         bulldozer = path[0].sprout(1, @bulldozers)[0]
         extend(bulldozer, FSMAgent, MovingAgent, Bulldozer)
-        bulldozer.init(path)
+        bulldozer.init(path, end_action)
         return bulldozer
 
-    init: (@path) ->
+    init: (@path, @end_action) ->
         @path_copy = (p for p in @path)
         @_set_initial_state('bulldoze_to_point')
         @board = MessageBoard.get_board('nodes_unconnected')
@@ -237,8 +237,11 @@ class Bulldozer
         if @_in_point(@path[0])
             @path.shift()
             if @path.length is 0
-                @board.post_message({path: @path_copy})
-                @_set_state('die')
+                @_set_state('run_action')
+
+    s_run_action: () ->
+        if @end_action()
+            @_set_state('die')
 
     s_die: () ->
         @die()

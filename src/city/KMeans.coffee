@@ -5,7 +5,7 @@ class KMeans
         return (KMeans._copy_point(point) for point in points)
 
     @_copy_point: (point) ->
-        return x: point.x, y: point.y, weight: 1
+        return x: point.x, y: point.y, weight: point.citizens
 
     @_init_clusters: (points, number_of_clusters) ->
         clusters = []

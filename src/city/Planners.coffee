@@ -177,7 +177,7 @@ class BulldozerPlanner
             @_set_state('get_message')
             return
 
-        Bulldozer.spawn_bulldozer(@message.path)
+        Bulldozer.spawn_bulldozer(@message.path, () => @board.post_message({path: @path_copy}))
         @message = null
         @_set_state('get_message')
 
@@ -225,7 +225,7 @@ class NeedsPlanner
             NeedsPlanner.supplied_needs.hospital = kmeans.centroids().length
 
             for building in Building.get_of_type('hospital')
-                Bulldozer.spawn_bulldozer([building])
+                Bulldozer.spawn_bulldozer([building], () -> Block.make_here(@p, building.plot))
 
             for patch in @_get_patches(kmeans.centroids())
                 BuildingBuilder.spawn_building_builder(CityModel.instance.city_hall, patch, 'hospital')
