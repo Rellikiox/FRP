@@ -1,8 +1,11 @@
 class KMeans
     @max_iters: 100
 
+    @_prepare_points: (points) ->
+        return (KMeans._copy_point(point) for point in points)
+
     @_copy_point: (point) ->
-        return x: point.x, y: point.y
+        return x: point.x, y: point.y, weight: 1
 
     @_init_clusters: (points, number_of_clusters) ->
         clusters = []
@@ -20,8 +23,9 @@ class KMeans
     @_points_are_equal: (point_a, point_b) ->
         return @_dist(point_a, point_b) < 0.1
 
-    constructor: (@points, @number_of_clusters) ->
-        @clusters = KMeans._init_clusters(@points, @number_of_clusters)
+    constructor: (points, number_of_clusters) ->
+        @points = KMeans._prepare_points(points)
+        @clusters = KMeans._init_clusters(@points, number_of_clusters)
         @converged = false
 
     run: () ->
@@ -46,11 +50,13 @@ class KMeans
         moved = false
         for cluster in @clusters
             mean_position = x: 0, y: 0
+            summed_weights = 0
             for point in cluster.points
-                mean_position.x += point.x
-                mean_position.y += point.y
-            mean_position.x /= cluster.points.length
-            mean_position.y /= cluster.points.length
+                mean_position.x += point.x * point.weight
+                mean_position.y += point.y * point.weight
+                summed_weights += point.weight
+            mean_position.x /= summed_weights
+            mean_position.y /= summed_weights
 
             moved = moved or not KMeans._points_are_equal(cluster.center, mean_position)
             cluster.center = mean_position
