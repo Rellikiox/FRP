@@ -85,6 +85,19 @@ class CityModel extends ABM.Model
     save: () ->
         return "#{@config.seed}:#{@anim.ticks}"
 
+    load: (save_string) ->
+        [seed, ticks] = save_string.split(':')
+        ticks = parseInt(ticks)
+
+        @config.seed = seed
+        @reset(@config, false)
+
+        i = 0
+        while i < ticks
+            @anim.step()
+            i += 1
+
+        @start()
 
     update_debug_config: (debug_config) ->
         @config.debug = debug_config

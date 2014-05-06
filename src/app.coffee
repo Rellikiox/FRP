@@ -78,6 +78,14 @@ class App
         $('input.j-update-debug-info').click () =>
             @update_debug_info()
 
+        $('#save-button').click () =>
+            save_string = @model.save()
+            $('#save-input').val(save_string)
+
+        $('#load-button').click () =>
+            save_string = $('#load-input').val()
+            @model.load(save_string)
+
     update_debug_info: () ->
         config =
             agents:
