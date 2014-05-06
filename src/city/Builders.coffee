@@ -139,11 +139,13 @@ class HouseBuilder
 
     init: (@block) ->
         @board = MessageBoard.get_board('new_citizen')
+        @_set_initial_state('start_navigation')
 
+    s_start_navigation: () ->
         if Road.get_road_neighbours(@p).length > 0
-            @_set_initial_state('go_to_plot')
+            @_set_state('go_to_plot')
         else
-            @_set_initial_state('go_to_road')
+            @_set_state('go_to_road')
 
     s_go_to_road: () ->
         if not @road?
@@ -157,7 +159,7 @@ class HouseBuilder
 
     s_go_to_plot: () ->
         if not @path? or @path.length is 0
-            patch = @block.plot.get_closes_patch_to(@p)
+            patch = @block.plot.get_closest_block_to(@p)
             road = ABM.util.oneOf(Road.get_road_neighbours(patch))
             @path = @_get_road_path_to(road)
 
@@ -172,13 +174,25 @@ class HouseBuilder
         @_move(@block)
 
         if @_in_point(@block)
-            @_house_citizen(@p)
-            @_set_state('die')
+            if @_house_citizen(@p)
+                @_set_state('die')
+            else
+                @block = null
+                @_set_state('get_new_block')
+
+    s_get_new_block: () ->
+        if @block?
+            @_set_state('start_navigation')
+        else
+            @block = Plot.get_available_block()
 
     s_die: () ->
         @die()
 
     _house_citizen: (patch) ->
+        if not Block.is_block(patch) or patch.under_construction
+            return false
+
         if not House.is_house(patch)
             House.make_here(patch)
 
@@ -186,6 +200,8 @@ class HouseBuilder
             patch.increase_citizens()
         else
             @board.post_message()
+
+        return true
 
 CityModel.register_module(HouseBuilder, ['house_builders'], [])
 
@@ -229,9 +245,8 @@ class Bulldozer
 
 
     _bulldoze_patch: () ->
-        if House.is_house(@p)
-            @p.reallocate_citizens()
-            CityModel.get_patches().setBreed(@p)
+        if Block.is_block(@p)
+            @p.destroy()
 
         @p.color = ABM.util.randomGray(100, 150)
         [r, g, b] = @p.color
@@ -280,7 +295,7 @@ class BuildingBuilder
 
     s_go_to_plot: () ->
         if not @path? or @path.length is 0
-            patch = @block.plot.get_closes_patch_to(@p)
+            patch = @block.plot.get_closest_block_to(@p)
             road = ABM.util.oneOf(Road.get_road_neighbours(patch))
             @path = @_get_road_path_to(road)
 

@@ -128,14 +128,12 @@ class HousingPlanner
             @_set_state('send_house_builder')
 
     s_send_house_builder: () ->
-        plot = Plot.get_random_plot()
-        if plot?
-            block = plot.get_available_block()
-            if block?
-                starting_point = if @message.starting_point? then @message.starting_point else @default_starting_point
-                HouseBuilder.spawn_house_builder(starting_point, block)
-                @message = null
-                @_set_state('get_message')
+        block = Plot.get_available_block()
+        if block?
+            starting_point = if @message.starting_point? then @message.starting_point else @default_starting_point
+            HouseBuilder.spawn_house_builder(starting_point, block)
+            @message = null
+            @_set_state('get_message')
 
 
 class GrowthPlanner

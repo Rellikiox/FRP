@@ -59,6 +59,7 @@ class NodeInspector extends Inspector
             inspect: MessageBoard.get_board('node_built')
             connect: MessageBoard.get_board('nodes_unconnected')
             bulldoze: MessageBoard.get_board('bulldoze_path')
+            construction: MessageBoard.get_board('under_construction')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
@@ -91,9 +92,10 @@ class NodeInspector extends Inspector
             path = @_get_terrain_path_to(node.node.p)
             crosses_plot = false
             for patch in path
-                if patch.plot?
-                    crosses_plot = true
-                    patch.plot.under_construction = true
+                if Block.is_block(patch)
+                    crosses_block = true
+                    patch.under_construction = true
+                    @msg_boards.construction.post_message({patch: patch})
                 patch.under_construction = true
             if crosses_plot
                 @msg_boards.bulldoze.post_message({path: path})

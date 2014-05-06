@@ -19,54 +19,48 @@ class Plot
 
         total_free_space = 0
         for plot in @plots
-            if plot.is_available()
-                total_free_space += plot.free_space()
+            total_free_space += plot.free_space()
 
         random_number = ABM.util.randomInt(total_free_space)
 
         for plot in @plots
-            if plot.is_available()
-                random_number -= plot.free_space()
-                if random_number <= 0
-                    return plot
+            random_number -= plot.free_space()
+            if random_number <= 0
+                return plot
         return null
 
     @destroy_plot: (plot) ->
         ABM.util.removeItem(@plots, plot)
-        plot._unset_patch_references()
+        plot._unset_block_references()
 
     @get_available_block: () ->
         return @get_random_plot()?.get_available_block()
 
 
-    patches: null
     blocks: null
-    under_construction: null
     space: 0
 
-    constructor: (@patches) ->
+    constructor: (patches) ->
         @blocks = []
         @under_construction = false
-        @space = @patches.length * 10
+        @space = patches.length * 10
 
-        for p in @patches
-            if not House.is_house(p)
-                p.color = ABM.util.randomGray(140, 170)
+        for p in patches
+            if not Block.is_block(p)
+                Block.make_here(p, @)
+            else
+                p.plot = @
+            @blocks.push(p)
 
-        @_set_patch_references()
-
-    _set_patch_references: () ->
-        for patch in @patches
-            patch.plot = @
-
-    _unset_patch_references: () ->
-        for patch in @patches
-            patch.plot = null
+    _unset_block_references: () ->
+        for block in @blocks
+            block.plot = null
 
     get_available_block: () ->
-        for i in ABM.util.shuffle([0..@patches.length-1])
-            if not House.is_house(@patches[i]) or @patches[i].has_free_space()
-                return @patches[i]
+        for i in ABM.util.shuffle([0..@blocks.length-1])
+            block = @blocks[i]
+            if block.is_available() or House.is_house(block) and block.has_free_space()
+                return @blocks[i]
         return null
 
     has_free_space: () ->
@@ -76,10 +70,10 @@ class Plot
         return @space - @citizens()
 
 
-    get_closes_patch_to: (patch) ->
+    get_closest_block_to: (patch) ->
         min_dist = null
         min_patch = null
-        for p in @patches
+        for p in @blocks
             dist = ABM.util.distance(p.x, p.y, patch.x, patch.y)
             if not min_dist? or dist < min_dist
                 min_dist = dist
@@ -87,12 +81,16 @@ class Plot
         return min_patch
 
     is_available: () ->
-        return not @under_construction
+        for block in @blocks
+            if block.is_available()
+                return true
+        return false
 
     citizens: () ->
         sum = 0
         for block in @blocks
-            sum += block.citizens()
+            if House.is_house(block)
+                sum += block.citizens
         return sum
 
 
@@ -103,35 +101,41 @@ CityModel.register_module(Plot, [], [])
 class Block
     @blocks: null
 
-    CityModel.register_module(House, [], ['houses'])
-
     @initialize: (@blocks) ->
+
+    @make_here: (patch, plot) ->
+        @blocks.setBreed(patch)
+        extend(patch, Block)
+        patch.init(plot)
 
     @closest_block: (patch) ->
         open_list = [patch]
         closed_list = []
         while open_list.length > 0
             p = open_list.shift()
-            if p.block?
+            if Block.is_block(p)
                 return p
             open_list.push(n) for n in p.n4 when not ABM.util.contains(open_list, n) and not ABM.util.contains(closed_list, n)
             closed_list.push(p)
         return null
 
-    houses: null
+    @is_block: (patch) ->
+        return patch.breed is @blocks
+
     plot: null
-    space: 0
+    block_type: 'block'
 
-    constructor: (house) ->
-        @houses = [house]
-        @plot = house.plot
-        @space = house.space
+    init: (plot) ->
+        @plot = plot
+        @color = ABM.util.randomGray(140, 170)
 
-    citizens: () ->
-        sum = 0
-        for house in @houses
-            sum += house.citizens
-        return sum
+    destroy: () ->
+        CityModel.get_patches().setBreed(@)
+
+    is_available: () ->
+        return @block_type == 'block'
+
+CityModel.register_module(Block, [], ['blocks'])
 
 
 class House
@@ -144,18 +148,18 @@ class House
 
     @total_citizens = 0
 
-    @make_here: (patch) ->
-        @houses.setBreed(patch)
-        extend(patch, House)
-        patch.init()
+    @make_here: (block) ->
+        if Block.is_block(block)
+            extend(block, House)
+            block.init()
 
     @is_house: (patch) ->
-        return patch.breed is @houses
+        return Block.is_block(patch) and patch.block_type is 'house'
 
     @houses_below_minimum: () ->
         free_space = 0
         total_space = 0
-        for house in @houses
+        for house in Block.blocks when house.block_type is 'house'
             total_space += house.space
             free_space += house.free_space()
 
@@ -164,19 +168,22 @@ class House
     @_update_navigation: (house) ->
         # CityModel.set_terrain_nav_patch_walkable(house, false)
 
+    @get_available_block: () ->
 
-    block: null
+
+
+    block_type: 'house'
+    color: [100, 0, 0]
+
     citizens: 0
     space: 0
 
     init: () ->
-        @block = new Block(@)
         House._update_navigation(@)
         @citizens = 0
         @space = House.max_citizens
         @inspector = Inspector.spawn_house_inspector(@)
         @board = MessageBoard.get_board('new_citizen')
-        @hospital_distance = 1
 
     has_free_space: () ->
         return @citizens < @space
