@@ -18,17 +18,11 @@ class Inspector
         null
 
     @spawn_road_inspector: (patch) ->
-        inspector = @spawn_inspector(patch, GridRoadInspector)
-        inspector.init()
-        inspector = @spawn_inspector(patch, GridRoadInspector)
+        inspector = @spawn_inspector(patch, RadialRoadInspector)
         inspector.init()
         return inspector
 
     @spawn_node_inspector: (patch) ->
-        inspector = @spawn_inspector(patch, NodeInspector)
-        inspector.init()
-        inspector = @spawn_inspector(patch, NodeInspector)
-        inspector.init()
         inspector = @spawn_inspector(patch, NodeInspector)
         inspector.init()
         return inspector

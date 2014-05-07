@@ -10,7 +10,7 @@ class MessageBoard
         return @message_queues[type]
 
     @get_board: (topic) ->
-        return new MessageBoard(topic)
+        return new Board(topic)
 
     @get_combined_board: (topics) ->
         return new MultiReader(topics)
