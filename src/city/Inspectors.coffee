@@ -8,7 +8,8 @@ class Inspector
     @initialize: (@inspectors, config) ->
         @inspectors.setDefault('color', @default_color)
 
-        RoadInspector.construction_points = []
+        RoadInspector.initialize()
+        GridRoadInspector.initialize()
 
         for key, value of config.inspectors.node_inspector
             NodeInspector.prototype[key] = value
@@ -18,6 +19,8 @@ class Inspector
 
     @spawn_road_inspector: (patch) ->
         inspector = @spawn_inspector(patch, GridRoadInspector)
+        inspector.init()
+        inspector = @spawn_inspector(patch, RadialRoadInspector)
         inspector.init()
         return inspector
 
@@ -124,7 +127,10 @@ class NodeInspector extends Inspector
 
 class RoadInspector extends Inspector
 
-    @construction_points = []
+    @construction_points: []
+
+    @initialize: () ->
+        @construction_points = []
 
 
     s_get_inspection_point: () ->
@@ -145,8 +151,8 @@ class RoadInspector extends Inspector
 
 
     _is_valid_construction_point: (patch) ->
-        road_dist = Road.get_connectivity(@p)
-        construction_dist = RoadInspector._get_construction_dist(@p)
+        road_dist = Road.get_connectivity(patch)
+        construction_dist = RoadInspector._get_construction_dist(patch)
         return road_dist > Road.too_connected_threshold && (not construction_dist? or construction_dist > Road.too_connected_threshold)
 
     _issue_construction: (patch) ->
@@ -206,9 +212,8 @@ class RadialRoadInspector extends RoadInspector
             @start_angle = null
 
     s_increment_radius: () ->
-        if House.houses_below_minimum() and @nodes_built_board.message_count() == 0
-            @ring_radius += @ring_increment
-            @_set_state('get_inspection_point')
+        @ring_radius += @ring_increment
+        @_set_state('get_inspection_point')
 
 
 
@@ -251,6 +256,11 @@ class GridRoadInspector extends RoadInspector
 
     @open_list: []
     @closed_list: []
+
+    @initialize: () ->
+        @open_list: []
+        @closed_list: []
+
 
     horizontal_grid_size: 6
     vertical_grid_size: 4
