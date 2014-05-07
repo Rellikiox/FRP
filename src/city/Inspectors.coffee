@@ -126,7 +126,13 @@ class RoadInspector extends Inspector
     ring_increment: 4
     ring_radius: 6
 
+    min_increment: 3
+    max_increment: 6
+
     init: () ->
+        @radius = ABM.util.randomFloat(2 * Math.PI)
+        @direction = ABM.util.oneOf([-1, 1])
+
         @_set_initial_state('get_inspection_point')
         @build_endpoint_board = MessageBoard.get_board('possible_node')
         @nodes_built_board = MessageBoard.get_board('node_built')
@@ -182,9 +188,14 @@ class RoadInspector extends Inspector
         return point? and CityModel.is_on_world(point) and not Road.is_road(CityModel.get_patch_at(point))
 
     _get_point_to_inspect: () ->
-        rand_angle  = ABM.util.randomFloat(2 * Math.PI)
-        x = Math.round(@ring_radius * Math.cos(rand_angle))
-        y = Math.round(@ring_radius * Math.sin(rand_angle))
+        arc_length = ABM.util.randomInt2(@min_increment, @max_increment)
+        polar_coords = @_get_polar_coords()
+        arc_radians = arc_length / @ring_radius
+
+        new_angle = polar_coords.angle + arc_radians * @direction
+
+        x = Math.round(@ring_radius * Math.cos(new_angle))
+        y = Math.round(@ring_radius * Math.sin(new_angle))
         return {x: x, y: y}
 
     _circular_move: () ->
@@ -226,6 +237,7 @@ class RoadInspector extends Inspector
 
     _lap_completed: () ->
         return @angle_moved >= 2 * Math.PI
+
 
 
 class PlotInspector
