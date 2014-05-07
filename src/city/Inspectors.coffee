@@ -309,8 +309,7 @@ class PlotInspector
         @_set_initial_state('get_message')
         @patches_to_check = []
         @msg_boards =
-            inspect: MessageBoard.get_board('inspect_plot')
-            built: MessageBoard.get_board('plot_built')
+            inspect: MessageBoard.get_board('possible_plot')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
@@ -366,7 +365,6 @@ class PlotInspector
             possible_plot = @_get_plot(patch)
             if possible_plot?
                 plot = Plot.make_plot(possible_plot)
-                @msg_boards.built.post_message({plot: plot})
 
     _any_edge_visible: (patch) ->
         current_patch = patch

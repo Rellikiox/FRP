@@ -171,13 +171,9 @@ class CityModel extends ABM.Model
     spawn_planners: (ammount) ->
         i = 0
         while i < ammount
-            Planner.spawn_road_planner()
-            Planner.spawn_node_planner()
+            Planner.spawn_generic_planner()
             Planner.spawn_growth_planner()
-            Planner.spawn_plot_planner()
             Planner.spawn_housing_planner()
-            Planner.spawn_plot_keeper_planner()
-            Planner.spawn_bulldozer_planner()
             Planner.spawn_needs_planner()
             i += 1
 

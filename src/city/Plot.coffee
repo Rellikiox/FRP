@@ -23,7 +23,7 @@ class Plot
 
         random_number = ABM.util.randomInt(total_free_space)
 
-        for plot in @plots
+        for plot in @plots when plot.has_free_space()
             random_number -= plot.free_space()
             if random_number <= 0
                 return plot
@@ -63,7 +63,7 @@ class Plot
         return null
 
     has_free_space: () ->
-        return @get_available_block()?
+        return @free_space() > 0
 
     free_space: () ->
         return @space() - @citizens()

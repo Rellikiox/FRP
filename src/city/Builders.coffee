@@ -11,20 +11,39 @@ class RoadBuilder
     @initialize: (@road_builders) ->
         @road_builders.setDefault('color', @default_color)
 
-    @spawn_road_connector: (path) ->
-        road_builder = @spawn_road_builder(path[0], RoadConnector)
+    @spawn_road_builder: (path) ->
+        road_builder = path[0].sprout(1, @road_builders)[0]
+        extend(road_builder, FSMAgent, MovingAgent, RoadBuilder)
         road_builder.init(path)
         return road_builder
 
-    @spawn_road_extender: (endpoint) ->
-        road_builder = @spawn_road_builder(CityModel.instance.city_hall, RoadExtender)
-        road_builder.init(endpoint)
-        return road_builder
 
-    @spawn_road_builder: (patch, klass) ->
-        road_builder = patch.sprout(1, @road_builders)[0]
-        extend(road_builder, FSMAgent, MovingAgent, klass)
-        return road_builder
+    init: (@path) ->
+        @startpoint = @path[0]
+        @endpoint = @path[@path.length-1]
+
+        @points_to_report = [@startpoint, @endpoint]
+
+        @_set_initial_state('build_to_point')
+
+        @msg_boards =
+            node: MessageBoard.get_board('node_built')
+            plot: MessageBoard.get_board('possible_plot')
+
+    s_build_to_point: () ->
+        if not @path?
+            @path = @_get_terrain_path_to(@endpoint)
+
+        @_move @path[0]
+
+        @_drop_road()
+
+        if @_in_point(@path[0])
+            @path.shift()
+            if @path.length is 0
+                for point in @points_to_report
+                    @msg_boards.node.post_message({patch: point})
+                @_set_state('die')
 
     # Utils
 
@@ -40,83 +59,11 @@ class RoadBuilder
         if Road.get_roads_in_n8(@p).length >= 2
             @msg_boards.plot.post_message({patch: @p})
 
-    s_build_to_point_state: ->
-        if not @path?
-            @path = @_get_terrain_path_to(@endpoint)
-
-        @_move @path[0]
-
-        if not Road.is_road @p
-            @_drop_road()
-
-        if @_in_point(@path[0])
-            @path.shift()
-            if @path.length is 0
-                for point in @points_to_report
-                    @msg_boards.node.post_message({patch: point})
-                @_set_state('die')
-
     s_die: ->
         @die()
 
-
-class RoadExtender extends RoadBuilder
-
-    init: (endpoint) ->
-        @endpoint = endpoint
-        @points_to_report = [@endpoint]
-
-        @_set_initial_state('go_to_point_state')
-
-        @msg_boards =
-            node: MessageBoard.get_board('node_built')
-            plot: MessageBoard.get_board('possible_plot')
-
-    s_go_to_point_state: ->
-        if not @path?
-            closest_road_to_target = Road.get_closest_road_to(@endpoint)
-            @path = @_get_terrain_path_to(closest_road_to_target)
-
-        @_move(@path[0])
-
-        if @_in_point(@path[0])
-            @path.shift()
-            if @path.length is 0
-                @path = CityModel.instance.terrainAStar.getPath(@, @endpoint)
-                @_set_state('build_to_point_state')
-
-
-class RoadConnector extends RoadBuilder
-
-    init: (@path) ->
-        @startpoint = @path[0]
-        @endpoint = @path[@path.length-1]
-
-        @points_to_report = [@startpoint, @endpoint]
-
-        @_set_initial_state('build_to_point')
-
-        @msg_boards =
-            node: MessageBoard.get_board('node_built')
-            plot: MessageBoard.get_board('possible_plot')
-
-    s_build_to_point: ->
-        if not @path?
-            @path = @_get_terrain_path_to(@endpoint)
-
-        @_move @path[0]
-
-        @_drop_road()
-
-        if @_in_point(@path[0])
-            @path.shift()
-            if @path.length is 0
-                for point in @points_to_report
-                    @msg_boards.node.post_message({patch: point})
-                @_set_state('die')
-
-
 CityModel.register_module(RoadBuilder, ['road_builders'], [])
+
 
 
 class HouseBuilder

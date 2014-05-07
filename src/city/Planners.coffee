@@ -3,29 +3,17 @@ class Planner
 
     @initialize: (@planners) ->
         @planners.setDefault 'hidden', true
-        PlotKeeperPlanner.initialize()
+        GenericPlanner.initialize()
         NeedsPlanner.initialize()
 
-    @spawn_road_planner: () ->
-        return @spawn_planner(RoadPlanner)
-
-    @spawn_node_planner: () ->
+    @spawn_generic_planner: () ->
         return @spawn_planner(GenericPlanner)
-
-    @spawn_bulldozer_planner: () ->
-        return @spawn_planner(BulldozerPlanner)
 
     @spawn_growth_planner: () ->
         return @spawn_planner(GrowthPlanner)
 
-    @spawn_plot_planner: () ->
-        return @spawn_planner(PlotPlanner)
-
     @spawn_housing_planner: () ->
         return @spawn_planner(HousingPlanner)
-
-    @spawn_plot_keeper_planner: () ->
-        return @spawn_planner(PlotKeeperPlanner)
 
     @spawn_needs_planner: () ->
         return @spawn_planner(NeedsPlanner)
@@ -39,7 +27,21 @@ class Planner
 
 class GenericPlanner extends Planner
     @actions:
-        nodes_unconnected: () -> RoadBuilder.spawn_road_connector(@message.path)
+        nodes_unconnected: (message) -> RoadBuilder.spawn_road_builder(message.path)
+        possible_node: (message) ->
+            closest_road = Road.get_closest_road_to(message.patch)
+            point_path = CityModel.instance.terrainAStar.getPath(closest_road, message.patch)
+            path = (CityModel.get_patch_at(p) for p in point_path)
+            RoadBuilder.spawn_road_builder(path)
+        bulldoze_path: (message) -> Bulldozer.spawn_bulldozer(message.path, () => @boards.nodes_unconnected.post_message({path: message.path}))
+
+    @boards:
+        nodes_unconnected: null
+
+    @initialize: () ->
+        for key, value of @boards
+            @boards[key] = MessageBoard.get_board(key)
+
 
     init: () ->
         topics = (key for key, value of GenericPlanner.actions)
@@ -53,101 +55,14 @@ class GenericPlanner extends Planner
             @_set_state('run_action')
 
     s_run_action: () ->
-        GenericPlanner.actions[@message.type]()
+        GenericPlanner.actions[@message.type](@message)
         @message = null
         @_set_state('get_message')
-
-
-
-
-
-class NodeInterconnectivityPlanner extends Planner
-
-    init: () ->
-        @msg_reader = MessageBoard.get_board('nodes_unconnected')
-        @_set_initial_state('get_message')
-
-    s_get_message: () ->
-        @message = @msg_reader.get_message()
-        if @message?
-            @_set_state('emit_road_connector')
-
-    s_emit_road_connector: () ->
-        if not @message?
-            @_set_state('get_message')
-            return
-
-        RoadBuilder.spawn_road_connector(@message.path)
-        @message = null
-        @_set_state('get_message')
-
-
-class RoadPlanner
-
-    init: () ->
-        @msg_reader = MessageBoard.get_board('possible_node')
-        @_set_initial_state('get_message')
-
-    s_get_message: () ->
-        @message = @msg_reader.get_message()
-        if @message?
-            @_set_state('send_road_extender')
-
-    s_send_road_extender: () ->
-        if not @message?
-            @_set_state('get_message')
-            return
-
-        RoadBuilder.spawn_road_extender(@message.patch)
-        @message = null
-        @_set_state('get_message')
-
-
-class PlotPlanner
-
-    init: () ->
-        @boards =
-            possible: MessageBoard.get_board('possible_plot')
-            inspect: MessageBoard.get_board('inspect_plot')
-        @_set_initial_state('get_message')
-
-    s_get_message: () ->
-        @message = @boards.possible.get_message()
-        if @message?
-            @_set_state('send_plot_inspector')
-
-    s_send_plot_inspector: () ->
-        if not @message?
-            @_set_state('get_message')
-            return
-
-        @boards.inspect.post_message({patch: @message.patch})
-        @message = null
-        @_set_state('get_message')
-
-
-class PlotKeeperPlanner
-
-    @available_plots: []
-
-    @initialize: () ->
-        @available_plots = []
-
-
-    init: () ->
-        @board = MessageBoard.get_board('plot_built')
-        @_set_initial_state('get_message')
-
-    s_get_message: () ->
-        @message = @board.get_message()
-        if @message?
-            PlotKeeperPlanner.available_plots.push(@message.plot)
 
 
 class HousingPlanner
 
     init: () ->
-        @default_starting_point = CityModel.instance.city_hall
         @board = MessageBoard.get_board('new_citizen')
         @_set_initial_state('get_message')
 
@@ -159,8 +74,8 @@ class HousingPlanner
     s_send_house_builder: () ->
         block = Plot.get_available_block()
         if block?
-            starting_point = if @message.starting_point? then @message.starting_point else @default_starting_point
-            HouseBuilder.spawn_house_builder(starting_point, block)
+            @message.starting_point ?= Road.get_closest_road_to(block)
+            HouseBuilder.spawn_house_builder(@message.starting_point, block)
             @message = null
             @_set_state('get_message')
 
@@ -188,27 +103,6 @@ class GrowthPlanner
     s_spawn_citizen: () ->
         @msg_reader.post_message()
         @_set_state('grow_population')
-
-
-class BulldozerPlanner
-
-    init: () ->
-        @msg_reader = MessageBoard.get_board('bulldoze_path')
-        @_set_initial_state('get_message')
-
-    s_get_message: () ->
-        @message = @msg_reader.get_message()
-        if @message?
-            @_set_state('emit_bulldozer')
-
-    s_emit_bulldozer: () ->
-        if not @message?
-            @_set_state('get_message')
-            return
-
-        Bulldozer.spawn_bulldozer(@message.path, () => @board.post_message({path: @path_copy}))
-        @message = null
-        @_set_state('get_message')
 
 
 class NeedsPlanner
