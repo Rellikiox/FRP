@@ -13,11 +13,11 @@ class Inspector
         for key, value of config.inspectors.node_inspector
             NodeInspector.prototype[key] = value
         for key, value of config.inspectors.road_inspector
-            RoadInspector.prototype[key] = value
+            RadialRoadInspector.prototype[key] = value
         null
 
     @spawn_road_inspector: (patch) ->
-        inspector = @spawn_inspector(patch, RoadInspector)
+        inspector = @spawn_inspector(patch, GridRoadInspector)
         inspector.init()
         return inspector
 
@@ -123,6 +123,50 @@ class NodeInspector extends Inspector
 
 
 class RoadInspector extends Inspector
+
+    @construction_points = []
+
+
+    s_get_inspection_point: () ->
+        @inspection_point = @_get_point_to_inspect()
+
+        if RoadInspector._valid_point(@inspection_point)
+            @_set_state('go_to_inspection_point')
+
+    s_go_to_inspection_point: () ->
+        if not @inspection_point?
+            @_set_state('get_inspection_point')
+            return
+
+        @_move(@inspection_point)
+
+        if @_in_point(@inspection_point)
+            @_set_state('find_new_endpoint')
+
+
+    _is_valid_construction_point: (patch) ->
+        road_dist = Road.get_connectivity(@p)
+        construction_dist = RoadInspector._get_construction_dist(@p)
+        return road_dist > Road.too_connected_threshold && (not construction_dist? or construction_dist > Road.too_connected_threshold)
+
+    _issue_construction: (patch) ->
+        RoadInspector.construction_points.push(patch)
+        @build_endpoint_board.post_message({patch: patch})
+
+    @_valid_point: (point) ->
+        return point? and CityModel.is_on_world(point) and not Road.is_road(CityModel.get_patch_at(point))
+
+    @_get_construction_dist: (patch) ->
+        min_dist = null
+        for point in RoadInspector.construction_points
+            dist_to_point = ABM.util.distance(patch.x, patch.y, point.x, point.y)
+            if (not min_dist?) or dist_to_point < min_dist
+                min_dist = dist_to_point
+        return min_dist
+
+
+
+class RadialRoadInspector extends RoadInspector
     ring_increment: 4
     ring_radius: 6
 
@@ -137,22 +181,6 @@ class RoadInspector extends Inspector
         @build_endpoint_board = MessageBoard.get_board('possible_node')
         @nodes_built_board = MessageBoard.get_board('node_built')
 
-
-    s_get_inspection_point: () ->
-        @inspection_point = @_get_point_to_inspect()
-
-        if @_valid_point(@inspection_point)
-            @_set_state('go_to_inspection_point')
-
-    s_go_to_inspection_point: () ->
-        if not @inspection_point?
-            @_set_state('get_inspection_point')
-            return
-
-        @_move(@inspection_point)
-
-        if @_in_point(@inspection_point)
-            @_set_state('find_new_endpoint')
 
     s_find_new_endpoint: () ->
         if @_is_valid_construction_point(@p)
@@ -183,9 +211,6 @@ class RoadInspector extends Inspector
             @_set_state('get_inspection_point')
 
 
-
-    _valid_point: (point) ->
-        return point? and CityModel.is_on_world(point) and not Road.is_road(CityModel.get_patch_at(point))
 
     _get_point_to_inspect: () ->
         arc_length = ABM.util.randomInt2(@min_increment, @max_increment)
@@ -218,25 +243,55 @@ class RoadInspector extends Inspector
             radius: ABM.util.distance(0, 0, @x, @y)
         return polar_coords
 
-    _is_valid_construction_point: (patch) ->
-        road_dist = Road.get_connectivity(@p)
-        construction_dist = @_get_construction_dist(@p)
-        return road_dist > Road.too_connected_threshold && (not construction_dist? or construction_dist > Road.too_connected_threshold)
-
-    _issue_construction: (patch) ->
-        @constructor.construction_points.push(patch)
-        @build_endpoint_board.post_message({patch: patch})
-
-    _get_construction_dist: (patch) ->
-        min_dist = null
-        for point in @constructor.construction_points
-            dist_to_point = ABM.util.distance(patch.x, patch.y, point.x, point.y)
-            if (not min_dist?) or dist_to_point < min_dist
-                min_dist = dist_to_point
-        return min_dist
-
     _lap_completed: () ->
         return @angle_moved >= 2 * Math.PI
+
+
+class GridRoadInspector extends RoadInspector
+
+    @open_list: []
+    @closed_list: []
+
+    horizontal_grid_size: 6
+    vertical_grid_size: 4
+
+    init: () ->
+        if GridRoadInspector.open_list.length is 0
+            GridRoadInspector.open_list.push(CityModel.instance.city_hall)
+
+
+        @_set_initial_state('get_inspection_point')
+        @build_endpoint_board = MessageBoard.get_board('possible_node')
+
+    s_populate_open_list: () ->
+        @_populate_open_list()
+        @_set_state('get_inspection_point')
+
+    s_find_new_endpoint: () ->
+        if @_is_valid_construction_point(@p)
+            @_issue_construction(@p)
+        @_set_state('populate_open_list')
+
+
+
+    _get_point_to_inspect: () ->
+        node = GridRoadInspector.open_list.shift()
+        GridRoadInspector.closed_list.push(node)
+        return node
+
+    _populate_open_list: () ->
+        for node in @_get_possible_nodes()
+            if not (node in GridRoadInspector.closed_list) and not (node in GridRoadInspector.open_list)
+                GridRoadInspector.open_list.push(node)
+
+    _get_possible_nodes: () ->
+        points = [{x: @p.x, y: @p.y + @vertical_grid_size},
+                  {x: @p.x + @horizontal_grid_size, y: @p.y},
+                  {x: @p.x, y: @p.y - @vertical_grid_size},
+                  {x: @p.x - @horizontal_grid_size, y: @p.y}]
+        ABM.util.shuffle(points)
+        return (CityModel.get_patch_at(point) for point in points)
+
 
 
 
