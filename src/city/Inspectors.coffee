@@ -20,8 +20,6 @@ class Inspector
     @spawn_road_inspector: (patch) ->
         inspector = @spawn_inspector(patch, GridRoadInspector)
         inspector.init()
-        inspector = @spawn_inspector(patch, RadialRoadInspector)
-        inspector.init()
         return inspector
 
     @spawn_node_inspector: (patch) ->
@@ -258,11 +256,11 @@ class GridRoadInspector extends RoadInspector
     @closed_list: []
 
     @initialize: () ->
-        @open_list: []
-        @closed_list: []
+        @open_list = []
+        @closed_list = []
 
 
-    horizontal_grid_size: 6
+    horizontal_grid_size: 4
     vertical_grid_size: 4
 
     init: () ->
