@@ -64,7 +64,7 @@ class KMeans
 
             moved = moved or not KMeans._points_are_equal(cluster.center, mean_position)
             cluster.center = mean_position
-        return moved
+        return not moved
 
     centroids: () ->
         return (cluster.center for cluster in @clusters)
