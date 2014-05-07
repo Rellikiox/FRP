@@ -10,7 +10,7 @@ class Planner
         return @spawn_planner(RoadPlanner)
 
     @spawn_node_planner: () ->
-        return @spawn_planner(NodeInterconnectivityPlanner)
+        return @spawn_planner(GenericPlanner)
 
     @spawn_bulldozer_planner: () ->
         return @spawn_planner(BulldozerPlanner)
@@ -35,6 +35,30 @@ class Planner
         extend(planner, FSMAgent, klass)
         planner.init()
         return planner
+
+
+class GenericPlanner extends Planner
+    @actions:
+        nodes_unconnected: () -> RoadBuilder.spawn_road_connector(@message.path)
+
+    init: () ->
+        topics = (key for key, value of GenericPlanner.actions)
+
+        @board = MessageBoard.get_combined_board(topics)
+        @_set_initial_state('get_message')
+
+    s_get_message: () ->
+        @message = @board.get_message()
+        if @message?
+            @_set_state('run_action')
+
+    s_run_action: () ->
+        GenericPlanner.actions[@message.type]()
+        @message = null
+        @_set_state('get_message')
+
+
+
 
 
 class NodeInterconnectivityPlanner extends Planner
