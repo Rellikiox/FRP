@@ -47,6 +47,7 @@
             <li><a href="#inspectors" data-toggle="tab">Inspectors</a></li>
             <li><a href="#builders" data-toggle="tab">Builders</a></li>
             <li><a href="#planners" data-toggle="tab">Planners</a></li>
+            <li><a href="#buildings" data-toggle="tab">Buildings</a></li>
           </ul>
 
           <!-- Tab panes -->
@@ -66,6 +67,25 @@
                         <div class="form-group">
                           <label for="inspection-area">Seed</label>
                           <input type="text" class="form-control" id="seed" value="">
+                        </div>
+                      </div>
+                      <div class="col-lg-8">
+                        <div class="form-group">
+                          <div class="input-group">
+                            <span class="input-group-btn">
+                              <button class="btn btn-default" type="button" id="save-button">Save</button>
+                            </span>
+                            <input type="text" class="form-control" id="save-input">
+                          </div><!-- /input-group -->
+                        </div>
+
+                        <div class="form-group">
+                          <div class="input-group">
+                            <input type="text" class="form-control" id="load-input">
+                            <span class="input-group-btn">
+                              <button class="btn btn-default" type="button" id="load-button">Load</button>
+                            </span>
+                          </div><!-- /input-group -->
                         </div>
                       </div>
                     </div>
@@ -114,10 +134,10 @@
               <div class="panel panel-default">
                 <div class="panel-heading">
                   <h3 class="panel-title">
-                    <a data-toggle="collapse"href="#collapse-road-inspector">RoadInspector</a>
+                    <a data-toggle="collapse"href="#collapse-node-inspector">NodeInspector</a>
                   </h3>
                 </div>
-                <div id="collapse-road-inspector" class="panel-collapse collapse in">
+                <div id="collapse-node-inspector" class="panel-collapse collapse in">
                   <div class="panel-body">
                     <div class="row">
                       <div class="col-lg-6">
@@ -139,10 +159,10 @@
               <div class="panel panel-default">
                 <div class="panel-heading">
                   <h3 class="panel-title">
-                    <a data-toggle="collapse"  href="#collapse-node-inspector">NodeInspector</a>
+                    <a data-toggle="collapse"  href="#collapse-road-inspector">RoadInspector</a>
                   </h3>
                 </div>
-                <div id="collapse-node-inspector" class="panel-collapse collapse">
+                <div id="collapse-road-inspector" class="panel-collapse collapse">
                   <div class="panel-body">
                     <div class="row">
                       <div class="col-lg-6">
@@ -161,11 +181,67 @@
                   </div>
                 </div>
               </div>
+
             </div>
 
             <div class="tab-pane" id="builders">...</div>
 
             <div class="tab-pane" id="planners">...</div>
+
+            <div class="tab-pane" id="buildings">
+
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">
+                    <a data-toggle="collapse"href="#collapse-roads">Roads</a>
+                  </h3>
+                </div>
+                <div id="collapse-roads" class="panel-collapse collapse in">
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-lg-6">
+                        <div class="form-group">
+                          <label for="road-distance">Distance between roads</label>
+                          <input type="text" class="form-control" id="road-distance" value="3">
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                      <div class="col-lg-6">
+                        <div class="form-group">
+                          <label for=""></label>
+                          <input type="text" class="form-control" id="" value="">
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">
+                    <a data-toggle="collapse"  href="#collapse-houses">Houses</a>
+                  </h3>
+                </div>
+                <div id="collapse-houses" class="panel-collapse collapse">
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-lg-6">
+                        <div class="form-group">
+                          <label for=""></label>
+                          <input type="text" class="form-control" id="" value="">
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                      <div class="col-lg-6">
+                        <div class="form-group">
+                          <label for=""></label>
+                          <input type="text" class="form-control" id="" value="">
+                        </div>
+                      </div><!-- /.col-lg-6 -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
 
         </div>
@@ -184,6 +260,7 @@
     <script src="lib/city/CityModel.js"></script>
 
     <script src="lib/city/AStar.js"></script>
+    <script src="lib/city/KMeans.js"></script>
     <script src="lib/city/MessageBoard.js"></script>
     <script src="lib/city/Common.js"></script>
 

@@ -3,7 +3,8 @@ class Planner
 
     @initialize: (@planners) ->
         @planners.setDefault 'hidden', true
-        PlotKeeperPlanner.available_plots = []
+        PlotKeeperPlanner.initialize()
+        NeedsPlanner.initialize()
 
     @spawn_road_planner: () ->
         return @spawn_planner(RoadPlanner)
@@ -25,6 +26,9 @@ class Planner
 
     @spawn_plot_keeper_planner: () ->
         return @spawn_planner(PlotKeeperPlanner)
+
+    @spawn_needs_planner: () ->
+        return @spawn_planner(NeedsPlanner)
 
     @spawn_planner: (klass) ->
         planner = @planners.create(1)[0]
@@ -102,6 +106,10 @@ class PlotKeeperPlanner
 
     @available_plots: []
 
+    @initialize: () ->
+        @available_plots = []
+
+
     init: () ->
         @board = MessageBoard.get_board('plot_built')
         @_set_initial_state('get_message')
@@ -115,6 +123,7 @@ class PlotKeeperPlanner
 class HousingPlanner
 
     init: () ->
+        @default_starting_point = CityModel.instance.city_hall
         @board = MessageBoard.get_board('new_citizen')
         @_set_initial_state('get_message')
 
@@ -124,32 +133,37 @@ class HousingPlanner
             @_set_state('send_house_builder')
 
     s_send_house_builder: () ->
-        plot = Plot.get_random_plot()
-        if plot?
-            block = plot.get_available_block()
-            if block?
-                HouseBuilder.spawn_house_builder(block)
-                @_set_state('get_message')
+        block = Plot.get_available_block()
+        if block?
+            starting_point = if @message.starting_point? then @message.starting_point else @default_starting_point
+            HouseBuilder.spawn_house_builder(starting_point, block)
+            @message = null
+            @_set_state('get_message')
 
 
 class GrowthPlanner
 
-    ticks_per_citizen: 30
+    base_growth: 0.03  # 1 person every 6 days (1 person/ (6 days * 5 ticks per day))
+
+    ###
+        10% population growth per year. Each 1 person contributes to 10/100 of a new person each year
+    ###
+    growth_per_capita: (1 / 1825) * (10 / 100)
 
     init: () ->
         @msg_reader = MessageBoard.get_board('new_citizen')
-        @ticks_since_last_citizen = 0
-        @_set_initial_state('wait_until_ready')
-
-    s_wait_until_ready: () ->
-        @ticks_since_last_citizen += 1
-        if @ticks_since_last_citizen >= @ticks_per_citizen
-            @_set_state('grow_population')
+        @citizen_percentage = 0
+        @_set_initial_state('grow_population')
 
     s_grow_population: () ->
+        @citizen_percentage += @base_growth + @growth_per_capita * House.population
+        if @citizen_percentage >= 1
+            @citizen_percentage -= 1
+            @_set_state('spawn_citizen')
+
+    s_spawn_citizen: () ->
         @msg_reader.post_message()
-        @ticks_since_last_citizen = 0
-        @_set_state('wait_until_ready')
+        @_set_state('grow_population')
 
 
 class BulldozerPlanner
@@ -168,9 +182,63 @@ class BulldozerPlanner
             @_set_state('get_message')
             return
 
-        Bulldozer.spawn_bulldozer(@message.path)
+        Bulldozer.spawn_bulldozer(@message.path, () => @board.post_message({path: @path_copy}))
         @message = null
         @_set_state('get_message')
+
+
+class NeedsPlanner
+    @needs:
+        hospital: {}
+
+    @supplied_needs:
+        hospital: 0
+
+    @initialize: () ->
+        @needs.hospital = {}
+        @supplied_needs.hospital = 0
+
+
+    init: () ->
+        @msg_reader = MessageBoard.get_board('population_needs')
+        @_set_initial_state('get_message')
+
+    s_get_message: () ->
+        @message = @msg_reader.get_message()
+        if @message?
+            @_set_state('process_message')
+
+    s_process_message: () ->
+        switch @message.need
+            when 'hospital' then @_process_hospital_need(@message.house)
+
+        @message = null
+        @_set_state('get_message')
+
+    _process_hospital_need: (house) ->
+        if not (house.id of NeedsPlanner.needs.hospital)
+            NeedsPlanner.needs.hospital[house.id] = house
+
+        people = 0
+        for id, house of NeedsPlanner.needs.hospital
+            people += house.citizens
+        needed_ammount = Math.floor(people / 100)
+        if needed_ammount > NeedsPlanner.supplied_needs.hospital
+            houses_array = (house for id, house of NeedsPlanner.needs.hospital)
+            kmeans = new KMeans(houses_array, needed_ammount)
+            kmeans.run()
+            NeedsPlanner.supplied_needs.hospital = kmeans.centroids().length
+
+            for building in Building.get_of_type('hospital')
+                Bulldozer.spawn_bulldozer([building], () -> Block.make_here(@p, building.plot))
+
+            for patch in @_get_patches(kmeans.centroids())
+                BuildingBuilder.spawn_building_builder(CityModel.instance.city_hall, patch, 'hospital')
+
+
+    _get_patches: (points) ->
+        points = (x: Math.round(point.x), y: Math.round(point.y) for point in points)
+        return (Block.closest_block(CityModel.get_patch_at(point)) for point in points)
 
 
 CityModel.register_module(Planner, ['planners'], [])

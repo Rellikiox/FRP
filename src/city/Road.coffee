@@ -6,8 +6,10 @@ class Road
     @too_connected_threshold = 2
 
 
-    @initialize: (@roads) ->
+    @initialize: (@roads, @config) ->
         @roads.setDefault("color", @default_color)
+
+        Road.too_connected_threshold = config.buildings.road.road_distance
 
     @set_breed: (patch, city_hall_dist=null) ->
         @roads.setBreed(patch)
@@ -110,6 +112,9 @@ class Road
 
     @get_road_neighbours: (patch) ->
         return (road for road in patch.n4 when Road.is_road(road))
+
+    @get_roads_in_n8: (patch) ->
+        return (road for road in patch.n when Road.is_road(road))
 
 
 CityModel.register_module(Road, [], ['roads'])

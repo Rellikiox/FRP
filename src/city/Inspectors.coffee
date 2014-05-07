@@ -8,27 +8,44 @@ class Inspector
     @initialize: (@inspectors, config) ->
         @inspectors.setDefault('color', @default_color)
 
-        RoadInspector.construction_points = []
+        RoadInspector.initialize()
+        GridRoadInspector.initialize()
 
-        for key, value of config.node_inspector
+        for key, value of config.inspectors.node_inspector
             NodeInspector.prototype[key] = value
-        for key, value of config.road_inspector
-            RoadInspector.prototype[key] = value
+        for key, value of config.inspectors.road_inspector
+            RadialRoadInspector.prototype[key] = value
         null
 
     @spawn_road_inspector: (patch) ->
-        return @spawn_inspector(patch, RoadInspector)
+        inspector = @spawn_inspector(patch, GridRoadInspector)
+        inspector.init()
+        inspector = @spawn_inspector(patch, GridRoadInspector)
+        inspector.init()
+        return inspector
 
     @spawn_node_inspector: (patch) ->
-        return @spawn_inspector(patch, NodeInspector)
+        inspector = @spawn_inspector(patch, NodeInspector)
+        inspector.init()
+        inspector = @spawn_inspector(patch, NodeInspector)
+        inspector.init()
+        inspector = @spawn_inspector(patch, NodeInspector)
+        inspector.init()
+        return inspector
 
     @spawn_plot_inspector: (patch) ->
-        return @spawn_inspector(patch, PlotInspector)
+        inspector = @spawn_inspector(patch, PlotInspector)
+        inspector.init()
+        return inspector
+
+    @spawn_house_inspector: (patch) ->
+        inspector = @spawn_inspector(patch, HouseInspector)
+        inspector.init(patch)
+        return inspector
 
     @spawn_inspector: (patch, klass) ->
         inspector = patch.sprout(1, @inspectors)[0]
         extend(inspector, FSMAgent, MovingAgent, klass)
-        inspector.init()
         return inspector
 
     speed: 0.05
@@ -49,6 +66,7 @@ class NodeInspector extends Inspector
             inspect: MessageBoard.get_board('node_built')
             connect: MessageBoard.get_board('nodes_unconnected')
             bulldoze: MessageBoard.get_board('bulldoze_path')
+            construction: MessageBoard.get_board('under_construction')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
@@ -81,9 +99,11 @@ class NodeInspector extends Inspector
             path = @_get_terrain_path_to(node.node.p)
             crosses_plot = false
             for patch in path
-                if patch.plot?
-                    crosses_plot = true
-                    patch.plot.under_construction = true
+                if Block.is_block(patch)
+                    crosses_block = true
+                    patch.under_construction = true
+                    @msg_boards.construction.post_message({patch: patch})
+                patch.under_construction = true
             if crosses_plot
                 @msg_boards.bulldoze.post_message({path: path})
             else
@@ -110,17 +130,17 @@ class NodeInspector extends Inspector
 
 
 class RoadInspector extends Inspector
-    ring_increment: 4
-    ring_radius: 6
 
-    init: () ->
-        @_set_initial_state('get_inspection_point')
-        @build_endpoint_board = MessageBoard.get_board('possible_node')
+    @construction_points: []
+
+    @initialize: () ->
+        @construction_points = []
+
 
     s_get_inspection_point: () ->
         @inspection_point = @_get_point_to_inspect()
 
-        if @_valid_point(@inspection_point)
+        if RoadInspector._valid_point(@inspection_point)
             @_set_state('go_to_inspection_point')
 
     s_go_to_inspection_point: () ->
@@ -132,6 +152,45 @@ class RoadInspector extends Inspector
 
         if @_in_point(@inspection_point)
             @_set_state('find_new_endpoint')
+
+
+    _is_valid_construction_point: (patch) ->
+        road_dist = Road.get_connectivity(patch)
+        construction_dist = RoadInspector._get_construction_dist(patch)
+        return road_dist > Road.too_connected_threshold && (not construction_dist? or construction_dist > Road.too_connected_threshold)
+
+    _issue_construction: (patch) ->
+        RoadInspector.construction_points.push(patch)
+        @build_endpoint_board.post_message({patch: patch})
+
+    @_valid_point: (point) ->
+        return point? and CityModel.is_on_world(point) and not Road.is_road(CityModel.get_patch_at(point))
+
+    @_get_construction_dist: (patch) ->
+        min_dist = null
+        for point in RoadInspector.construction_points
+            dist_to_point = ABM.util.distance(patch.x, patch.y, point.x, point.y)
+            if (not min_dist?) or dist_to_point < min_dist
+                min_dist = dist_to_point
+        return min_dist
+
+
+
+class RadialRoadInspector extends RoadInspector
+    ring_increment: 4
+    ring_radius: 6
+
+    min_increment: 3
+    max_increment: 6
+
+    init: () ->
+        @radius = ABM.util.randomFloat(2 * Math.PI)
+        @direction = ABM.util.oneOf([-1, 1])
+
+        @_set_initial_state('get_inspection_point')
+        @build_endpoint_board = MessageBoard.get_board('possible_node')
+        @nodes_built_board = MessageBoard.get_board('node_built')
+
 
     s_find_new_endpoint: () ->
         if @_is_valid_construction_point(@p)
@@ -152,19 +211,25 @@ class RoadInspector extends Inspector
             @_set_state('find_new_endpoint')
 
         if @_lap_completed()
+            @_set_state('increment_radius')
             @circular_direction = null
             @start_angle = null
-            @ring_radius += @ring_increment
-            @_set_state('get_inspection_point')
+
+    s_increment_radius: () ->
+        @ring_radius += @ring_increment
+        @_set_state('get_inspection_point')
 
 
-    _valid_point: (point) ->
-        return point? and CityModel.is_on_world(point) and not Road.is_road(CityModel.get_patch_at(point))
 
     _get_point_to_inspect: () ->
-        rand_angle  = ABM.util.randomFloat(2 * Math.PI)
-        x = Math.round(@ring_radius * Math.cos(rand_angle))
-        y = Math.round(@ring_radius * Math.sin(rand_angle))
+        arc_length = ABM.util.randomInt2(@min_increment, @max_increment)
+        polar_coords = @_get_polar_coords()
+        arc_radians = arc_length / @ring_radius
+
+        new_angle = polar_coords.angle + arc_radians * @direction
+
+        x = Math.round(@ring_radius * Math.cos(new_angle))
+        y = Math.round(@ring_radius * Math.sin(new_angle))
         return {x: x, y: y}
 
     _circular_move: () ->
@@ -187,25 +252,61 @@ class RoadInspector extends Inspector
             radius: ABM.util.distance(0, 0, @x, @y)
         return polar_coords
 
-    _is_valid_construction_point: (patch) ->
-        road_dist = Road.get_connectivity(@p)
-        construction_dist = @_get_construction_dist(@p)
-        return road_dist > 2 && (not construction_dist? or construction_dist > 2)
-
-    _issue_construction: (patch) ->
-        @constructor.construction_points.push(patch)
-        @build_endpoint_board.post_message({patch: patch})
-
-    _get_construction_dist: (patch) ->
-        min_dist = null
-        for point in @constructor.construction_points
-            dist_to_point = ABM.util.distance(patch.x, patch.y, point.x, point.y)
-            if (not min_dist?) or dist_to_point < min_dist
-                min_dist = dist_to_point
-        return min_dist
-
     _lap_completed: () ->
         return @angle_moved >= 2 * Math.PI
+
+
+class GridRoadInspector extends RoadInspector
+
+    @open_list: []
+    @closed_list: []
+
+    @initialize: () ->
+        @open_list = []
+        @closed_list = []
+
+
+    horizontal_grid_size: 6
+    vertical_grid_size: 4
+
+    init: () ->
+        if GridRoadInspector.open_list.length is 0
+            GridRoadInspector.open_list.push(CityModel.instance.city_hall)
+
+
+        @_set_initial_state('get_inspection_point')
+        @build_endpoint_board = MessageBoard.get_board('possible_node')
+
+    s_populate_open_list: () ->
+        @_populate_open_list()
+        @_set_state('get_inspection_point')
+
+    s_find_new_endpoint: () ->
+        if @_is_valid_construction_point(@p)
+            @_issue_construction(@p)
+        @_set_state('populate_open_list')
+
+
+
+    _get_point_to_inspect: () ->
+        node = GridRoadInspector.open_list.shift()
+        GridRoadInspector.closed_list.push(node)
+        return node
+
+    _populate_open_list: () ->
+        for node in @_get_possible_nodes()
+            if not (node in GridRoadInspector.closed_list) and not (node in GridRoadInspector.open_list)
+                GridRoadInspector.open_list.push(node)
+
+    _get_possible_nodes: () ->
+        points = [{x: @p.x, y: @p.y + @vertical_grid_size},
+                  {x: @p.x + @horizontal_grid_size, y: @p.y},
+                  {x: @p.x, y: @p.y - @vertical_grid_size},
+                  {x: @p.x - @horizontal_grid_size, y: @p.y}]
+        ABM.util.shuffle(points)
+        return (CityModel.get_patch_at(point) for point in points)
+
+
 
 
 class PlotInspector
@@ -299,18 +400,42 @@ class PlotInspector
     _get_plot: (patch) ->
         closed_list = []
         open_list = [patch]
-        edge = false
+        invalid = false
         while open_list.length > 0
             p = open_list.shift()
-            if p.isOnEdge()
-                edge = true
+            if p.isOnEdge() or p.under_construction
+                invalid = true
                 break
-            open_list.push(n) for n in p.n when not Road.is_road(n) and not ABM.util.contains(open_list, n) and not ABM.util.contains(closed_list, n)
+            open_list.push(n) for n in p.n4 when not Road.is_road(n) and not ABM.util.contains(open_list, n) and not ABM.util.contains(closed_list, n)
             closed_list.push(p)
-        if not edge
+        if not invalid
             return closed_list
         else
             return null
+
+
+class HouseInspector
+    @ticks_per_report = 100
+
+    init: (@house) ->
+        @hidden = true
+        @_set_initial_state('report_state')
+        @msg_board = MessageBoard.get_board('population_needs')
+
+    s_report_state: () ->
+        @msg_board.post_message(
+            'need': 'hospital'
+            'house': @house
+        )
+        @ticks_since_report = 0
+        @_set_state('wait')
+
+    s_wait: () ->
+        if @ticks_since_report > HouseInspector.ticks_per_report
+            @_set_state('report_state')
+        else
+            @ticks_since_report += 1
+
 
 CityModel.register_module(Inspector, ['inspectors'], [])
 

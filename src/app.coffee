@@ -8,22 +8,17 @@ class App
         @setup_buttons()
 
     setup_model: () ->
-        @model = new CityModel(@element_id, 16, -16, 16, -16, 16)
+        @model = new CityModel(@element_id, 8, -32, 32, -32, 32)
         $('#seed').val(GPW.pronounceable(8))
         # @seed = "therinet"
 
 
     run: () ->
         config = @get_config()
-        @get_and_update_seed()
         @model.reset(config, not @paused)
 
     restart: () ->
         @run()
-
-    get_and_update_seed: () ->
-        @seed = $('#seed').val()
-        Math.seedrandom(@seed)
 
     get_int_val: (id) ->
         parseInt($(id).val())
@@ -39,11 +34,15 @@ class App
             road_inspector:
                 ring_radius: @get_int_val('#initial-radius')
                 ring_increment: @get_int_val('#radius-increment')
+        buildings:
+            road:
+                road_distance: @get_int_val('#road-distance')
         debug:
             agents:
                 show_states: @get_cb_val('#show-state')
                 show_ids: @get_cb_val('#show-id')
                 show_logs: @get_cb_val('#show-logs')
+        seed: $('#seed').val()
 
     play_pause_model: () ->
         if @paused
@@ -78,6 +77,14 @@ class App
 
         $('input.j-update-debug-info').click () =>
             @update_debug_info()
+
+        $('#save-button').click () =>
+            save_string = @model.save()
+            $('#save-input').val(save_string)
+
+        $('#load-button').click () =>
+            save_string = $('#load-input').val()
+            @model.load(save_string)
 
     update_debug_info: () ->
         config =
