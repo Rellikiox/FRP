@@ -166,6 +166,7 @@ class CityModel extends ABM.Model
             Inspector.spawn_node_inspector(patch)
             Inspector.spawn_road_inspector(patch)
             Inspector.spawn_plot_inspector(patch)
+            Inspector.spawn_needs_inspector(patch, 'hospital')
             i += 1
 
     spawn_planners: (ammount) ->
@@ -174,7 +175,6 @@ class CityModel extends ABM.Model
             Planner.spawn_generic_planner()
             Planner.spawn_growth_planner()
             Planner.spawn_housing_planner()
-            Planner.spawn_needs_planner()
             i += 1
 
     set_up_AStar_helpers: ->

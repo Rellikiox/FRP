@@ -186,8 +186,7 @@ class House
         House._update_navigation(@)
         @citizens = 0
         @space = House.max_citizens
-        @inspector = Inspector.spawn_house_inspector(@)
-        @board = MessageBoard.get_board('new_citizen')
+        @distances = {}
 
     has_free_space: () ->
         return @citizens < @space
@@ -205,7 +204,12 @@ class House
         for i in [0..@citizens]
             House.population -= 1
             HouseBuilder.spawn_house_builder(@, Plot.get_available_block())
-        @inspector.die()
+
+    dist_to_need: (need) ->
+        if need of @distances
+            return @distances[need]
+        else
+            return null
 
 
 
