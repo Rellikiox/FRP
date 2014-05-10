@@ -30,6 +30,9 @@ class GenericPlanner extends Planner
             path = (CityModel.get_patch_at(p) for p in point_path)
             RoadBuilder.spawn_road_builder(path)
         bulldoze_path: (message) -> Bulldozer.spawn_bulldozer(message.path, () => @boards.nodes_unconnected.post_message({path: message.path}))
+        building_needed: (message) ->
+            patch = CityModel.instance.city_hall
+            BuildingBuilder.spawn_building_builder(patch, message.block, message.type)
 
     @boards:
         nodes_unconnected: null

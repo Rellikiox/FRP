@@ -132,7 +132,7 @@ class RoadInspector extends Inspector
     s_get_inspection_point: () ->
         @inspection_point = @_get_point_to_inspect()
 
-        if RoadInspector._valid_point(@inspection_point)
+        if @inspection_point?
             @_set_state('go_to_inspection_point')
 
     s_go_to_inspection_point: () ->
@@ -453,12 +453,12 @@ class NeedsInspector extends Inspector
                 @plot_circumference.shift()
                 if @plot_circumference.length is 0
                     @plot_circumference = null
-                    @inspected_blocks = {}
                     @_set_state('make_decision')
 
     s_make_decision: () ->
         if not @possible_blocks?
             @possible_blocks = @_sort_by_best_fit(@inspected_blocks)
+            @inspected_blocks = {}
 
         best_fit = @possible_blocks.shift()
         if best_fit? and @_valid_construction(best_fit)
@@ -495,7 +495,8 @@ class NeedsInspector extends Inspector
 
         covered = 0
         for house in blocks_in_radius when House.is_house(house)
-            if house.dist_to_need(@need) > @_need_threshold()
+            dist = house.dist_to_need(@need)
+            if not dist? or dist > @_need_threshold()
                 covered += house.citizens
 
         @inspected_blocks[block.id] = block: block, need_covered: covered
@@ -505,10 +506,10 @@ class NeedsInspector extends Inspector
         return (info for id, info of blocks_dict when @_over_threshold(info)).sort((a, b) -> a.need_covered - b.need_covered)
 
     _valid_construction: (block_info) ->
-        return @_over_threshold(info) and true # TODO
+        return @_over_threshold(block_info) and true # TODO
 
     _over_threshold: (block_info) ->
-        return block_info.need_covered > @_need_threshold()
+        return block_info.need_covered >= @_need_threshold()
 
     _notify_building_need: (block_info) ->
         @boards.building_needed.post_message(block: block_info.block, type: @need)
