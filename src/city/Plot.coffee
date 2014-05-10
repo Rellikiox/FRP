@@ -211,6 +211,9 @@ class House
         else
             return null
 
+    set_dist_to_need: (need, dist) ->
+        @distances[need] = dist
+
 
 
 class Building
@@ -233,4 +236,19 @@ class Building
     color: [174, 131, 0]
 
     init: (@building_type) ->
+        @_set_distances()
+
+    _set_distances: () ->
+        blocks_in_radius = Block.blocks.inRadius(@, 10)
+        for house in blocks_in_radius when House.is_house(house)
+            m_dist = @_manhatan_distance_to(house)
+            if m_dist > 10
+                house.set_dist_to_need(@building_type, m_dist)
+
+    _manhatan_distance_to: (patch) ->
+        return Math.abs(@x - patch.x) + Math.abs(@y - patch.y)
+
+
+
+
 

@@ -8,6 +8,7 @@ extend = (obj, mixin_list...) ->
 
 class FSMAgent
 
+    transitions: []
     current_state: null
     current_state_name: null
 
@@ -20,7 +21,9 @@ class FSMAgent
         @die()
 
     _set_state: (new_state) ->
-        @_log("#{@id}: #{@current_state_name} -> #{new_state}")
+        transition = "#{@id}: #{@current_state_name} -> #{new_state}"
+        @transitions.push(transition)
+        @_log(transition)
         @_update_state(new_state)
 
 

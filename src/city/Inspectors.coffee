@@ -501,7 +501,6 @@ class NeedsInspector extends Inspector
 
         @inspected_blocks[block.id] = block: block, need_covered: covered
 
-
     _sort_by_best_fit: (blocks_dict) ->
         return (info for id, info of blocks_dict when @_over_threshold(info)).sort((a, b) -> a.need_covered - b.need_covered)
 
@@ -522,9 +521,4 @@ class NeedsInspector extends Inspector
         return NeedsInspector.needs_info[@need].threshold
 
 
-
-
-
-
 CityModel.register_module(Inspector, ['inspectors'], [])
-
