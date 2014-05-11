@@ -1,6 +1,7 @@
 class Plot
 
     @plots: null
+
     @initialize: () ->
         @plots = []
 
@@ -107,6 +108,7 @@ class Block
     @blocks: null
 
     @initialize: (@blocks) ->
+        House.initialize()
 
     @make_here: (patch, plot) ->
         @blocks.setBreed(patch)
@@ -152,6 +154,9 @@ class House
     @minimum_housing_available = 0.5
 
     @population = 0
+
+    @initialize: () ->
+        @population = 0
 
     @make_here: (block) ->
         if Block.is_block(block)
