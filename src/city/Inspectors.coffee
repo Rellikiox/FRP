@@ -358,7 +358,10 @@ class PlotInspector extends Inspector
 
     _check_patch: (patch) ->
         if Plot.is_part_of_plot(patch)
-            Plot.destroy_plot(patch.plot)
+            if patch.plot.under_construction
+                Plot.destroy_plot(patch.plot)
+            else
+                return
 
         if not @_any_edge_visible(patch)
             possible_plot = @_get_plot(patch)
@@ -423,7 +426,7 @@ class NeedsInspector extends Inspector
             building_needed: MessageBoard.get_board('building_needed')
 
     s_get_target_plot: () ->
-        plot_list = (plot for plot in Plot.plots when not (plot in @visited_plots))
+        plot_list = (plot for plot in Plot.plots when not (@_is_visited(plot)))
         if plot_list.length > 0
             @target_plot = ABM.util.oneOf(plot_list)
             @visited_plots.push(@target_plot)
@@ -471,6 +474,8 @@ class NeedsInspector extends Inspector
 
 
 
+    _is_visited: (plot) ->
+        return @visited_plots.some((visited_plot) -> visited_plot.id == plot.id)
 
     _get_closest_plot_block: (plot) ->
         min_dist = null
@@ -502,16 +507,21 @@ class NeedsInspector extends Inspector
         @inspected_blocks[block.id] = block: block, need_covered: covered
 
     _sort_by_best_fit: (blocks_dict) ->
-        return (info for id, info of blocks_dict when @_over_threshold(info)).sort((a, b) -> a.need_covered - b.need_covered)
+        return (info for id, info of blocks_dict when @_over_threshold(info.need_covered)).sort((a, b) -> a.need_covered - b.need_covered)
 
     _valid_construction: (block_info) ->
-        return @_over_threshold(block_info) and true # TODO
+        return @_over_threshold(block_info.need_covered) and @_away_from_others(block_info.block)
 
-    _over_threshold: (block_info) ->
-        return block_info.need_covered >= @_need_threshold()
+    _over_threshold: (covered) ->
+        return covered >= @_need_threshold()
+
+    _away_from_others: (block) ->
+        buildings_of_type = Building.get_of_type(@need)
+        return not buildings_of_type.some((building) =>
+            ABM.util.distance(block.x, block.y, building.x, building.y) < @_need_radius())
 
     _notify_building_need: (block_info) ->
-        @boards.building_needed.post_message(block: block_info.block, type: @need)
+        @boards.building_needed.post_message(block: block_info.block, building_type: @need)
 
 
     _need_radius: () ->

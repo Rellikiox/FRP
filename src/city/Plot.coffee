@@ -1,9 +1,11 @@
 class Plot
 
     @plots: null
+    @global_id = 0
 
     @initialize: () ->
         @plots = []
+        @global_id = 0
 
     @make_plot: (patches) ->
         if patches? and patches.length > 0
@@ -40,10 +42,12 @@ class Plot
 
     blocks: null
     space: 0
+    id: null
 
     constructor: (patches) ->
         @blocks = []
         @under_construction = false
+        @id = Plot.global_id++
 
         for p in patches
             if not Block.is_block(p)
@@ -247,7 +251,8 @@ class Building
         blocks_in_radius = Block.blocks.inRadius(@, 10)
         for house in blocks_in_radius when House.is_house(house)
             m_dist = @_manhatan_distance_to(house)
-            if m_dist > 10
+            house_dist = house.dist_to_need(@building_type)
+            if not house_dist? or house_dist > m_dist
                 house.set_dist_to_need(@building_type, m_dist)
 
     _manhatan_distance_to: (patch) ->
