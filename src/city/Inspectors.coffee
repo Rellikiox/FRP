@@ -493,7 +493,18 @@ class NeedsInspector extends Inspector
         return (b for b in block.n4 when Block.is_block(b)).length
 
     _get_plot_circumference: (plot) ->
-        return (b for b in plot.blocks when @_number_of_neighbours(b) < 8)
+        return (b for b in plot.blocks when @_number_of_neighbours(b) < 8).sort((a, b) ->
+            if a.y > b.y
+                return -1
+            else if a.y < b.y
+                return 1
+            else
+                if a.x < b.x
+                    return -1
+                else if a.x > b.x
+                    return 1
+                else
+                    return 0)
 
     _inspect_block: (block) ->
         blocks_in_radius = Block.blocks.inRadius(@p, @_need_radius())
