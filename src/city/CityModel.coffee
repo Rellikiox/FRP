@@ -167,6 +167,8 @@ class CityModel extends ABM.Model
             Inspector.spawn_road_inspector(patch)
             Inspector.spawn_plot_inspector(patch)
             Inspector.spawn_needs_inspector(patch, 'hospital')
+            Inspector.spawn_needs_inspector(patch, 'school')
+            Inspector.spawn_needs_inspector(patch, 'store')
             i += 1
 
     spawn_planners: (ammount) ->

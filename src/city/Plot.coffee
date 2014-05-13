@@ -43,6 +43,7 @@ class Plot
     blocks: null
     space: 0
     id: null
+    distances: null
 
     constructor: (patches) ->
         @blocks = []
@@ -139,6 +140,7 @@ class Block
     init: (plot) ->
         @plot = plot
         @color = ABM.util.randomGray(140, 170)
+        @distances = {}
 
     destroy: () ->
         CityModel.get_patches().setBreed(@)
@@ -151,6 +153,18 @@ class Block
 
     is_of_type: (type) ->
         return @building_type() == type
+
+    dist_to_need: (need) ->
+        if need of @distances
+            return @distances[need]
+        else
+            return null
+
+    set_dist_to_need: (need, dist) ->
+        @distances[need] = dist
+
+    _manhatan_distance_to: (patch) ->
+        return Math.abs(@x - patch.x) + Math.abs(@y - patch.y)
 
 CityModel.register_module(Block, [], ['blocks'])
 
@@ -211,11 +225,9 @@ class House
     blocks: null
     citizens: 0
     space: House.max_citizens
-    distances: null
 
     constructor: (block) ->
         @blocks = []
-        @distances = {}
 
         @blocks.push(block)
         House._update_navigation(@)
@@ -240,15 +252,6 @@ class House
             House.population -= 1
             HouseBuilder.spawn_house_builder(@blocks[0], Plot.get_available_block())
 
-    dist_to_need: (need) ->
-        if need of @distances
-            return @distances[need]
-        else
-            return null
-
-    set_dist_to_need: (need, dist) ->
-        @distances[need] = dist
-
     _check_for_expansion: () ->
 
 
@@ -271,6 +274,21 @@ class House
 
 class GenericBuilding
 
+    @info:
+        hospital:
+            threshold: 400
+            radius: 20
+            color: [223,194,24]
+        school:
+            threshold: 100
+            radius: 10
+            color: [223,194,24]
+        store:
+            threshold: 50
+            radius: 5
+            color: [223,194,24]
+
+
     @make_here: (block, subtype) ->
         if Block.is_block(block)
             if House.has_house(block)
@@ -291,24 +309,25 @@ class GenericBuilding
 
     constructor: (block, @building_subtype) ->
         @blocks = []
+        @blocks.push(block)
 
         @_set_distances()
 
-        @blocks.push(block)
-        block.color = @color
+        if @building_subtype == 'hospital'
+            block.color = @color
+        else if @building_subtype == 'school'
+            block.color = [181,49,255]
+        else
+            block.color = [0,255,249]
 
 
     _set_distances: () ->
-        blocks_in_radius = Block.blocks.inRadius(@, 10)
+        blocks_in_radius = Block.blocks.inRadius(@blocks[0], 10)
         for block in blocks_in_radius when House.has_house(block)
-            house = block.building
-            m_dist = @_manhatan_distance_to(house)
-            house_dist = house.dist_to_need(@building_subtype)
-            if not house_dist? or house_dist > m_dist
-                house.set_dist_to_need(@building_subtype, m_dist)
-
-    _manhatan_distance_to: (patch) ->
-        return Math.abs(@x - patch.x) + Math.abs(@y - patch.y)
+            m_dist = @blocks[0]._manhatan_distance_to(block)
+            block_dist = block.dist_to_need(@building_subtype)
+            if not block_dist? or block_dist > m_dist
+                block.set_dist_to_need(@building_subtype, m_dist)
 
     is_of_subtype: (subtype) ->
         return @building_subtype == subtype

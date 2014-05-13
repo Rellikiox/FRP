@@ -411,18 +411,12 @@ class PlotInspector extends Inspector
 
 
 class NeedsInspector extends Inspector
-
-    @needs_info:
-        hospital:
-            threshold: 400
-            radius: 20
-
     @default_color: [255, 206, 0]
 
-    @under_construction: []
+    @under_construction: null
 
     @initialize: () ->
-        @under_construction = []
+        @under_construction = {}
 
     init: (@need) ->
         @color = NeedsInspector.default_color
@@ -518,10 +512,10 @@ class NeedsInspector extends Inspector
 
         covered = 0
         for block in blocks_in_radius when House.has_house(block)
-            house = block.building
-            dist = house.dist_to_need(@need)
-            if not dist? or dist > @_need_threshold()
-                covered += house.citizens
+            if House.has_house(block)
+                dist = block.dist_to_need(@need)
+                if not dist? or dist > @_need_threshold()
+                    covered += block.building.citizens
 
         @inspected_blocks[possible_block.id] = block: possible_block, need_covered: covered
 
@@ -536,20 +530,23 @@ class NeedsInspector extends Inspector
 
     _away_from_others: (block) ->
         buildings_of_type = GenericBuilding.get_of_subtype(@need)
-
-        return not (buildings_of_type.concat(NeedsInspector.under_construction)).some((building) =>
+        if @need of NeedsInspector.under_construction
+            buildings_of_type = buildings_of_type.concat(NeedsInspector.under_construction[@need])
+        return not buildings_of_type.some((building) =>
             ABM.util.distance(block.x, block.y, building.x, building.y) < @_need_radius())
 
     _notify_building_need: (block_info) ->
         @boards.building_needed.post_message(block: block_info.block, building_type: @need)
-        NeedsInspector.under_construction.push(block_info.block)
+        if not (@need of NeedsInspector.under_construction)
+            NeedsInspector.under_construction[@need] = []
+        NeedsInspector.under_construction[@need].push(block_info.block)
 
 
     _need_radius: () ->
-        return NeedsInspector.needs_info[@need].radius
+        return GenericBuilding.info[@need].radius
 
     _need_threshold: () ->
-        return NeedsInspector.needs_info[@need].threshold
+        return GenericBuilding.info[@need].threshold
 
 
 CityModel.register_module(Inspector, ['inspectors'], [])
