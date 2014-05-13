@@ -411,7 +411,6 @@ class PlotInspector extends Inspector
 
 
 class NeedsInspector extends Inspector
-    @default_color: [255, 206, 0]
 
     @under_construction: null
 
@@ -419,17 +418,26 @@ class NeedsInspector extends Inspector
         @under_construction = {}
 
     init: (@need) ->
-        @color = NeedsInspector.default_color
+        base_color = GenericBuilding.info[@need].hsl_color
+        @color = Colors.lighten(base_color, 0.3).map((f) -> Math.round(f))
         @visited_plots = []
-        @_set_initial_state('get_target_plot')
+        @_set_initial_state('wait_for_population')
         @boards =
             building_needed: MessageBoard.get_board('building_needed')
+
+    s_wait_for_population: () ->
+        if House.population > @_need_threshold()
+            @_set_state('get_target_plot')
 
     s_get_target_plot: () ->
         plot_list = (plot for plot in Plot.plots when not (@_is_visited(plot)))
         if plot_list.length > 0
             @target_plot = ABM.util.oneOf(plot_list)
             @visited_plots.push(@target_plot)
+        else
+            @target_plot = ABM.util.oneOf(@visited_plots)
+
+        if @target_plot?
             @_set_state('go_to_plot')
 
     s_go_to_plot: () ->
@@ -444,7 +452,8 @@ class NeedsInspector extends Inspector
 
     s_circle_plot: () ->
         if not @plot_circumference?
-            @plot_circumference = @_get_plot_circumference(@target_plot)
+            @plot_circumference = @_get_plot_path(@target_plot)
+            @target_plot = null
             @inspected_blocks = {}
 
         @_move(@plot_circumference[0])
@@ -493,19 +502,16 @@ class NeedsInspector extends Inspector
     _number_of_neighbours: (block) ->
         return (b for b in block.n4 when Block.is_block(b)).length
 
-    _get_plot_circumference: (plot) ->
-        return (b for b in plot.blocks when @_number_of_neighbours(b) < 8).sort((a, b) ->
-            if a.y > b.y
-                return -1
-            else if a.y < b.y
-                return 1
-            else
-                if a.x < b.x
-                    return -1
-                else if a.x > b.x
-                    return 1
-                else
-                    return 0)
+    _get_plot_path: (plot) ->
+        _traverse = (node, current_nodes) ->
+            current_nodes.push(node)
+            for neighbour in node.n4 when not (neighbour in current_nodes) and Block.is_block(neighbour) and neighbour.plot == plot
+                current_nodes = _traverse(neighbour, current_nodes)
+            return current_nodes
+
+        return _traverse(@p, [])
+
+
 
     _inspect_block: (possible_block) ->
         blocks_in_radius = Block.blocks.inRadius(@p, @_need_radius())

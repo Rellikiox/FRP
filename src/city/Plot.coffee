@@ -171,7 +171,7 @@ CityModel.register_module(Block, [], ['blocks'])
 
 class House
 
-    @default_color: [100, 0, 0]
+    @hsl_color: [1.0, 1.0, 0.5]
 
     @max_citizens: 10
 
@@ -271,22 +271,27 @@ class House
                     1
 
 
-
 class GenericBuilding
+    @hospital_color: [0.44, 1.0, 0.5]
+    @school_color: [0.50, 1.0, 0.5]
+    @store_color: [0.56, 1.0, 0.5]
 
     @info:
         hospital:
             threshold: 400
             radius: 20
-            color: [223,194,24]
+            hsl_color: @hospital_color
+            rgb_color: Colors.hslToRgb(@hospital_color...).map((f) -> Math.round(f))
         school:
             threshold: 100
             radius: 10
-            color: [223,194,24]
+            hsl_color: @school_color
+            rgb_color: Colors.hslToRgb(@school_color...).map((f) -> Math.round(f))
         store:
             threshold: 50
             radius: 5
-            color: [223,194,24]
+            hsl_color: @store_color
+            rgb_color: Colors.hslToRgb(@store_color...).map((f) -> Math.round(f))
 
 
     @make_here: (block, subtype) ->
@@ -313,12 +318,7 @@ class GenericBuilding
 
         @_set_distances()
 
-        if @building_subtype == 'hospital'
-            block.color = @color
-        else if @building_subtype == 'school'
-            block.color = [181,49,255]
-        else
-            block.color = [0,255,249]
+        block.color = GenericBuilding.info[@building_subtype].rgb_color
 
 
     _set_distances: () ->

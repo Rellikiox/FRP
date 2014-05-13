@@ -10,6 +10,7 @@ class RoadBuilder
 
     @initialize: (@road_builders) ->
         @road_builders.setDefault('color', @default_color)
+        @road_builders.setDefault('shape', 'triangle')
 
     @spawn_road_builder: (path) ->
         road_builder = path[0].sprout(1, @road_builders)[0]
@@ -75,6 +76,7 @@ class HouseBuilder
 
     @initialize: (@house_builders) ->
         @house_builders.setDefault('color', @default_color)
+        @house_builders.setDefault('shape', 'triangle')
 
     @spawn_house_builder: (starting_point, patch) ->
         house_builder = starting_point.sprout(1, @house_builders)[0]
@@ -158,6 +160,7 @@ class Bulldozer
 
     @initialize: (@bulldozers) ->
         @bulldozers.setDefault('color', @default_color)
+        @bulldozers.setDefault('shape', 'triangle')
 
     @spawn_bulldozer: (path, end_action) ->
         bulldozer = path[0].sprout(1, @bulldozers)[0]
@@ -211,11 +214,8 @@ class BuildingBuilder
     # Agentscript stuff
     @building_builders: null
 
-    # Appearance
-    @default_color: [255, 193, 0]
-
     @initialize: (@building_builders) ->
-        @building_builders.setDefault('color', @default_color)
+        @building_builders.setDefault('shape', 'triangle')
 
     @spawn_building_builder: (starting_point, patch, type) ->
         building_builder = starting_point.sprout(1, @building_builders)[0]
@@ -226,6 +226,9 @@ class BuildingBuilder
     speed: 0.05
 
     init: (@block, @type) ->
+        base_color = GenericBuilding.info[@type].hsl_color
+        @color = Colors.darken(base_color, 0.3).map((f) -> Math.round(f))
+
         if Road.get_road_neighbours(@p).length > 0
             @_set_initial_state('go_to_plot')
         else

@@ -112,13 +112,10 @@ Colors =
   # @param   Float            percent  A percentage value >= 0
   # @return  String           hex      A hex string of the new color.
   #
-  lighten: (rgb, percent) ->
-    rgb = @rgbify(rgb) if typeof rgb == 'string'
-
-    hsl = @rgbToHsl.apply this, rgb
+  lighten: (hsl, percent) ->
     lightness = hsl[2] + (hsl[2] * percent)
     lightness = Math.min 1.0, lightness
-    return @hexify(@hslToRgb(hsl[0], hsl[1], lightness))
+    return @hslToRgb(hsl[0], hsl[1], lightness)
 
   # darken a color by a percentage of its current lightness
   #
@@ -126,10 +123,7 @@ Colors =
   # @param   Float            percent  A percentage value >= 0
   # @return  String           hex      A hex string of the new color.
   #
-  darken: (rgb, percent) ->
-    rgb = @rgbify(rgb) if typeof rgb is 'String'
-
-    hsl = @rgbToHsl.apply(this, rgb)
+  darken: (hsl, percent) ->
     lightness = hsl[2] - (hsl[2] * percent)
     lightness = Math.max 0.0, hsl[2]
-    return @hexify @hslToRgb(hsl[0], hsl[1], lightness)
+    return @hslToRgb(hsl[0], hsl[1], lightness)
