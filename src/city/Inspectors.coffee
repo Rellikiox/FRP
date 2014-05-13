@@ -10,6 +10,7 @@ class Inspector
 
         RoadInspector.initialize()
         GridRoadInspector.initialize()
+        NeedsInspector.initialize()
 
         for key, value of config.inspectors.node_inspector
             NodeInspector.prototype[key] = value
@@ -413,10 +414,15 @@ class NeedsInspector extends Inspector
 
     @needs_info:
         hospital:
-            threshold: 200
-            radius: 10
+            threshold: 400
+            radius: 20
 
     @default_color: [255, 206, 0]
+
+    @under_construction: []
+
+    @initialize: () ->
+        @under_construction = []
 
     init: (@need) ->
         @color = NeedsInspector.default_color
@@ -507,7 +513,7 @@ class NeedsInspector extends Inspector
                 else
                     return 0)
 
-    _inspect_block: (block) ->
+    _inspect_block: (possible_block) ->
         blocks_in_radius = Block.blocks.inRadius(@p, @_need_radius())
 
         covered = 0
@@ -517,7 +523,7 @@ class NeedsInspector extends Inspector
             if not dist? or dist > @_need_threshold()
                 covered += house.citizens
 
-        @inspected_blocks[block.id] = block: block, need_covered: covered
+        @inspected_blocks[possible_block.id] = block: possible_block, need_covered: covered
 
     _sort_by_best_fit: (blocks_dict) ->
         return (info for id, info of blocks_dict when @_over_threshold(info.need_covered)).sort((a, b) -> a.need_covered - b.need_covered)
@@ -529,12 +535,14 @@ class NeedsInspector extends Inspector
         return covered >= @_need_threshold()
 
     _away_from_others: (block) ->
-        buildings_of_type = Building.get_of_subtype(@need)
-        return not buildings_of_type.some((building) =>
+        buildings_of_type = GenericBuilding.get_of_subtype(@need)
+
+        return not (buildings_of_type.concat(NeedsInspector.under_construction)).some((building) =>
             ABM.util.distance(block.x, block.y, building.x, building.y) < @_need_radius())
 
     _notify_building_need: (block_info) ->
         @boards.building_needed.post_message(block: block_info.block, building_type: @need)
+        NeedsInspector.under_construction.push(block_info.block)
 
 
     _need_radius: () ->

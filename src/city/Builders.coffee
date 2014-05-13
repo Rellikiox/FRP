@@ -139,14 +139,12 @@ class HouseBuilder
     _house_citizen: (patch) ->
         if Block.is_block(patch)
             block = patch
-            if block.is_available()
-                House.make_here(block)
 
-            if House.has_house(block)
-                house = block.building
-                if house.has_free_space()
-                    house.increase_citizens()
-                    return true
+            house = House.get_or_create(block)
+
+            if house?.has_free_space()
+                house.increase_citizens()
+                return true
         return false
 
 
@@ -270,6 +268,6 @@ class BuildingBuilder
         @die()
 
     build: () ->
-        Building.make_here(@p, @type)
+        GenericBuilding.make_here(@p, @type)
 
 CityModel.register_module(BuildingBuilder, ['building_builders'], [])

@@ -171,6 +171,16 @@ class House
     @initialize: () ->
         @population = 0
 
+    @get_or_create: (block) ->
+        house = null
+        if Block.is_block(block)
+            if House.has_house(block)
+                house = block.building
+            else if block.is_available()
+                house = House.make_here(block)
+
+        return house
+
     @make_here: (block) ->
         if Block.is_block(block)
             block.building = new House(block)
@@ -228,7 +238,7 @@ class House
     reallocate_citizens: () ->
         for i in [0..@citizens]
             House.population -= 1
-            HouseBuilder.spawn_house_builder(@, Plot.get_available_block())
+            HouseBuilder.spawn_house_builder(@blocks[0], Plot.get_available_block())
 
     dist_to_need: (need) ->
         if need of @distances
@@ -264,9 +274,9 @@ class GenericBuilding
     @make_here: (block, subtype) ->
         if Block.is_block(block)
             if House.has_house(block)
-                block.house.reallocate_citizens()
-            extend(block, Building)
-            block.init(subtype)
+                block.building.reallocate_citizens()
+
+            block.building = new GenericBuilding(block, subtype)
 
     @is_building: (patch) ->
         return Block.is_block(patch) and patch.is_of_type('building')
@@ -279,12 +289,19 @@ class GenericBuilding
     building_subtype: null
     color: [174, 131, 0]
 
-    init: (@building_subtype) ->
+    constructor: (block, @building_subtype) ->
+        @blocks = []
+
         @_set_distances()
+
+        @blocks.push(block)
+        block.color = @color
+
 
     _set_distances: () ->
         blocks_in_radius = Block.blocks.inRadius(@, 10)
-        for house in blocks_in_radius when House.has_house(house)
+        for block in blocks_in_radius when House.has_house(block)
+            house = block.building
             m_dist = @_manhatan_distance_to(house)
             house_dist = house.dist_to_need(@building_subtype)
             if not house_dist? or house_dist > m_dist
@@ -294,7 +311,7 @@ class GenericBuilding
         return Math.abs(@x - patch.x) + Math.abs(@y - patch.y)
 
     is_of_subtype: (subtype) ->
-        return @_building_subtype == subtype
+        return @building_subtype == subtype
 
 
 
