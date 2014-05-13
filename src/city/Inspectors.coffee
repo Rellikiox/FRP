@@ -450,13 +450,14 @@ class NeedsInspector extends Inspector
         @_move(@plot_circumference[0])
 
         if @_in_point(@plot_circumference[0])
-            if not (@plot_circumference[0].id of @inspected_blocks)
-                @_inspect_block(@plot_circumference[0])
+            block = @plot_circumference.shift()
 
-                @plot_circumference.shift()
-                if @plot_circumference.length is 0
-                    @plot_circumference = null
-                    @_set_state('make_decision')
+            if not (block.id of @inspected_blocks)
+                @_inspect_block(block)
+
+            if @plot_circumference.length is 0
+                @plot_circumference = null
+                @_set_state('make_decision')
 
     s_make_decision: () ->
         if not @possible_blocks?
@@ -510,7 +511,8 @@ class NeedsInspector extends Inspector
         blocks_in_radius = Block.blocks.inRadius(@p, @_need_radius())
 
         covered = 0
-        for house in blocks_in_radius when House.is_house(house)
+        for block in blocks_in_radius when House.has_house(block)
+            house = block.building
             dist = house.dist_to_need(@need)
             if not dist? or dist > @_need_threshold()
                 covered += house.citizens
@@ -527,7 +529,7 @@ class NeedsInspector extends Inspector
         return covered >= @_need_threshold()
 
     _away_from_others: (block) ->
-        buildings_of_type = Building.get_of_type(@need)
+        buildings_of_type = Building.get_of_subtype(@need)
         return not buildings_of_type.some((building) =>
             ABM.util.distance(block.x, block.y, building.x, building.y) < @_need_radius())
 

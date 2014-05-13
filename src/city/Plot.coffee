@@ -63,7 +63,7 @@ class Plot
     get_available_block: () ->
         for i in ABM.util.shuffle([0..@blocks.length-1])
             block = @blocks[i]
-            if block.is_available() or House.is_house(block) and block.has_free_space()
+            if block.is_available() or House.has_house(block) and block.building.has_free_space()
                 return @blocks[i]
         return null
 
@@ -92,15 +92,15 @@ class Plot
     space: () ->
         sum = 0
         for block in @blocks
-            if House.is_house(block) or block.is_available()
+            if House.has_house(block) or block.is_available()
                 sum += House.max_citizens
         return sum
 
     citizens: () ->
         sum = 0
         for block in @blocks
-            if House.is_house(block)
-                sum += block.citizens
+            if House.has_house(block)
+                sum += block.building.citizens
         return sum
 
 
@@ -134,7 +134,7 @@ class Block
         return patch.breed is @blocks
 
     plot: null
-    block_type: 'block'
+    building: null
 
     init: (plot) ->
         @plot = plot
@@ -144,7 +144,13 @@ class Block
         CityModel.get_patches().setBreed(@)
 
     is_available: () ->
-        return @block_type == 'block'
+        return not @building?
+
+    building_type: () ->
+        return @building?._building_type
+
+    is_of_type: (type) ->
+        return @building_type() == type
 
 CityModel.register_module(Block, [], ['blocks'])
 
@@ -157,6 +163,9 @@ class House
 
     @minimum_housing_available = 0.5
 
+    @explansion_threshold = 0.5
+    @explansion_factor = 1.25
+
     @population = 0
 
     @initialize: () ->
@@ -164,18 +173,18 @@ class House
 
     @make_here: (block) ->
         if Block.is_block(block)
-            extend(block, House)
-            block.init()
+            block.building = new House(block)
+            return block.building
 
-    @is_house: (patch) ->
-        return Block.is_block(patch) and patch.block_type is 'house'
+    @has_house: (patch) ->
+        return Block.is_block(patch) and patch.is_of_type('house')
 
     @houses_below_minimum: () ->
         free_space = 0
         total_space = 0
-        for house in Block.blocks when house.block_type is 'house'
-            total_space += house.space
-            free_space += house.free_space()
+        for block in Block.blocks when House.has_house(block)
+            total_space += block.house.space
+            free_space += block.house.free_space()
 
         return (free_space / total_space) < House.minimum_housing_available
 
@@ -185,17 +194,23 @@ class House
     @get_available_block: () ->
 
 
-    block_type: 'house'
+    _building_type: 'house'
+
     color: [100, 0, 0]
 
+    blocks: null
     citizens: 0
-    space: 0
+    space: House.max_citizens
+    distances: null
 
-    init: () ->
-        House._update_navigation(@)
-        @citizens = 0
-        @space = House.max_citizens
+    constructor: (block) ->
+        @blocks = []
         @distances = {}
+
+        @blocks.push(block)
+        House._update_navigation(@)
+
+        block.color = @color
 
     has_free_space: () ->
         return @citizens < @space
@@ -207,7 +222,8 @@ class House
         if @has_free_space()
             @citizens += 1
             House.population += 1
-            @color = ABM.util.scaleColor(@color, 1.05)
+            @blocks[0].color = ABM.util.scaleColor(@blocks[0].color, 1.05)
+            @_check_for_expansion()
 
     reallocate_citizens: () ->
         for i in [0..@citizens]
@@ -223,42 +239,62 @@ class House
     set_dist_to_need: (need, dist) ->
         @distances[need] = dist
 
+    _check_for_expansion: () ->
 
 
-class Building
+    is_1x1: () ->
+        return @blocks.length == 1
 
-    @make_here: (block, type) ->
+    is_2x1: () ->
+        return @blocks.length == 2
+
+    is_2x2: () ->
+        return @blocks.length == 4
+
+    _check_2x1: () ->
+        if @is_1x1()
+            for block in @block.n4 when House.has_house(block)
+                if block.house.is_1x1()
+                    1
+
+
+
+class GenericBuilding
+
+    @make_here: (block, subtype) ->
         if Block.is_block(block)
-            if House.is_house(block)
-                block.reallocate_citizens()
+            if House.has_house(block)
+                block.house.reallocate_citizens()
             extend(block, Building)
-            block.init(type)
+            block.init(subtype)
 
     @is_building: (patch) ->
-        return Block.is_block(patch) and patch.block_type is 'building'
+        return Block.is_block(patch) and patch.is_of_type('building')
 
-    @get_of_type: (type) ->
-        return (block for block in Block.blocks when @is_building(block) and block.building_type == type)
+    @get_of_subtype: (subtype) ->
+        return (block for block in Block.blocks when block.is_of_type('building') and block.building.is_of_subtype(subtype))
 
-    block_type: 'building'
-    building_type: null
+    _building_type: 'building'
+
+    building_subtype: null
     color: [174, 131, 0]
 
-    init: (@building_type) ->
+    init: (@building_subtype) ->
         @_set_distances()
 
     _set_distances: () ->
         blocks_in_radius = Block.blocks.inRadius(@, 10)
-        for house in blocks_in_radius when House.is_house(house)
+        for house in blocks_in_radius when House.has_house(house)
             m_dist = @_manhatan_distance_to(house)
-            house_dist = house.dist_to_need(@building_type)
+            house_dist = house.dist_to_need(@building_subtype)
             if not house_dist? or house_dist > m_dist
-                house.set_dist_to_need(@building_type, m_dist)
+                house.set_dist_to_need(@building_subtype, m_dist)
 
     _manhatan_distance_to: (patch) ->
         return Math.abs(@x - patch.x) + Math.abs(@y - patch.y)
 
-
+    is_of_subtype: (subtype) ->
+        return @_building_subtype == subtype
 
 
 

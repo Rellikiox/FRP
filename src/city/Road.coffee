@@ -132,6 +132,7 @@ class RoadNode
         @road_nodes.setDefault('color', @default_color)
         @road_nodes.setDefault('shape', 'circle')
         @road_nodes.setDefault('size', 0.4)
+        @road_nodes.setDefault('hidden', true)
 
     @check_patch: (patch) ->
         return Road.is_road(patch) and not patch.node?

@@ -137,18 +137,18 @@ class HouseBuilder
         @die()
 
     _house_citizen: (patch) ->
-        if not Block.is_block(patch) or (not patch.is_available() and not House.is_house(patch))
-            return false
+        if Block.is_block(patch)
+            block = patch
+            if block.is_available()
+                House.make_here(block)
 
-        if not House.is_house(patch)
-            House.make_here(patch)
+            if House.has_house(block)
+                house = block.building
+                if house.has_free_space()
+                    house.increase_citizens()
+                    return true
+        return false
 
-        if patch.has_free_space()
-            patch.increase_citizens()
-        else
-            @board.post_message()
-
-        return true
 
 CityModel.register_module(HouseBuilder, ['house_builders'], [])
 
