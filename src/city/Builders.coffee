@@ -271,6 +271,8 @@ class BuildingBuilder
         @die()
 
     build: () ->
-        GenericBuilding.make_here(@p, @type)
+        shape = GenericBuilding.get_shape(@p, @type)
+        if shape
+            GenericBuilding.make_here(shape, @type)
 
 CityModel.register_module(BuildingBuilder, ['building_builders'], [])

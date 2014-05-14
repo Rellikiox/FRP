@@ -511,8 +511,6 @@ class NeedsInspector extends Inspector
 
         return _traverse(@p, [])
 
-
-
     _inspect_block: (possible_block) ->
         blocks_in_radius = Block.blocks.inRadius(@p, @_need_radius())
 
@@ -529,7 +527,9 @@ class NeedsInspector extends Inspector
         return (info for id, info of blocks_dict when @_over_threshold(info.need_covered)).sort((a, b) -> b.need_covered - a.need_covered)
 
     _valid_construction: (block_info) ->
-        return @_over_threshold(block_info.need_covered) and @_away_from_others(block_info.block)
+        is_valid = @_over_threshold(block_info.need_covered)
+        is_valid = is_valid and @_away_from_others(block_info.block)
+        return is_valid and GenericBuilding.fits_here(block_info.block, @need)
 
     _over_threshold: (covered) ->
         return covered >= @_need_threshold()

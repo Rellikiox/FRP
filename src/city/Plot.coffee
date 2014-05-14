@@ -282,24 +282,55 @@ class GenericBuilding
             radius: 20
             hsl_color: @hospital_color
             rgb_color: Colors.hslToRgb(@hospital_color...).map((f) -> Math.round(f))
+            size: '2x2'
         school:
             threshold: 100
             radius: 10
             hsl_color: @school_color
             rgb_color: Colors.hslToRgb(@school_color...).map((f) -> Math.round(f))
+            size: '2x1'
         store:
             threshold: 50
             radius: 5
             hsl_color: @store_color
             rgb_color: Colors.hslToRgb(@store_color...).map((f) -> Math.round(f))
+            size: '1x1'
 
+    @_get_shape:
+        '1x1': (patch) -> return [patch] if Block.is_block(patch)
+        '2x1': (patch) ->
+            if Block.is_block(patch)
+                neighbours = (p for p in patch.n4 when Block.is_block(p))
+                if neighbours.length > 0
+                    return [patch, ABM.util.oneOf(neighbours)]
+        '2x2': (patch) ->
+            _get_patch = (patch, offset) ->
+                return CityModel.get_patch_at({x: patch.x + offset.x, y: patch.y + offset.y})
+            _check_patch = (patch, offset) ->
+                return Block.is_block(_get_patch(patch, offset))
+            offsets = [
+                [{x: -1, y: 0}, {x: -1, y: 1}, {x: 0, y: 1}, {x: 0, y: 0}],
+                [{x: 0, y: 1}, {x: 1, y: 1}, {x: 1, y: 0}, {x: 0, y: 0}],
+                [{x: 1, y: 0}, {x: 1, y: -1}, {x: 0, y: -1}, {x: 0, y: 0}],
+                [{x: 0, y: -1}, {x: -1, y: -1}, {x: -1, y: 0}, {x: 0, y: 0}]]
 
-    @make_here: (block, subtype) ->
-        if Block.is_block(block)
-            if House.has_house(block)
-                block.building.reallocate_citizens()
+            available = (offset for offset in offsets when not offset.some((offset) -> not _check_patch(patch, offset)))
+            if available.length > 0
+                shape = ABM.util.oneOf(available)
+                return (_get_patch(patch, offset) for offset in shape)
 
-            block.building = new GenericBuilding(block, subtype)
+    @get_shape: (patch, type) ->
+        size = @info[type].size
+        return @_get_shape[size](patch)
+
+    @make_here: (blocks, subtype) ->
+        if not blocks.some((b) -> not Block.is_block(b))
+
+            for block in blocks
+                if House.has_house(block)
+                    block.building.reallocate_citizens()
+
+                block.building = new GenericBuilding(blocks, subtype)
 
     @is_building: (patch) ->
         return Block.is_block(patch) and patch.is_of_type('building')
@@ -307,18 +338,20 @@ class GenericBuilding
     @get_of_subtype: (subtype) ->
         return (block for block in Block.blocks when block.is_of_type('building') and block.building.is_of_subtype(subtype))
 
+    @fits_here: (patch, type) ->
+        return @get_shape(patch, type).length > 0
+
+
     _building_type: 'building'
 
     building_subtype: null
     color: [174, 131, 0]
 
-    constructor: (block, @building_subtype) ->
-        @blocks = []
-        @blocks.push(block)
-
+    constructor: (@blocks, @building_subtype) ->
         @_set_distances()
 
-        block.color = GenericBuilding.info[@building_subtype].rgb_color
+        for block in blocks
+            block.color = GenericBuilding.info[@building_subtype].rgb_color
 
 
     _set_distances: () ->
