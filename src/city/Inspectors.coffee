@@ -526,7 +526,7 @@ class NeedsInspector extends Inspector
         @inspected_blocks[possible_block.id] = block: possible_block, need_covered: covered
 
     _sort_by_best_fit: (blocks_dict) ->
-        return (info for id, info of blocks_dict when @_over_threshold(info.need_covered)).sort((a, b) -> a.need_covered - b.need_covered)
+        return (info for id, info of blocks_dict when @_over_threshold(info.need_covered)).sort((a, b) -> b.need_covered - a.need_covered)
 
     _valid_construction: (block_info) ->
         return @_over_threshold(block_info.need_covered) and @_away_from_others(block_info.block)

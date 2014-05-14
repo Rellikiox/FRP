@@ -97,6 +97,8 @@ class App
         return @model
 
     animate: (ticks) ->
+        start = new Date().getTime();
+
         @model.stop()
         i = 0
         while i < ticks
@@ -106,3 +108,7 @@ class App
             @model.start()
         else
             @model.anim.draw()
+
+        end = new Date().getTime();
+        time = end - start;
+        console.log('Execution time: ' + time);
