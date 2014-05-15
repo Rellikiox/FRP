@@ -8,27 +8,18 @@ class Inspector
     @initialize: (@inspectors, config) ->
         @inspectors.setDefault('color', @default_color)
 
-        RoadInspector.initialize()
-        GridRoadInspector.initialize()
+        RoadInspector.initialize(config.inspectors.node_inspector)
+        GridRoadInspector.initialize(config.inspectors.grid_road_inspector)
+        RadialRoadInspector.initialize(config.inspectors.radial_road_inspector)
+        NeedsInspector.initialize()
 
-        for key, value of config.inspectors.node_inspector
-            NodeInspector.prototype[key] = value
-        for key, value of config.inspectors.road_inspector
-            RadialRoadInspector.prototype[key] = value
-        null
 
     @spawn_road_inspector: (patch) ->
-        inspector = @spawn_inspector(patch, GridRoadInspector)
-        inspector.init()
-        inspector = @spawn_inspector(patch, GridRoadInspector)
+        inspector = @spawn_inspector(patch, RadialRoadInspector)
         inspector.init()
         return inspector
 
     @spawn_node_inspector: (patch) ->
-        inspector = @spawn_inspector(patch, NodeInspector)
-        inspector.init()
-        inspector = @spawn_inspector(patch, NodeInspector)
-        inspector.init()
         inspector = @spawn_inspector(patch, NodeInspector)
         inspector.init()
         return inspector
@@ -38,9 +29,9 @@ class Inspector
         inspector.init()
         return inspector
 
-    @spawn_house_inspector: (patch) ->
-        inspector = @spawn_inspector(patch, HouseInspector)
-        inspector.init(patch)
+    @spawn_needs_inspector: (patch, type) ->
+        inspector = @spawn_inspector(patch, NeedsInspector)
+        inspector.init(type)
         return inspector
 
     @spawn_inspector: (patch, klass) ->
@@ -49,8 +40,6 @@ class Inspector
         return inspector
 
     speed: 0.05
-
-    test: 1
 
 
 class NodeInspector extends Inspector
@@ -140,7 +129,7 @@ class RoadInspector extends Inspector
     s_get_inspection_point: () ->
         @inspection_point = @_get_point_to_inspect()
 
-        if RoadInspector._valid_point(@inspection_point)
+        if @inspection_point?
             @_set_state('go_to_inspection_point')
 
     s_go_to_inspection_point: () ->
@@ -266,8 +255,8 @@ class GridRoadInspector extends RoadInspector
         @closed_list = []
 
 
-    horizontal_grid_size: 6
-    vertical_grid_size: 4
+    horizontal_grid_size: 8
+    vertical_grid_size: 8
 
     init: () ->
         if GridRoadInspector.open_list.length is 0
@@ -309,14 +298,14 @@ class GridRoadInspector extends RoadInspector
 
 
 
-class PlotInspector
+class PlotInspector extends Inspector
 
     init: () ->
         @_set_initial_state('get_message')
         @patches_to_check = []
         @msg_boards =
-            inspect: MessageBoard.get_board('inspect_plot')
-            built: MessageBoard.get_board('plot_built')
+            inspect: MessageBoard.get_board('possible_plot')
+            created: MessageBoard.get_board('plot_created')
 
     s_get_message: () ->
         @current_message = @msg_boards.inspect.get_message()
@@ -366,13 +355,16 @@ class PlotInspector
 
     _check_patch: (patch) ->
         if Plot.is_part_of_plot(patch)
-            Plot.destroy_plot(patch.plot)
+            if patch.plot.under_construction
+                Plot.destroy_plot(patch.plot)
+            else
+                return
 
         if not @_any_edge_visible(patch)
             possible_plot = @_get_plot(patch)
             if possible_plot?
                 plot = Plot.make_plot(possible_plot)
-                @msg_boards.built.post_message({plot: plot})
+                @msg_boards.created.post_message(plot: plot)
 
     _any_edge_visible: (patch) ->
         current_patch = patch
@@ -414,28 +406,149 @@ class PlotInspector
             return null
 
 
-class HouseInspector
-    @ticks_per_report = 100
+class NeedsInspector extends Inspector
 
-    init: (@house) ->
-        @hidden = true
-        @_set_initial_state('report_state')
-        @msg_board = MessageBoard.get_board('population_needs')
+    @under_construction: null
 
-    s_report_state: () ->
-        @msg_board.post_message(
-            'need': 'hospital'
-            'house': @house
-        )
-        @ticks_since_report = 0
-        @_set_state('wait')
+    @initialize: () ->
+        @under_construction = {}
 
-    s_wait: () ->
-        if @ticks_since_report > HouseInspector.ticks_per_report
-            @_set_state('report_state')
+    init: (@need) ->
+        base_color = GenericBuilding.info[@need].hsl_color
+        @color = Colors.lighten(base_color, 0.3).map((f) -> Math.round(f))
+        @visited_plots = []
+        @_set_initial_state('wait_for_population')
+        @boards =
+            building_needed: MessageBoard.get_board('building_needed')
+
+    s_wait_for_population: () ->
+        if House.population > @_need_threshold()
+            @_set_state('get_target_plot')
+
+    s_get_target_plot: () ->
+        plot_list = (plot for plot in Plot.plots when not (@_is_visited(plot)))
+        if plot_list.length > 0
+            @target_plot = ABM.util.oneOf(plot_list)
+            @visited_plots.push(@target_plot)
         else
-            @ticks_since_report += 1
+            @target_plot = ABM.util.oneOf(@visited_plots)
+
+        if @target_plot?
+            @_set_state('go_to_plot')
+
+    s_go_to_plot: () ->
+        if not @target_point?
+            @target_point = @_get_closest_plot_block(@target_plot)
+
+        @_move(@target_point)
+
+        if @_in_point(@target_point)
+            @target_point = null
+            @_set_state('circle_plot')
+
+    s_circle_plot: () ->
+        if not @plot_circumference?
+            @plot_circumference = @_get_plot_path(@target_plot)
+            @target_plot = null
+            @inspected_blocks = {}
+
+        @_move(@plot_circumference[0])
+
+        if @_in_point(@plot_circumference[0])
+            block = @plot_circumference.shift()
+
+            if not (block.id of @inspected_blocks)
+                @_inspect_block(block)
+
+            if @plot_circumference.length is 0
+                @plot_circumference = null
+                @_set_state('make_decision')
+
+    s_make_decision: () ->
+        if not @possible_blocks?
+            @possible_blocks = @_sort_by_best_fit(@inspected_blocks)
+            @inspected_blocks = {}
+
+        best_fit = @possible_blocks.shift()
+        if best_fit? and @_valid_construction(best_fit)
+            @_notify_building_need(best_fit)
+            best_fit = null
+
+        if not best_fit?
+            @possible_blocks = null
+            @_set_state('get_target_plot')
+
+
+
+    _is_visited: (plot) ->
+        return @visited_plots.some((visited_plot) -> visited_plot.id == plot.id)
+
+    _get_closest_plot_block: (plot) ->
+        min_dist = null
+        closest_block = null
+
+        for block in plot.blocks
+            dist_to_block = ABM.util.distance(@p.x, @p.y, block.x, block.y)
+            if not min_dist? or min_dist > dist_to_block
+                min_dist = dist_to_block
+                closest_block = block
+
+        return closest_block
+
+    _number_of_neighbours: (block) ->
+        return (b for b in block.n4 when Block.is_block(b)).length
+
+    _get_plot_path: (plot) ->
+        _traverse = (node, current_nodes) ->
+            current_nodes.push(node)
+            for neighbour in node.n4 when not (neighbour in current_nodes) and Block.is_block(neighbour) and neighbour.plot == plot
+                current_nodes = _traverse(neighbour, current_nodes)
+            return current_nodes
+
+        return _traverse(@p, [])
+
+    _inspect_block: (possible_block) ->
+        blocks_in_radius = Block.blocks.inRadius(@p, @_need_radius())
+
+        covered = 0
+        for block in blocks_in_radius when House.has_house(block)
+            if House.has_house(block)
+                dist = block.dist_to_need(@need)
+                if not dist? or dist > @_need_threshold()
+                    covered += block.building.citizens
+
+        @inspected_blocks[possible_block.id] = block: possible_block, need_covered: covered
+
+    _sort_by_best_fit: (blocks_dict) ->
+        return (info for id, info of blocks_dict when @_over_threshold(info.need_covered)).sort((a, b) -> b.need_covered - a.need_covered)
+
+    _valid_construction: (block_info) ->
+        is_valid = @_over_threshold(block_info.need_covered)
+        is_valid = is_valid and @_away_from_others(block_info.block)
+        return is_valid and GenericBuilding.fits_here(block_info.block, @need)
+
+    _over_threshold: (covered) ->
+        return covered >= @_need_threshold()
+
+    _away_from_others: (block) ->
+        buildings_of_type = GenericBuilding.get_of_subtype(@need)
+        if @need of NeedsInspector.under_construction
+            buildings_of_type = buildings_of_type.concat(NeedsInspector.under_construction[@need])
+        return not buildings_of_type.some((building) =>
+            ABM.util.distance(block.x, block.y, building.x, building.y) < @_need_radius())
+
+    _notify_building_need: (block_info) ->
+        @boards.building_needed.post_message(block: block_info.block, building_type: @need)
+        if not (@need of NeedsInspector.under_construction)
+            NeedsInspector.under_construction[@need] = []
+        NeedsInspector.under_construction[@need].push(block_info.block)
+
+
+    _need_radius: () ->
+        return GenericBuilding.info[@need].radius
+
+    _need_threshold: () ->
+        return GenericBuilding.info[@need].threshold
 
 
 CityModel.register_module(Inspector, ['inspectors'], [])
-

@@ -166,19 +166,17 @@ class CityModel extends ABM.Model
             Inspector.spawn_node_inspector(patch)
             Inspector.spawn_road_inspector(patch)
             Inspector.spawn_plot_inspector(patch)
+            Inspector.spawn_needs_inspector(patch, 'hospital')
+            Inspector.spawn_needs_inspector(patch, 'school')
+            Inspector.spawn_needs_inspector(patch, 'store')
             i += 1
 
     spawn_planners: (ammount) ->
         i = 0
         while i < ammount
-            Planner.spawn_road_planner()
-            Planner.spawn_node_planner()
+            Planner.spawn_generic_planner()
             Planner.spawn_growth_planner()
-            Planner.spawn_plot_planner()
             Planner.spawn_housing_planner()
-            Planner.spawn_plot_keeper_planner()
-            Planner.spawn_bulldozer_planner()
-            Planner.spawn_needs_planner()
             i += 1
 
     set_up_AStar_helpers: ->

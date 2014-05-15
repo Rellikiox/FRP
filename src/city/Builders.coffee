@@ -5,26 +5,43 @@ class RoadBuilder
     # Appearance
     @default_color: [255,255,255]
 
-    # Behavior
-    @radius_increment = 3
-
     @initialize: (@road_builders) ->
         @road_builders.setDefault('color', @default_color)
+        @road_builders.setDefault('shape', 'triangle')
 
-    @spawn_road_connector: (path) ->
-        road_builder = @spawn_road_builder(path[0], RoadConnector)
+    @spawn_road_builder: (path) ->
+        road_builder = path[0].sprout(1, @road_builders)[0]
+        extend(road_builder, FSMAgent, MovingAgent, RoadBuilder)
         road_builder.init(path)
         return road_builder
 
-    @spawn_road_extender: (endpoint) ->
-        road_builder = @spawn_road_builder(CityModel.instance.city_hall, RoadExtender)
-        road_builder.init(endpoint)
-        return road_builder
 
-    @spawn_road_builder: (patch, klass) ->
-        road_builder = patch.sprout(1, @road_builders)[0]
-        extend(road_builder, FSMAgent, MovingAgent, klass)
-        return road_builder
+    init: (@path) ->
+        @startpoint = @path[0]
+        @endpoint = @path[@path.length-1]
+
+        @points_to_report = [@startpoint, @endpoint]
+
+        @_set_initial_state('build_to_point')
+
+        @msg_boards =
+            node: MessageBoard.get_board('node_built')
+            plot: MessageBoard.get_board('possible_plot')
+
+    s_build_to_point: () ->
+        if not @path?
+            @path = @_get_terrain_path_to(@endpoint)
+
+        @_move @path[0]
+
+        @_drop_road()
+
+        if @_in_point(@path[0])
+            @path.shift()
+            if @path.length is 0
+                for point in @points_to_report
+                    @msg_boards.node.post_message({patch: point})
+                @_set_state('die')
 
     # Utils
 
@@ -40,83 +57,11 @@ class RoadBuilder
         if Road.get_roads_in_n8(@p).length >= 2
             @msg_boards.plot.post_message({patch: @p})
 
-    s_build_to_point_state: ->
-        if not @path?
-            @path = @_get_terrain_path_to(@endpoint)
-
-        @_move @path[0]
-
-        if not Road.is_road @p
-            @_drop_road()
-
-        if @_in_point(@path[0])
-            @path.shift()
-            if @path.length is 0
-                for point in @points_to_report
-                    @msg_boards.node.post_message({patch: point})
-                @_set_state('die')
-
     s_die: ->
         @die()
 
-
-class RoadExtender extends RoadBuilder
-
-    init: (endpoint) ->
-        @endpoint = endpoint
-        @points_to_report = [@endpoint]
-
-        @_set_initial_state('go_to_point_state')
-
-        @msg_boards =
-            node: MessageBoard.get_board('node_built')
-            plot: MessageBoard.get_board('possible_plot')
-
-    s_go_to_point_state: ->
-        if not @path?
-            closest_road_to_target = Road.get_closest_road_to(@endpoint)
-            @path = @_get_terrain_path_to(closest_road_to_target)
-
-        @_move(@path[0])
-
-        if @_in_point(@path[0])
-            @path.shift()
-            if @path.length is 0
-                @path = CityModel.instance.terrainAStar.getPath(@, @endpoint)
-                @_set_state('build_to_point_state')
-
-
-class RoadConnector extends RoadBuilder
-
-    init: (@path) ->
-        @startpoint = @path[0]
-        @endpoint = @path[@path.length-1]
-
-        @points_to_report = [@startpoint, @endpoint]
-
-        @_set_initial_state('build_to_point')
-
-        @msg_boards =
-            node: MessageBoard.get_board('node_built')
-            plot: MessageBoard.get_board('possible_plot')
-
-    s_build_to_point: ->
-        if not @path?
-            @path = @_get_terrain_path_to(@endpoint)
-
-        @_move @path[0]
-
-        @_drop_road()
-
-        if @_in_point(@path[0])
-            @path.shift()
-            if @path.length is 0
-                for point in @points_to_report
-                    @msg_boards.node.post_message({patch: point})
-                @_set_state('die')
-
-
 CityModel.register_module(RoadBuilder, ['road_builders'], [])
+
 
 
 class HouseBuilder
@@ -128,6 +73,7 @@ class HouseBuilder
 
     @initialize: (@house_builders) ->
         @house_builders.setDefault('color', @default_color)
+        @house_builders.setDefault('shape', 'triangle')
 
     @spawn_house_builder: (starting_point, patch) ->
         house_builder = starting_point.sprout(1, @house_builders)[0]
@@ -190,18 +136,16 @@ class HouseBuilder
         @die()
 
     _house_citizen: (patch) ->
-        if not Block.is_block(patch) or (not patch.is_available() and not House.is_house(patch))
-            return false
+        if Block.is_block(patch)
+            block = patch
 
-        if not House.is_house(patch)
-            House.make_here(patch)
+            house = House.get_or_create(block)
 
-        if patch.has_free_space()
-            patch.increase_citizens()
-        else
-            @board.post_message()
+            if house?.has_free_space()
+                house.increase_citizens()
+                return true
+        return false
 
-        return true
 
 CityModel.register_module(HouseBuilder, ['house_builders'], [])
 
@@ -213,6 +157,7 @@ class Bulldozer
 
     @initialize: (@bulldozers) ->
         @bulldozers.setDefault('color', @default_color)
+        @bulldozers.setDefault('shape', 'triangle')
 
     @spawn_bulldozer: (path, end_action) ->
         bulldozer = path[0].sprout(1, @bulldozers)[0]
@@ -266,11 +211,8 @@ class BuildingBuilder
     # Agentscript stuff
     @building_builders: null
 
-    # Appearance
-    @default_color: [255, 193, 0]
-
     @initialize: (@building_builders) ->
-        @building_builders.setDefault('color', @default_color)
+        @building_builders.setDefault('shape', 'triangle')
 
     @spawn_building_builder: (starting_point, patch, type) ->
         building_builder = starting_point.sprout(1, @building_builders)[0]
@@ -281,6 +223,9 @@ class BuildingBuilder
     speed: 0.05
 
     init: (@block, @type) ->
+        base_color = GenericBuilding.info[@type].hsl_color
+        @color = Colors.darken(base_color, 0.3).map((f) -> Math.round(f))
+
         if Road.get_road_neighbours(@p).length > 0
             @_set_initial_state('go_to_plot')
         else
@@ -323,6 +268,8 @@ class BuildingBuilder
         @die()
 
     build: () ->
-        Building.make_here(@p, @type)
+        shape = GenericBuilding.get_shape(@p, @type)
+        if shape
+            GenericBuilding.make_here(shape, @type)
 
 CityModel.register_module(BuildingBuilder, ['building_builders'], [])
