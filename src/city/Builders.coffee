@@ -5,9 +5,6 @@ class RoadBuilder
     # Appearance
     @default_color: [255,255,255]
 
-    # Behavior
-    @radius_increment = 3
-
     @initialize: (@road_builders) ->
         @road_builders.setDefault('color', @default_color)
         @road_builders.setDefault('shape', 'triangle')

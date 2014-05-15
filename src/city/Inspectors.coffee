@@ -8,15 +8,11 @@ class Inspector
     @initialize: (@inspectors, config) ->
         @inspectors.setDefault('color', @default_color)
 
-        RoadInspector.initialize()
-        GridRoadInspector.initialize()
+        RoadInspector.initialize(config.inspectors.node_inspector)
+        GridRoadInspector.initialize(config.inspectors.grid_road_inspector)
+        RadialRoadInspector.initialize(config.inspectors.radial_road_inspector)
         NeedsInspector.initialize()
 
-        for key, value of config.inspectors.node_inspector
-            NodeInspector.prototype[key] = value
-        for key, value of config.inspectors.road_inspector
-            RadialRoadInspector.prototype[key] = value
-        null
 
     @spawn_road_inspector: (patch) ->
         inspector = @spawn_inspector(patch, RadialRoadInspector)

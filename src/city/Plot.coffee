@@ -177,8 +177,8 @@ class House
 
     @minimum_housing_available = 0.5
 
-    @explansion_threshold = 0.5
-    @explansion_factor = 1.25
+    @expansion_threshold = 0.5
+    @expansion_factor = 1.25
 
     @population = 0
 

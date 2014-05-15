@@ -45,7 +45,6 @@
           <ul class="nav nav-tabs">
             <li class="active"><a href="#simulation" data-toggle="tab">Simulation</a></li>
             <li><a href="#inspectors" data-toggle="tab">Inspectors</a></li>
-            <li><a href="#builders" data-toggle="tab">Builders</a></li>
             <li><a href="#planners" data-toggle="tab">Planners</a></li>
             <li><a href="#buildings" data-toggle="tab">Buildings</a></li>
           </ul>
@@ -53,195 +52,245 @@
           <!-- Tab panes -->
           <div class="tab-content">
 
-            <div class="tab-pane active panel-group" id="simulation">
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h3 class="panel-title">
-                    <a data-toggle="collapse" href="#general">General</a>
-                  </h3>
-                </div>
-                <div id="general" class="panel-collapse collapse in">
-                  <div class="panel-body">
-                    <div class="row">
-                      <div class="col-lg-4">
-                        <div class="form-group">
-                          <label for="inspection-area">Seed</label>
-                          <input type="text" class="form-control" id="seed" value="">
-                        </div>
-                      </div>
-                      <div class="col-lg-8">
-                        <div class="form-group">
-                          <div class="input-group">
-                            <span class="input-group-btn">
-                              <button class="btn btn-default" type="button" id="save-button">Save</button>
-                            </span>
-                            <input type="text" class="form-control" id="save-input">
-                          </div><!-- /input-group -->
-                        </div>
+            <div class="tab-pane active" id="simulation">
 
-                        <div class="form-group">
-                          <div class="input-group">
-                            <input type="text" class="form-control" id="load-input">
-                            <span class="input-group-btn">
-                              <button class="btn btn-default" type="button" id="load-button">Load</button>
-                            </span>
-                          </div><!-- /input-group -->
-                        </div>
-                      </div>
-                    </div>
+              <h3>General</h3>
+              <div class="row">
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label for="inspection-area">Seed</label>
+                    <input type="text" class="form-control" id="seed" value="">
+                  </div>
+                </div>
+                <div class="col-lg-8">
+                  <div class="form-group">
+                    <div class="input-group">
+                      <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="save-button">Save</button>
+                      </span>
+                      <input type="text" class="form-control" id="save-input">
+                    </div><!-- /input-group -->
+                  </div>
+
+                  <div class="form-group">
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="load-input">
+                      <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="load-button">Load</button>
+                      </span>
+                    </div><!-- /input-group -->
                   </div>
                 </div>
               </div>
 
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h3 class="panel-title">
-                    <a data-toggle="collapse" href="#debug">Debug</a>
-                  </h3>
-                </div>
-                <div id="debug" class="panel-collapse collapse in">
-                  <div class="panel-body">
-                    <div class="row">
-                      <div class="col-lg-3">
-                        <div class="checkbox">
-                          <label>
-                            <input type="checkbox" class="j-update-debug-info" id="show-state"> Show states
-                          </label>
-                        </div>
-                      </div><!-- /.col-lg-3 -->
-                      <div class="col-lg-3">
-                        <div class="checkbox">
-                          <label>
-                            <input type="checkbox" class="j-update-debug-info" id="show-id"> Show IDs
-                          </label>
-                        </div>
-                      </div><!-- /.col-lg-3 -->
-                      <div class="col-lg-3">
-                        <div class="checkbox">
-                          <label>
-                            <input type="checkbox" class="j-update-debug-info" id="show-logs"> Show logs
-                          </label>
-                        </div>
-                      </div><!-- /.col-lg-3 -->
-                    </div>
+              <h3>Debug</h3>
+              <div class="row">
+                <div class="col-lg-3">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" class="j-update-debug-info" id="show-state"> Show states
+                    </label>
                   </div>
-                </div>
+                </div><!-- /.col-lg-3 -->
+                <div class="col-lg-3">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" class="j-update-debug-info" id="show-id"> Show IDs
+                    </label>
+                  </div>
+                </div><!-- /.col-lg-3 -->
+                <div class="col-lg-3">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" class="j-update-debug-info" id="show-logs"> Show logs
+                    </label>
+                  </div>
+                </div><!-- /.col-lg-3 -->
               </div>
+
             </div>
 
             <div class="tab-pane panel-group" id="inspectors">
 
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h3 class="panel-title">
-                    <a data-toggle="collapse"href="#collapse-node-inspector">NodeInspector</a>
-                  </h3>
-                </div>
-                <div id="collapse-node-inspector" class="panel-collapse collapse in">
-                  <div class="panel-body">
-                    <div class="row">
-                      <div class="col-lg-6">
-                        <div class="form-group">
-                          <label for="inspection-area">Inspection area</label>
-                          <input type="text" class="form-control" id="inspection-area" value="20">
-                        </div>
-                      </div><!-- /.col-lg-6 -->
-                      <div class="col-lg-6">
-                        <div class="form-group">
-                          <label for="distance-factor">Max. distance factor</label>
-                          <input type="text" class="form-control" id="distance-factor" value="3">
-                        </div>
-                      </div><!-- /.col-lg-6 -->
-                    </div>
+              <h3>NodeInspector</h3>
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label for="inspection-area">Inspection area</label>
+                    <input type="text" class="form-control" id="inspection-area" value="20">
                   </div>
-                </div>
-              </div>
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h3 class="panel-title">
-                    <a data-toggle="collapse"  href="#collapse-road-inspector">RoadInspector</a>
-                  </h3>
-                </div>
-                <div id="collapse-road-inspector" class="panel-collapse collapse">
-                  <div class="panel-body">
-                    <div class="row">
-                      <div class="col-lg-6">
-                        <div class="form-group">
-                          <label for="initial-radius">Initial radius</label>
-                          <input type="text" class="form-control" id="initial-radius" value="6">
-                        </div>
-                      </div><!-- /.col-lg-6 -->
-                      <div class="col-lg-6">
-                        <div class="form-group">
-                          <label for="radius-increment">Radius increment</label>
-                          <input type="text" class="form-control" id="radius-increment" value="4">
-                        </div>
-                      </div><!-- /.col-lg-6 -->
-                    </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label for="distance-factor">Max. distance factor</label>
+                    <input type="text" class="form-control" id="distance-factor" value="3">
                   </div>
-                </div>
+                </div><!-- /.col-lg-6 -->
               </div>
+
+              <h3>GridRoadInspector</h3>
+              <div class="row">
+                <div class="col-lg-3">
+                  <div class="form-group">
+                    <label for="initial-radius">Initial radius</label>
+                    <input type="text" class="form-control" id="initial-radius" value="6">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-3">
+                  <div class="form-group">
+                    <label for="radius-increment">Radius increment</label>
+                    <input type="text" class="form-control" id="radius-increment" value="4">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-3">
+                  <div class="form-group">
+                    <label for="min-incr">Minimum Increment</label>
+                    <input type="text" class="form-control" id="min-incr" value="3">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-3">
+                  <div class="form-group">
+                    <label for="max-incr">Maximum Increment</label>
+                    <input type="text" class="form-control" id="max-incr" value="6">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+              </div>
+
+              <h3>RadialRoadInspector</h3>
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label for="horizontal-grid">Horizontal grid size</label>
+                    <input type="text" class="form-control" id="horizontal-grid" value="8">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label for="vertical-grid">Vertical grid size</label>
+                    <input type="text" class="form-control" id="vertical-grid" value="8">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+              </div>
+
+              <h3>PlotInspector</h3>
+              ...
+
+              <h3>NeedsInspector</h3>
+              ...
 
             </div>
 
-            <div class="tab-pane" id="builders">...</div>
+            <div class="tab-pane" id="planners">
 
-            <div class="tab-pane" id="planners">...</div>
+              <h3>GrowthPlanner</h3>
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label for="base-growth">Base growth</label>
+                    <input type="text" class="form-control" id="base-growth" value="0.03">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label for="growth-pc">Increase per year (1825 ticks)</label>
+                    <input type="text" class="form-control" id="growth-pc" value="0.1">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+              </div>
+
+            </div>
 
             <div class="tab-pane" id="buildings">
 
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h3 class="panel-title">
-                    <a data-toggle="collapse"href="#collapse-roads">Roads</a>
-                  </h3>
-                </div>
-                <div id="collapse-roads" class="panel-collapse collapse in">
-                  <div class="panel-body">
-                    <div class="row">
-                      <div class="col-lg-6">
-                        <div class="form-group">
-                          <label for="road-distance">Distance between roads</label>
-                          <input type="text" class="form-control" id="road-distance" value="3">
-                        </div>
-                      </div><!-- /.col-lg-6 -->
-                      <div class="col-lg-6">
-                        <div class="form-group">
-                          <label for=""></label>
-                          <input type="text" class="form-control" id="" value="">
-                        </div>
-                      </div><!-- /.col-lg-6 -->
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h3 class="panel-title">
-                    <a data-toggle="collapse"  href="#collapse-houses">Houses</a>
-                  </h3>
-                </div>
-                <div id="collapse-houses" class="panel-collapse collapse">
-                  <div class="panel-body">
-                    <div class="row">
-                      <div class="col-lg-6">
-                        <div class="form-group">
-                          <label for=""></label>
-                          <input type="text" class="form-control" id="" value="">
-                        </div>
-                      </div><!-- /.col-lg-6 -->
-                      <div class="col-lg-6">
-                        <div class="form-group">
-                          <label for=""></label>
-                          <input type="text" class="form-control" id="" value="">
-                        </div>
-                      </div><!-- /.col-lg-6 -->
-                    </div>
+              <h3>Roads</h3>
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="form-group">
+                    <label for="road-distance">Distance between roads</label>
+                    <input type="text" class="form-control" id="road-distance" value="3">
                   </div>
                 </div>
               </div>
 
-            </div>
+              <h3>Houses</h3>
+              <div class="row">
+                <div class="col-lg-3">
+                  <div class="form-group">
+                    <label for="max-citizens">Max. citizens</label>
+                    <input type="text" class="form-control" id="max-citizens" value="10">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-3">
+                  <div class="form-group">
+                    <label for="min-houses">Min. houses %</label>
+                    <input type="text" class="form-control" id="min-houses" value="0.5">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-3">
+                  <div class="form-group">
+                    <label for="exp-threshold">Exp. threshold</label>
+                    <input type="text" class="form-control" id="exp-threshold" value="0.5">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+                <div class="col-lg-3">
+                  <div class="form-group">
+                    <label for="exp-factor">Exp. Factor</label>
+                    <input type="text" class="form-control" id="exp-factor" value="1.25">
+                  </div>
+                </div><!-- /.col-lg-6 -->
+              </div>
+
+              <h3>Buildings</h3>
+                <h4>Hospital</h4>
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="form-group">
+                      <label for="hospital-capacity">Capacity</label>
+                      <input type="text" class="form-control" id="hospital-capacity" value="400">
+                    </div>
+                  </div><!-- /.col-lg-6 -->
+                  <div class="col-lg-6">
+                    <div class="form-group">
+                      <label for="hospital-radius">Radius</label>
+                      <input type="text" class="form-control" id="hospital-radius" value="20">
+                    </div>
+                  </div>
+                </div>
+
+                <h4>School</h4>
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="form-group">
+                      <label for="school-capacity">Capacity</label>
+                      <input type="text" class="form-control" id="school-capacity" value="100">
+                    </div>
+                  </div><!-- /.col-lg-6 -->
+                  <div class="col-lg-6">
+                    <div class="form-group">
+                      <label for="school-radius">Radius</label>
+                      <input type="text" class="form-control" id="school-radius" value="10">
+                    </div>
+                  </div>
+                </div>
+
+                <h4>Store</h4>
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="form-group">
+                      <label for="store-capacity">Capacity</label>
+                      <input type="text" class="form-control" id="store-capacity" value="50">
+                    </div>
+                  </div><!-- /.col-lg-6 -->
+                  <div class="col-lg-6">
+                    <div class="form-group">
+                      <label for="store-radius">Radius</label>
+                      <input type="text" class="form-control" id="store-radius" value="5">
+                    </div>
+                  </div>
+                </div>
+
+
+
           </div>
 
         </div>

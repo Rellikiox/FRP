@@ -18,6 +18,9 @@ class App
     restart: () ->
         @run()
 
+    get_float_val: (id) ->
+        parseFloat($(id).val())
+
     get_int_val: (id) ->
         parseInt($(id).val())
 
@@ -29,12 +32,36 @@ class App
             node_inspector:
                 inspection_radius: @get_int_val('#inspection-area')
                 max_distance_factor: @get_int_val('#distance-factor')
-            road_inspector:
+            radial_road_inspector:
                 ring_radius: @get_int_val('#initial-radius')
                 ring_increment: @get_int_val('#radius-increment')
+                min_increment: @get_int_val('#min-incr')
+                max_increment: @get_int_val('#max-incr')
+            grid_road_inspector:
+                horizontal_grid_size: @get_int_val('#horizontal-grid')
+                vertical_grid_size: @get_int_val('#vertical-grid')
+        planners:
+            growth_planner:
+                base_growth: @get_float_val('#base-growth')
+                growth_per_capita: @get_float_val('#growth-pc')
         buildings:
             road:
                 road_distance: @get_int_val('#road-distance')
+            house:
+                max_citizens: @get_int_val('#max-citizens')
+                minimum_housing_available: @get_float_val('#min-houses')
+                expansion_threshold: @get_float_val('#exp-threshold')
+                expansion_factor: @get_float_val('#exp-factor')
+            generic:
+                hospital:
+                    threshold: @get_int_val('#hospital-capacity')
+                    radius: @get_int_val('#hospital-radius')
+                school:
+                    threshold: @get_int_val('#school-capacity')
+                    radius: @get_int_val('#school-radius')
+                store:
+                    threshold: @get_int_val('#store-capacity')
+                    radius: @get_int_val('#store-radius')
         debug:
             agents:
                 show_states: @get_cb_val('#show-state')
