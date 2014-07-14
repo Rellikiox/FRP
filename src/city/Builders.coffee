@@ -105,6 +105,10 @@ class HouseBuilder
 
     s_go_to_plot: () ->
         if not @path? or @path.length is 0
+            if not @block?
+                @_set_state('die')
+                return
+
             patch = @block.plot.get_closest_block_to(@p)
             road = ABM.util.oneOf(Road.get_road_neighbours(patch))
             @path = @_get_road_path_to(road)
