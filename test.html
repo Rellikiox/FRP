@@ -172,12 +172,6 @@
                 </div><!-- /.col-lg-6 -->
               </div>
 
-              <h3>PlotInspector</h3>
-              ...
-
-              <h3>NeedsInspector</h3>
-              ...
-
             </div>
 
             <div class="tab-pane" id="planners">
@@ -328,5 +322,12 @@
         city.run();
       });
     </script>
+
+    <script >
+    function canvasToImg() {
+      var canvas = $(document.getElementById("layers")).children()[0];
+      console.log(canvas.toDataURL());
+    }
+</script>
   </body>
 </html>

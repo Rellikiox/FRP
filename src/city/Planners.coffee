@@ -1,9 +1,10 @@
 class Planner
     @planners = null
 
-    @initialize: (@planners) ->
+    @initialize: (@planners, config) ->
         @planners.setDefault 'hidden', true
         GenericPlanner.initialize()
+        GrowthPlanner.initialize(config.planners.growth_planner)
 
     @spawn_generic_planner: () ->
         return @spawn_planner(GenericPlanner)
@@ -81,14 +82,21 @@ class HousingPlanner
 
 class GrowthPlanner
 
-    base_growth: 0.03  # 1 person every 6 days (1 person/ (6 days * 5 ticks per day))
+    @base_growth: 0.03  # 1 person every 6 "days" (1 person/ (6 days * 5 ticks per day))
 
     ###
         10% population growth per year. Each 1 person contributes to 10/100 of a new person each year
     ###
-    growth_per_capita: (1 / 1825) * (10 / 100)
+    @growth_per_capita: (1 / 1825) * (10 / 100)
+
+    @initialize: (config) ->
+        @base_growth = config.base_growth
+        @growth_per_capita = config.growth_per_capita * (1 / 1825)
 
     init: () ->
+        @base_growth = GrowthPlanner.base_growth
+        @growth_per_capita = GrowthPlanner.growth_per_capita
+
         @msg_reader = MessageBoard.get_board('new_citizen')
         @citizen_percentage = 0
         @_set_initial_state('grow_population')

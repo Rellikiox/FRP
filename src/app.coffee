@@ -8,7 +8,7 @@ class App
         @setup_buttons()
 
     setup_model: () ->
-        @model = new CityModel(@element_id, 8, -32, 32, -32, 32)
+        @model = new CityModel(@element_id, 16, -16, 16, -16, 16)
         $('#seed').val(GPW.pronounceable(8))
 
     run: () ->

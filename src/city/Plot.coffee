@@ -339,7 +339,7 @@ class GenericBuilding
         return (block for block in Block.blocks when block.is_of_type('building') and block.building.is_of_subtype(subtype))
 
     @fits_here: (patch, type) ->
-        return @get_shape(patch, type).length > 0
+        return @get_shape(patch, type)?.length > 0
 
 
     _building_type: 'building'

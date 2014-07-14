@@ -8,13 +8,16 @@ class Inspector
     @initialize: (@inspectors, config) ->
         @inspectors.setDefault('color', @default_color)
 
-        RoadInspector.initialize(config.inspectors.node_inspector)
+        NodeInspector.initialize(config.inspectors.node_inspector)
+        RoadInspector.initialize()
         GridRoadInspector.initialize(config.inspectors.grid_road_inspector)
         RadialRoadInspector.initialize(config.inspectors.radial_road_inspector)
         NeedsInspector.initialize()
 
 
     @spawn_road_inspector: (patch) ->
+        # inspector = @spawn_inspector(patch, GridRoadInspector)
+        # inspector.init()
         inspector = @spawn_inspector(patch, RadialRoadInspector)
         inspector.init()
         return inspector
@@ -49,7 +52,14 @@ class NodeInspector extends Inspector
     inspection_radius: 20
     max_distance_factor: 3
 
+    @initialize: (config) ->
+        @inspection_radius = config.inspection_radius
+        @max_distance_factor = config.max_distance_factor
+
     init: () ->
+        @inspection_radius = NodeInspector.inspection_radius
+        @max_distance_factor = NodeInspector.max_distance_factor
+
         @_set_initial_state('get_message')
         @msg_boards =
             inspect: MessageBoard.get_board('node_built')
@@ -166,13 +176,25 @@ class RoadInspector extends Inspector
 
 
 class RadialRoadInspector extends RoadInspector
-    ring_increment: 4
-    ring_radius: 6
+    @ring_increment: 4
+    @ring_radius: 6
 
-    min_increment: 3
-    max_increment: 6
+    @min_increment: 3
+    @max_increment: 6
+
+    @initialize: (config) ->
+        @ring_increment = config.ring_increment
+        @ring_radius = config.ring_radius
+        @min_increment = config.min_increment
+        @max_increment = config.max_increment
 
     init: () ->
+
+        @ring_increment = RadialRoadInspector.ring_increment
+        @ring_radius = RadialRoadInspector.ring_radius
+        @min_increment = RadialRoadInspector.min_increment
+        @max_increment = RadialRoadInspector.max_increment
+
         @radius = ABM.util.randomFloat(2 * Math.PI)
         @direction = ABM.util.oneOf([-1, 1])
 
@@ -250,15 +272,21 @@ class GridRoadInspector extends RoadInspector
     @open_list: []
     @closed_list: []
 
-    @initialize: () ->
+    @initialize: (config) ->
         @open_list = []
         @closed_list = []
+        @horizontal_grid_size = config.horizontal_grid_size
+        @vertical_grid_size = config.vertical_grid_size
 
 
     horizontal_grid_size: 8
     vertical_grid_size: 8
 
     init: () ->
+
+        @horizontal_grid_size = GridRoadInspector.horizontal_grid_size
+        @vertical_grid_size = GridRoadInspector.vertical_grid_size
+
         if GridRoadInspector.open_list.length is 0
             GridRoadInspector.open_list.push(CityModel.instance.city_hall)
 
@@ -354,6 +382,9 @@ class PlotInspector extends Inspector
         return adyacent
 
     _check_patch: (patch) ->
+        if not patch?
+            return
+
         if Plot.is_part_of_plot(patch)
             if patch.plot.under_construction
                 Plot.destroy_plot(patch.plot)
